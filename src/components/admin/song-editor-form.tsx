@@ -1,0 +1,332 @@
+"use client";
+
+import Image from "next/image";
+import { useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
+
+import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
+import { updateSongAction } from "@/app/admin/actions";
+import { ArtworkUploadField } from "@/components/admin/artwork-upload-field";
+import { DeleteSongButton } from "@/components/admin/delete-song-button";
+import { FormStateMessage } from "@/components/admin/form-state";
+import { PublicLinkPanel } from "@/components/admin/public-link-panel";
+import { StatusPill } from "@/components/admin/status-pill";
+import { Button } from "@/components/ui/button";
+import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
+import type { DashboardSongRow, SongPageWithLinks } from "@/lib/types";
+
+function SaveButtons() {
+  const { pending } = useFormStatus();
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <Button name="intent" value="draft" type="submit" busy={pending}>
+        Save draft
+      </Button>
+      <Button
+        name="intent"
+        value="publish"
+        type="submit"
+        tone="secondary"
+        busy={pending}
+      >
+        Publish
+      </Button>
+      <Button
+        name="intent"
+        value="unpublish"
+        type="submit"
+        tone="ghost"
+        busy={pending}
+      >
+        Unpublish
+      </Button>
+    </div>
+  );
+}
+
+export function SongEditorForm({
+  page,
+  performance,
+}: {
+  page: SongPageWithLinks;
+  performance?: DashboardSongRow | null;
+}) {
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    updateSongAction,
+    INITIAL_ACTION_STATE,
+  );
+  const [artworkUrl, setArtworkUrl] = useState(page.song.artworkUrl);
+  const linkedServices = page.links.filter((entry) => Boolean(entry.url)).length;
+  const manualReviewCount = page.links.filter(
+    (entry) => !entry.url || entry.matchStatus !== "matched",
+  ).length;
+
+  return (
+    <>
+      <form action={formAction} className="grid gap-5">
+        <input type="hidden" name="song_id" value={page.song.id} />
+
+        <div className="app-card grid gap-4 rounded-[1.75rem] p-5 lg:grid-cols-[190px_minmax(0,1fr)]">
+          <Image
+            src={artworkUrl}
+            alt=""
+            width={190}
+            height={190}
+            className="aspect-square w-full rounded-[1.5rem] object-cover"
+            unoptimized={artworkUrl.startsWith("data:")}
+          />
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusPill status={page.page.status} />
+              <span className="text-sm text-[var(--app-muted)]">
+                {linkedServices}/{STREAMING_SERVICES.length} services ready
+              </span>
+              {performance ? (
+                <>
+                  <span className="text-sm text-[var(--app-muted)]">
+                    {performance.visitCount} visits
+                  </span>
+                  <span className="text-sm text-[var(--app-muted)]">
+                    {performance.clickCount} outbound clicks
+                  </span>
+                </>
+              ) : null}
+            </div>
+
+            <div className="grid gap-2">
+              <h2 className="text-3xl font-semibold text-[var(--app-text)]">
+                {page.song.artistName} • {page.song.title}
+              </h2>
+              <p className="max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
+                Review the imported song page, replace anything that feels off,
+                then publish when the fan-facing link is ready to share.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  title: "Metadata imported",
+                  body: "Spotify title, artist, artwork, and preview were pulled in automatically.",
+                },
+                {
+                  title: "Link review",
+                  body: `${manualReviewCount} service destinations still need manual review or completion.`,
+                },
+                {
+                  title: "Publish + share",
+                  body: "Publishing makes the public URL live for fans and ad traffic.",
+                },
+              ].map((step) => (
+                <div
+                  key={step.title}
+                  className="app-card-soft rounded-[1.2rem] px-4 py-4"
+                >
+                  <div className="text-sm font-semibold text-[var(--app-text)]">{step.title}</div>
+                  <div className="mt-2 text-sm leading-7 text-[var(--app-muted)]">{step.body}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="app-kicker">
+                  Save state
+                </span>
+              </div>
+              <SaveButtons />
+            </div>
+          </div>
+        </div>
+
+        <PublicLinkPanel
+          slug={page.page.slug}
+          status={page.page.status}
+          previewHref={`/admin/preview/${page.song.id}`}
+        />
+
+        <div className="app-card grid gap-4 rounded-[1.75rem] p-5">
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--app-text)]">Song page details</h2>
+            <p className="mt-1 text-sm text-[var(--app-muted)]">
+              Tune the public title, slug, headline, preview, and artwork before
+              the page goes live.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2">
+              <span className="text-sm text-[var(--app-muted)]">Song title</span>
+              <input
+                name="title"
+                defaultValue={page.song.title}
+                className="app-input"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className="text-sm text-[var(--app-muted)]">Artist name</span>
+              <input
+                name="artist_name"
+                defaultValue={page.song.artistName}
+                className="app-input"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className="text-sm text-[var(--app-muted)]">Album name</span>
+              <input
+                name="album_name"
+                defaultValue={page.song.albumName ?? ""}
+                className="app-input"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className="text-sm text-[var(--app-muted)]">Slug</span>
+              <input
+                name="slug"
+                defaultValue={page.page.slug}
+                className="app-input"
+              />
+            </label>
+          </div>
+
+          <label className="grid gap-2">
+            <span className="text-sm text-[var(--app-muted)]">Headline</span>
+            <input
+              name="headline"
+              defaultValue={page.page.headline}
+              className="app-input"
+            />
+          </label>
+
+          <ArtworkUploadField value={artworkUrl} onChange={setArtworkUrl} />
+
+          <label className="grid gap-2">
+            <span className="text-sm text-[var(--app-muted)]">Preview URL</span>
+            <input
+              name="preview_url"
+              defaultValue={page.song.previewUrl ?? ""}
+              className="app-input"
+              placeholder="Optional 30-second preview"
+            />
+          </label>
+        </div>
+
+        <div className="app-card grid gap-4 rounded-[1.75rem] p-5">
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--app-text)]">Streaming links</h2>
+            <p className="mt-1 text-sm text-[var(--app-muted)]">
+              Review every destination before publishing. Search fallbacks are allowed
+              in V1, but manual correction is always available here.
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {STREAMING_SERVICES.map((service) => {
+              const link = page.links.find((entry) => entry.service === service);
+              return (
+                <div
+                  key={service}
+                  className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-white/82 p-4 lg:grid-cols-[180px_minmax(0,1fr)]"
+                >
+                  <div className="grid gap-2">
+                    <div className="text-sm font-semibold text-[var(--app-text)]">
+                      {SERVICE_LABELS[service]}
+                    </div>
+                    <div className="text-xs leading-6 text-[var(--app-muted)]">
+                      {link?.url
+                        ? "Check the destination and adjust anything that looks wrong."
+                        : "No destination yet. Add a URL or leave it unresolved."}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <input
+                      type="hidden"
+                      name={`${service}_match_source`}
+                      defaultValue={link?.matchSource ?? "manual_review"}
+                    />
+                    <label className="grid gap-2">
+                      <span className="app-kicker">
+                        Destination URL
+                      </span>
+                      <input
+                        name={`${service}_url`}
+                        defaultValue={link?.url ?? ""}
+                        className="app-input"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-[180px_140px_minmax(0,1fr)]">
+                      <label className="grid gap-2">
+                        <span className="app-kicker">
+                          Match status
+                        </span>
+                        <select
+                          name={`${service}_match_status`}
+                          defaultValue={link?.matchStatus ?? "manual"}
+                          className="app-input"
+                        >
+                          <option value="matched">Matched</option>
+                          <option value="manual">Manual</option>
+                          <option value="search_fallback">Search fallback</option>
+                          <option value="unresolved">Unresolved</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-2">
+                        <span className="app-kicker">
+                          Confidence
+                        </span>
+                        <input
+                          name={`${service}_confidence`}
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          defaultValue={link?.confidence ?? ""}
+                          className="app-input"
+                        />
+                      </label>
+                      <label className="grid gap-2">
+                        <span className="app-kicker">
+                          Review notes
+                        </span>
+                        <input
+                          name={`${service}_notes`}
+                          defaultValue={link?.notes ?? ""}
+                          className="app-input"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <FormStateMessage error={state.error} success={state.success} />
+        <div className="flex justify-end">
+          <SaveButtons />
+        </div>
+      </form>
+
+      <section className="grid gap-4 rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
+        <div>
+          <p className="app-kicker text-red-500">
+            Danger zone
+          </p>
+          <h2 className="mt-2 text-xl font-semibold text-[var(--app-text)]">Delete this song</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
+            This permanently removes the song, public page, service links, import
+            attempts, visits, and outbound click analytics for this record.
+          </p>
+        </div>
+
+        <DeleteSongButton
+          songId={page.song.id}
+          songLabel={`${page.song.artistName} - ${page.song.title}`}
+        />
+      </section>
+    </>
+  );
+}

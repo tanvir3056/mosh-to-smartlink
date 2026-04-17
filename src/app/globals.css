@@ -1,26 +1,140 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --app-bg: #edf2e9;
+  --app-panel: rgba(248, 250, 245, 0.88);
+  --app-panel-strong: #dfe7dc;
+  --app-panel-muted: rgba(238, 243, 235, 0.96);
+  --app-text: #203126;
+  --app-muted: #637468;
+  --app-muted-2: #7a897f;
+  --app-line: rgba(52, 73, 60, 0.1);
+  --app-line-strong: rgba(52, 73, 60, 0.16);
+  --app-glow: rgba(121, 150, 122, 0.12);
+  --app-accent: #6f8f74;
+  --app-accent-strong: #5b7860;
+  --app-accent-soft: rgba(111, 143, 116, 0.14);
+  --app-accent-mint: #b9d1bc;
+  --app-surface: #fbf8f1;
+  --app-surface-line: rgba(34, 52, 40, 0.1);
+  --app-surface-text: #203126;
+  --app-surface-muted: #6a746c;
+  --font-display: "Avenir Next Condensed", "Avenir Next", "Helvetica Neue",
+    "Segoe UI", sans-serif;
+  --font-body: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-sans: var(--font-body);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body), sans-serif;
+  color: var(--app-text);
+  background:
+    radial-gradient(circle at top left, rgba(192, 212, 193, 0.72), transparent 24%),
+    radial-gradient(circle at 85% 3%, rgba(229, 236, 220, 0.82), transparent 26%),
+    radial-gradient(circle at bottom, rgba(207, 221, 204, 0.44), transparent 30%),
+    linear-gradient(180deg, #f4f7f0 0%, #edf3e8 46%, #e8f0e4 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(32, 49, 38, 0.36);
+}
+
+::selection {
+  background: rgba(111, 143, 116, 0.28);
+}
+
+.app-card {
+  border: 1px solid var(--app-line);
+  background: rgba(255, 255, 252, 0.74);
+  box-shadow: 0 18px 48px rgba(73, 93, 79, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.app-card-soft {
+  border: 1px solid var(--app-line);
+  background: rgba(242, 246, 238, 0.88);
+  box-shadow: 0 10px 28px rgba(73, 93, 79, 0.05);
+}
+
+.app-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--app-muted-2);
+}
+
+.app-muted {
+  color: var(--app-muted);
+}
+
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+  background: rgba(244, 247, 240, 0.94);
+  padding: 0.5rem 0.8rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #5f7265;
+}
+
+.app-input {
+  min-height: 3rem;
+  width: 100%;
+  border: 1px solid rgba(48, 69, 55, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 252, 0.92);
+  padding: 0 1rem;
+  color: var(--app-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.app-input:focus {
+  border-color: rgba(111, 143, 116, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 0 0 4px rgba(111, 143, 116, 0.12);
+}
+
+.app-note {
+  border: 1px solid var(--app-line);
+  border-radius: 1rem;
+  background: rgba(245, 248, 241, 0.92);
+  padding: 0.9rem 1rem;
+  color: var(--app-muted);
 }
