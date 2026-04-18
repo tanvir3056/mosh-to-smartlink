@@ -7,7 +7,7 @@ export function BrandMark({
   return (
     <span
       className={cn(
-        "inline-flex h-12 w-12 items-center justify-center rounded-[1.1rem] border border-[var(--app-line)] bg-white/84 shadow-[0_10px_24px_rgba(73,93,79,0.08)] backdrop-blur-md",
+        "inline-flex h-12 w-12 items-center justify-center rounded-[1.1rem] border border-white/12 bg-black/40 shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-md",
         className,
       )}
       {...props}
@@ -18,25 +18,35 @@ export function BrandMark({
         fill="none"
         aria-hidden="true"
       >
-        <circle cx="32" cy="32" r="28" fill="rgba(111,143,116,0.12)" />
-        <path
-          d="M20 39.5c0-11.8 8.1-20.6 23.5-22.8-1 15.6-9.1 24.1-23.5 22.8Z"
-          fill="var(--app-accent)"
-          opacity="0.9"
+        <rect
+          x="10"
+          y="10"
+          width="44"
+          height="44"
+          rx="13"
+          stroke="rgba(255,255,255,0.14)"
+          strokeWidth="1.5"
         />
         <path
-          d="M24 40.5c4.7-7.7 11.2-13.8 19.8-18.2"
-          stroke="#ffffff"
-          strokeWidth="3.2"
+          d="M24 16.5v31"
+          stroke="white"
+          strokeWidth="4.4"
           strokeLinecap="round"
         />
         <path
-          d="M31.4 26.8c1.4 3.8 1 7.2-0.8 10.4"
-          stroke="#ffffff"
-          strokeWidth="2.2"
+          d="M24 18h8.2c5.4 0 9.8 3.8 9.8 8.7 0 3.2-1.8 5.8-4.6 7 3.5 1.1 5.8 4 5.8 7.7 0 5.2-4.8 9.1-10.5 9.1H24"
+          stroke="var(--app-accent)"
+          strokeWidth="4.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M43.2 16v8.2"
+          stroke="var(--app-accent-mint)"
+          strokeWidth="2.4"
           strokeLinecap="round"
         />
-        <circle cx="46.5" cy="19.5" r="4.5" fill="var(--app-accent-mint)" />
+        <circle cx="43.2" cy="14" r="2.4" fill="var(--app-accent-mint)" />
       </svg>
     </span>
   );

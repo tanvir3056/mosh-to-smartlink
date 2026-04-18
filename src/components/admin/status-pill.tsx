@@ -23,7 +23,7 @@ export function StatusPill({
         status === "draft" &&
           "border-amber-200 bg-amber-50 text-amber-700",
         status === "unpublished" &&
-          "border-[var(--app-line)] bg-white/75 text-[var(--app-muted)]",
+          "border-slate-200 bg-slate-50 text-slate-600",
         className,
       )}
     >

@@ -27,14 +27,14 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
     <form action={formAction} className="grid gap-4">
       <input type="hidden" name="requested_by" value={requestedBy} />
       <label className="grid gap-2">
-        <span className="text-sm text-[var(--app-muted)]">Spotify track URL</span>
+        <span className="text-sm font-medium text-[var(--app-text)]">Spotify track URL</span>
         <input
           name="spotify_url"
           placeholder="https://open.spotify.com/track/..."
-          className="app-input min-h-12"
+          className="app-input"
         />
       </label>
-      <div className="app-note text-sm">
+      <div className="app-note rounded-2xl px-4 py-3 text-sm">
         After import, you land on the review screen. The fan-facing page only goes
         live after you press <span className="font-semibold text-[var(--app-text)]">Publish</span>.
       </div>

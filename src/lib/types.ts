@@ -101,6 +101,8 @@ export interface ServiceBreakdownRow {
 export interface ReferrerRow {
   label: string;
   visits: number;
+  clicks: number;
+  ctr: number;
 }
 
 export interface UTMRow {
@@ -108,12 +110,23 @@ export interface UTMRow {
   medium: string;
   campaign: string;
   visits: number;
+  clicks: number;
+  ctr: number;
 }
 
 export interface GeoRow {
   country: string;
   city: string;
   visits: number;
+  clicks: number;
+  ctr: number;
+}
+
+export interface DeviceRow {
+  label: string;
+  visits: number;
+  clicks: number;
+  ctr: number;
 }
 
 export interface SongPerformanceRow {
@@ -122,17 +135,30 @@ export interface SongPerformanceRow {
   title: string;
   visits: number;
   clicks: number;
+  ctr: number;
+}
+
+export interface AnalyticsDailyPoint {
+  date: string;
+  visits: number;
+  uniqueVisitors: number;
+  clicks: number;
+  ctr: number;
 }
 
 export interface AnalyticsSnapshot {
+  rangeDays: number;
   totalVisits: number;
   uniqueVisitors: number;
   totalClicks: number;
+  clickThroughRate: number;
   serviceBreakdown: ServiceBreakdownRow[];
   referrers: ReferrerRow[];
   utms: UTMRow[];
   geos: GeoRow[];
+  devices: DeviceRow[];
   songs: SongPerformanceRow[];
+  daily: AnalyticsDailyPoint[];
 }
 
 export interface SpotifyTrackImport {

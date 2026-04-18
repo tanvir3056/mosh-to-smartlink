@@ -58,19 +58,19 @@ export function ArtworkUploadField({
   return (
     <div className="grid gap-3">
       <label className="grid gap-2">
-        <span className="text-sm text-[var(--app-muted)]">Artwork URL</span>
+        <span className="text-sm font-medium text-[var(--app-text)]">Artwork URL</span>
         <input
           name="artwork_url"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="app-input min-h-12"
+          className="app-input"
         />
       </label>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label
           htmlFor={inputId}
-          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white/82 px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[rgba(111,143,116,0.24)] hover:bg-white"
+          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
         >
           {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
           Upload artwork manually
@@ -112,7 +112,7 @@ export function ArtworkUploadField({
       />
 
       {error ? (
-        <div className="rounded-2xl border border-red-300/50 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}

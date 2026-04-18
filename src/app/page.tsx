@@ -4,122 +4,97 @@ import { redirect } from "next/navigation";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
-import { APP_DESCRIPTION, APP_DOMAIN_HINT, APP_NAME } from "@/lib/constants";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import { listPublishedPages } from "@/lib/data";
-import { getDatabaseMode } from "@/lib/db/driver";
-import { appEnv } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [pages, databaseMode] = await Promise.all([
-    listPublishedPages(),
-    getDatabaseMode(),
-  ]);
+  const pages = await listPublishedPages();
 
   if (pages.length === 1) {
     redirect(`/${pages[0].slug}`);
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-8 sm:px-8 sm:py-12">
-      <div className="app-card rounded-[2rem] px-6 py-10">
-        <BrandLockup includeDomain tagline="Smart release pages for artists running paid traffic." />
-        <div className="mt-6 inline-flex rounded-full border border-[var(--app-line)] bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--app-muted)]">
-          Working domain direction: {APP_DOMAIN_HINT}
-        </div>
-        <h1 className="mt-5 max-w-3xl font-[var(--font-display)] text-5xl font-semibold leading-[0.94] tracking-[-0.04em] text-[var(--app-text)] sm:text-6xl">
-          A quieter place to run every release.
-        </h1>
-        <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--app-muted)] sm:text-base">
-          {APP_NAME} keeps the fan page polished, the routing clean, and the
-          attribution first-party. {APP_DESCRIPTION}
-        </p>
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-5 py-8 sm:px-8 sm:py-12">
+      <section className="app-shell-card rounded-[2rem] p-3 sm:p-4">
+        <div className="grid gap-8 rounded-[1.7rem] bg-[linear-gradient(180deg,#10141b,#0b0f15)] p-6 sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:p-10">
+          <div className="flex flex-col justify-between">
+            <div>
+              <BrandLockup
+                includeDomain
+                tagline="Private release control for one artist, one catalog, and one clean paid-traffic workflow."
+              />
+              <p className="mt-8 app-kicker text-white/40">Admin gateway</p>
+              <h1 className="mt-3 max-w-3xl font-[var(--font-display)] text-5xl font-semibold leading-[0.92] tracking-[-0.05em] text-white sm:text-6xl">
+                {APP_NAME} gives your releases one polished page and one source of truth.
+              </h1>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-white/62 sm:text-base">
+                {APP_DESCRIPTION}
+              </p>
+            </div>
 
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link href="/admin">
-            <Button>Open admin dashboard</Button>
-          </Link>
-          {pages[0] ? (
-            <Link href={`/${pages[0].slug}`}>
-              <Button tone="secondary">Preview latest song page</Button>
-            </Link>
-          ) : null}
-        </div>
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          <div className="app-card-soft rounded-[1.5rem] p-5">
-            <div className="app-kicker">
-              Runtime
-            </div>
-            <div className="mt-3 text-2xl font-semibold text-[var(--app-text)]">
-              {databaseMode === "local" ? "Local Postgres mode" : "Postgres mode"}
-            </div>
-            <p className="mt-2 text-sm text-[var(--app-muted)]">
-              {databaseMode === "local"
-                ? "Running on the embedded local database for development and verification."
-                : "Connected to the configured Postgres database."}
-            </p>
-          </div>
-
-          <div className="app-card-soft rounded-[1.5rem] p-5">
-            <div className="app-kicker">
-              Admin auth
-            </div>
-            <div className="mt-3 text-2xl font-semibold text-[var(--app-text)]">
-              {appEnv.hasSupabaseAuth ? "Supabase Auth" : "Local demo auth"}
-            </div>
-            <p className="mt-2 text-sm text-[var(--app-muted)]">
-              {appEnv.hasSupabaseAuth
-                ? "Production sign-in is handled through Supabase Auth and a single allowed admin account."
-                : "Supabase env vars are missing, so development falls back to a local-only admin sign-in path."}
-            </p>
-          </div>
-
-          <div className="app-card-soft rounded-[1.5rem] p-5">
-            <div className="app-kicker">
-              Published pages
-            </div>
-            <div className="mt-3 text-2xl font-semibold text-[var(--app-text)]">
-              {pages.length}
-            </div>
-            <p className="mt-2 text-sm text-[var(--app-muted)]">
-              Import your first released track from the admin dashboard and publish
-              when the service links are reviewed.
-            </p>
-          </div>
-        </div>
-
-        {pages.length > 1 ? (
-          <div className="app-card-soft mt-10 rounded-[1.5rem] p-5">
-            <div className="app-kicker">
-              Live song pages
-            </div>
-            <div className="mt-4 grid gap-3">
-              {pages.map((page) => (
-                <Link
-                  key={page.slug}
-                  href={`/${page.slug}`}
-                  className="flex items-center gap-4 rounded-[1.25rem] border border-[var(--app-line)] bg-white/86 p-3 transition hover:bg-white"
-                >
-                  <Image
-                    src={page.artwork_url}
-                    alt=""
-                    width={56}
-                    height={56}
-                    className="h-14 w-14 rounded-xl object-cover"
-                    unoptimized={page.artwork_url.startsWith("data:")}
-                  />
-                  <div>
-                    <div className="font-medium text-[var(--app-text)]">{page.title}</div>
-                    <div className="text-sm text-[var(--app-muted)]">{page.artist_name}</div>
-                  </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/admin/sign-in">
+                <Button>Open admin dashboard</Button>
+              </Link>
+              {pages[0] ? (
+                <Link href={`/${pages[0].slug}`}>
+                  <Button tone="secondary" className="border-white/10 bg-white/4 text-white hover:bg-white/8">
+                    Preview latest live page
+                  </Button>
                 </Link>
-              ))}
+              ) : null}
             </div>
           </div>
-        ) : null}
-      </div>
+
+          <div className="app-card rounded-[1.8rem] p-5 sm:p-6">
+            <p className="app-kicker text-[var(--app-muted)]">Published pages</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+              {pages.length ? "Current live release links" : "No live pages yet"}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
+              {pages.length
+                ? "Open a live page directly or head into the admin to import the next track."
+                : "Import your first released song from the admin dashboard to create a fan-facing smart link."}
+            </p>
+
+            {pages.length ? (
+              <div className="mt-6 grid gap-3">
+                {pages.map((page) => (
+                  <Link
+                    key={page.slug}
+                    href={`/${page.slug}`}
+                    className="flex items-center gap-4 rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 transition hover:bg-[var(--app-panel-muted)]"
+                  >
+                    <Image
+                      src={page.artwork_url}
+                      alt=""
+                      width={56}
+                      height={56}
+                      className="h-14 w-14 rounded-xl object-cover"
+                      unoptimized={page.artwork_url.startsWith("data:")}
+                    />
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-[var(--app-text)]">
+                        {page.title}
+                      </div>
+                      <div className="truncate text-sm text-[var(--app-muted)]">
+                        {page.artist_name}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-[1.3rem] border border-dashed border-[var(--app-line)] px-4 py-10 text-center text-sm text-[var(--app-muted)]">
+                No live release links yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

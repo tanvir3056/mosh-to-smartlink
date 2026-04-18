@@ -17,15 +17,15 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(111,143,116,0.46)] disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-accent)] disabled:cursor-not-allowed disabled:opacity-60",
         tone === "primary" &&
-          "bg-[var(--app-accent)] text-white shadow-[0_10px_24px_rgba(84,113,89,0.18)] hover:bg-[var(--app-accent-strong)]",
+          "bg-[var(--app-accent)] text-[#062c28] shadow-[0_14px_32px_rgba(63,212,196,0.28)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)] active:text-[#062c28] active:shadow-[0_8px_18px_rgba(63,212,196,0.24)]",
         tone === "secondary" &&
-          "border border-[var(--app-line)] bg-white/78 text-[var(--app-text)] hover:border-[rgba(111,143,116,0.3)] hover:bg-white",
+          "border border-[var(--app-line)] bg-white text-[var(--app-text)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]",
         tone === "ghost" &&
-          "text-[var(--app-text)]/72 hover:bg-[var(--app-accent-soft)] hover:text-[var(--app-text)]",
+          "text-[var(--app-muted)] hover:bg-black/4 hover:text-[var(--app-text)] active:bg-black/6 active:text-[var(--app-text)]",
         tone === "danger" &&
-          "border border-red-400/18 bg-red-500/12 text-red-50 hover:border-red-400/28 hover:bg-red-500/18",
+          "border border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100 active:border-red-300 active:bg-red-100 active:text-red-700",
         className,
       )}
       {...props}

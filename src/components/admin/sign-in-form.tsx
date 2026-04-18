@@ -32,20 +32,20 @@ export function SignInForm({
   return (
     <form action={formAction} className="grid gap-4">
       <input type="hidden" name="email" value={email} />
-      <div className="app-note text-sm">
+      <div className="app-card-soft rounded-2xl px-4 py-3 text-sm text-[var(--app-muted)]">
         Sign-in mode: {modeLabel}
       </div>
       <label className="grid gap-2">
-        <span className="text-sm text-[var(--app-muted)]">Admin email</span>
+        <span className="text-sm font-medium text-[var(--app-text)]">Admin email</span>
         <input
           name="email_display"
           value={email}
           readOnly
-          className="app-input"
+          className="app-input text-[var(--app-muted)]"
         />
       </label>
       <label className="grid gap-2">
-        <span className="text-sm text-[var(--app-muted)]">Password</span>
+        <span className="text-sm font-medium text-[var(--app-text)]">Password</span>
         <input
           name="password"
           type="password"

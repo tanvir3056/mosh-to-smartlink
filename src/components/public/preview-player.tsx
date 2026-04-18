@@ -9,9 +9,13 @@ import { cn } from "@/lib/utils";
 export function PreviewPlayer({
   previewUrl,
   artworkUrl,
+  title,
+  artistName,
 }: {
   previewUrl: string | null;
   artworkUrl: string;
+  title: string;
+  artistName: string;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -25,11 +29,14 @@ export function PreviewPlayer({
     audioRef.current = audio;
 
     const handleEnded = () => setPlaying(false);
+    const handlePause = () => setPlaying(false);
     audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("pause", handlePause);
 
     return () => {
       audio.pause();
       audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("pause", handlePause);
       audioRef.current = null;
     };
   }, [previewUrl]);
@@ -50,54 +57,37 @@ export function PreviewPlayer({
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#111612]">
-      <div
-        className="absolute inset-0 scale-110 bg-cover bg-center opacity-40 blur-2xl"
-        style={{ backgroundImage: `url(${artworkUrl})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-[#111612]/62" />
-      <div className="relative aspect-square">
+    <div className="relative overflow-hidden bg-[#0b0d11]">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.04)_38%,rgba(8,10,14,0.28)_100%)]" />
+      <div className="relative aspect-square overflow-hidden rounded-t-[1.55rem]">
         <Image
           src={artworkUrl}
-          alt=""
+          alt={`${artistName} - ${title} artwork`}
           fill
           priority
           sizes="(max-width: 640px) 100vw, 432px"
           className="object-cover"
           unoptimized={artworkUrl.startsWith("data:")}
         />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0)_55%,rgba(8,10,14,0.12)_100%)]" />
         {previewUrl ? (
           <button
             type="button"
             onClick={togglePlayback}
             className={cn(
-              "absolute left-1/2 top-1/2 inline-flex h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-[#f7f6f0]/84 text-[#203126] shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur-md transition hover:scale-[1.03]",
-              playing && "bg-[var(--app-accent)] text-white",
+              "absolute right-3 top-3 inline-flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full border border-white/18 bg-[rgba(7,9,12,0.28)] text-white/88 backdrop-blur-[2px] transition-[transform,background-color,color,border-color] duration-200 ease-out hover:border-white/26 hover:bg-[rgba(7,9,12,0.4)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 active:scale-[0.97]",
+              playing &&
+                "border-white/28 bg-[rgba(245,241,232,0.22)] text-white",
             )}
             aria-label={playing ? "Pause preview" : "Play preview"}
           >
             {playing ? (
-              <Pause className="h-8 w-8" />
+              <Pause className="h-[0.9rem] w-[0.9rem]" />
             ) : (
-              <Play className="ml-1 h-8 w-8" />
+              <Play className="ml-[1px] h-[0.9rem] w-[0.9rem]" />
             )}
           </button>
-        ) : (
-          <div className="absolute inset-x-5 bottom-5 rounded-2xl border border-white/16 bg-[#1a211c]/72 px-4 py-3 text-center text-sm text-white/78 backdrop-blur-md">
-            Preview unavailable for this release.
-          </div>
-        )}
-
-        <div className="absolute inset-x-4 top-4 flex items-center justify-between">
-          <span className="rounded-full border border-white/14 bg-[#141a16]/58 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/78 backdrop-blur-md">
-            Released song
-          </span>
-          {previewUrl ? (
-            <span className="rounded-full border border-white/14 bg-[#141a16]/58 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/78 backdrop-blur-md">
-              Preview on
-            </span>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
   );

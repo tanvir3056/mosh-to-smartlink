@@ -62,6 +62,23 @@ function defaultTrackingConfig(): TrackingConfig {
   };
 }
 
+function createSinceIso(rangeDays: number) {
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+  since.setDate(since.getDate() - (rangeDays - 1));
+  return since.toISOString();
+}
+
+function normalizeDateKey(value: string | Date) {
+  const raw = String(value);
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    return raw.slice(0, 10);
+  }
+
+  return new Date(raw).toISOString().slice(0, 10);
+}
+
 async function ensureSingletonRows() {
   await dbQuery(
     `
@@ -786,16 +803,27 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   };
 }
 
-export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
+export async function getAnalyticsSnapshot(
+  rangeDays = 30,
+): Promise<AnalyticsSnapshot> {
   await ensureAppData();
+  const sinceIso = createSinceIso(rangeDays);
 
   const [
     totals,
     serviceBreakdown,
+    dailyVisitEvents,
+    dailyClickEvents,
     referrers,
+    referrerClicks,
     utms,
+    utmClicks,
     geos,
+    geoClicks,
+    devices,
+    deviceClicks,
     songs,
+    songClicks,
   ] = await Promise.all([
     dbQuery<{
       total_visits: string | number;
@@ -804,10 +832,11 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
     }>(
       `
         select
-          (select count(*) from visits) as total_visits,
-          (select count(distinct visitor_id) from visits) as unique_visitors,
-          (select count(*) from click_events) as total_clicks
+          (select count(*) from visits where created_at >= $1::timestamptz) as total_visits,
+          (select count(distinct visitor_id) from visits where created_at >= $1::timestamptz) as unique_visitors,
+          (select count(*) from click_events where created_at >= $1::timestamptz) as total_clicks
       `,
+      [sinceIso],
     ),
     dbQuery<{
       service: StreamingLinkRecord["service"];
@@ -816,9 +845,32 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
       `
         select service, count(*) as clicks
         from click_events
+        where created_at >= $1::timestamptz
         group by service
         order by clicks desc
       `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      created_at: string;
+      visitor_id: string;
+    }>(
+      `
+        select created_at, visitor_id
+        from visits
+        where created_at >= $1::timestamptz
+      `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      created_at: string;
+    }>(
+      `
+        select created_at
+        from click_events
+        where created_at >= $1::timestamptz
+      `,
+      [sinceIso],
     ),
     dbQuery<{
       label: string | null;
@@ -827,10 +879,25 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
       `
         select coalesce(referrer_host, 'Direct') as label, count(*) as visits
         from visits
+        where created_at >= $1::timestamptz
         group by label
         order by visits desc
         limit 10
       `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      label: string | null;
+      clicks: string | number;
+    }>(
+      `
+        select coalesce(referrer_host, 'Direct') as label, count(*) as clicks
+        from click_events
+        where created_at >= $1::timestamptz
+        group by label
+        order by clicks desc
+      `,
+      [sinceIso],
     ),
     dbQuery<{
       source: string | null;
@@ -845,10 +912,31 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
           coalesce(utm_campaign, '(none)') as campaign,
           count(*) as visits
         from visits
+        where created_at >= $1::timestamptz
         group by source, medium, campaign
         order by visits desc
         limit 10
       `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      source: string | null;
+      medium: string | null;
+      campaign: string | null;
+      clicks: string | number;
+    }>(
+      `
+        select
+          coalesce(utm_source, 'Direct') as source,
+          coalesce(utm_medium, '(none)') as medium,
+          coalesce(utm_campaign, '(none)') as campaign,
+          count(*) as clicks
+        from click_events
+        where created_at >= $1::timestamptz
+        group by source, medium, campaign
+        order by clicks desc
+      `,
+      [sinceIso],
     ),
     dbQuery<{
       country: string | null;
@@ -861,10 +949,59 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
           coalesce(city, 'Unknown') as city,
           count(*) as visits
         from visits
+        where created_at >= $1::timestamptz
         group by country, city
         order by visits desc
         limit 10
       `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      country: string | null;
+      city: string | null;
+      clicks: string | number;
+    }>(
+      `
+        select
+          coalesce(country, 'Unknown') as country,
+          coalesce(city, 'Unknown') as city,
+          count(*) as clicks
+        from click_events
+        where created_at >= $1::timestamptz
+        group by country, city
+        order by clicks desc
+      `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      label: string | null;
+      visits: string | number;
+    }>(
+      `
+        select
+          coalesce(device_type, 'Unknown') as label,
+          count(*) as visits
+        from visits
+        where created_at >= $1::timestamptz
+        group by label
+        order by visits desc
+      `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      label: string | null;
+      clicks: string | number;
+    }>(
+      `
+        select
+          coalesce(device_type, 'Unknown') as label,
+          count(*) as clicks
+        from click_events
+        where created_at >= $1::timestamptz
+        group by label
+        order by clicks desc
+      `,
+      [sinceIso],
     ),
     dbQuery<{
       song_id: string;
@@ -885,50 +1022,213 @@ export async function getAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
         left join (
           select song_id, count(*) as visits
           from visits
+          where created_at >= $1::timestamptz
           group by song_id
         ) v on v.song_id = s.id
         left join (
           select song_id, count(*) as clicks
           from click_events
+          where created_at >= $1::timestamptz
           group by song_id
         ) c on c.song_id = s.id
         order by visits desc, clicks desc, title asc
       `,
+      [sinceIso],
+    ),
+    dbQuery<{
+      song_id: string;
+      clicks: string | number;
+    }>(
+      `
+        select song_id, count(*) as clicks
+        from click_events
+        where created_at >= $1::timestamptz
+        group by song_id
+        order by clicks desc
+      `,
+      [sinceIso],
     ),
   ]);
 
   const row = totals[0];
+  const totalVisits = Number(row?.total_visits ?? 0);
+  const totalClicks = Number(row?.total_clicks ?? 0);
+  const uniqueVisitors = Number(row?.unique_visitors ?? 0);
+
+  const referrerClickMap = new Map(
+    referrerClicks.map((entry) => [entry.label ?? "Direct", Number(entry.clicks)]),
+  );
+  const referrerVisitMap = new Map(
+    referrers.map((entry) => [entry.label ?? "Direct", Number(entry.visits)]),
+  );
+  const referrerLabels = new Set<string>([
+    ...referrerVisitMap.keys(),
+    ...referrerClickMap.keys(),
+  ]);
+
+  const utmClickMap = new Map(
+    utmClicks.map((entry) => [
+      `${entry.source ?? "Direct"}|${entry.medium ?? "(none)"}|${entry.campaign ?? "(none)"}`,
+      Number(entry.clicks),
+    ]),
+  );
+  const utmVisitMap = new Map(
+    utms.map((entry) => [
+      `${entry.source ?? "Direct"}|${entry.medium ?? "(none)"}|${entry.campaign ?? "(none)"}`,
+      Number(entry.visits),
+    ]),
+  );
+  const utmKeys = new Set<string>([...utmVisitMap.keys(), ...utmClickMap.keys()]);
+
+  const geoClickMap = new Map(
+    geoClicks.map((entry) => [
+      `${entry.country ?? "Unknown"}|${entry.city ?? "Unknown"}`,
+      Number(entry.clicks),
+    ]),
+  );
+  const geoVisitMap = new Map(
+    geos.map((entry) => [
+      `${entry.country ?? "Unknown"}|${entry.city ?? "Unknown"}`,
+      Number(entry.visits),
+    ]),
+  );
+  const geoKeys = new Set<string>([...geoVisitMap.keys(), ...geoClickMap.keys()]);
+
+  const deviceClickMap = new Map(
+    deviceClicks.map((entry) => [entry.label ?? "Unknown", Number(entry.clicks)]),
+  );
+  const deviceVisitMap = new Map(
+    devices.map((entry) => [entry.label ?? "Unknown", Number(entry.visits)]),
+  );
+  const deviceLabels = new Set<string>([
+    ...deviceVisitMap.keys(),
+    ...deviceClickMap.keys(),
+  ]);
+
+  const songClickMap = new Map(
+    songClicks.map((entry) => [entry.song_id, Number(entry.clicks)]),
+  );
+
+  const dailyVisitMap = new Map<string, { visits: number; uniqueVisitors: Set<string> }>();
+
+  for (const entry of dailyVisitEvents) {
+    const key = normalizeDateKey(entry.created_at);
+    const current = dailyVisitMap.get(key) ?? {
+      visits: 0,
+      uniqueVisitors: new Set<string>(),
+    };
+    current.visits += 1;
+    current.uniqueVisitors.add(entry.visitor_id);
+    dailyVisitMap.set(key, current);
+  }
+
+  const dailyClickMap = new Map<string, number>();
+
+  for (const entry of dailyClickEvents) {
+    const key = normalizeDateKey(entry.created_at);
+    dailyClickMap.set(key, (dailyClickMap.get(key) ?? 0) + 1);
+  }
+
+  const daily: AnalyticsSnapshot["daily"] = [];
+  const start = new Date(sinceIso);
+
+  for (let index = 0; index < rangeDays; index += 1) {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    const key = day.toISOString().slice(0, 10);
+    const visitsForDay = dailyVisitMap.get(key)?.visits ?? 0;
+    const uniqueForDay = dailyVisitMap.get(key)?.uniqueVisitors.size ?? 0;
+    const clicksForDay = dailyClickMap.get(key) ?? 0;
+
+    daily.push({
+      date: key,
+      visits: visitsForDay,
+      uniqueVisitors: uniqueForDay,
+      clicks: clicksForDay,
+      ctr: visitsForDay > 0 ? clicksForDay / visitsForDay : 0,
+    });
+  }
 
   return {
-    totalVisits: Number(row?.total_visits ?? 0),
-    uniqueVisitors: Number(row?.unique_visitors ?? 0),
-    totalClicks: Number(row?.total_clicks ?? 0),
+    rangeDays,
+    totalVisits,
+    uniqueVisitors,
+    totalClicks,
+    clickThroughRate: totalVisits > 0 ? totalClicks / totalVisits : 0,
     serviceBreakdown: serviceBreakdown.map((entry) => ({
       service: entry.service,
       clicks: Number(entry.clicks),
     })),
-    referrers: referrers.map((entry) => ({
-      label: entry.label ?? "Direct",
-      visits: Number(entry.visits),
-    })),
-    utms: utms.map((entry) => ({
-      source: entry.source ?? "Direct",
-      medium: entry.medium ?? "(none)",
-      campaign: entry.campaign ?? "(none)",
-      visits: Number(entry.visits),
-    })),
-    geos: geos.map((entry) => ({
-      country: entry.country ?? "Unknown",
-      city: entry.city ?? "Unknown",
-      visits: Number(entry.visits),
-    })),
+    referrers: [...referrerLabels]
+      .map((label) => {
+        const visits = referrerVisitMap.get(label) ?? 0;
+        const clicks = referrerClickMap.get(label) ?? 0;
+        return {
+          label,
+          visits,
+          clicks,
+          ctr: visits > 0 ? clicks / visits : 0,
+        };
+      })
+      .sort((left, right) => right.visits - left.visits || right.clicks - left.clicks)
+      .slice(0, 10),
+    utms: [...utmKeys]
+      .map((key) => {
+        const [source, medium, campaign] = key.split("|");
+        const visits = utmVisitMap.get(key) ?? 0;
+        const clicks = utmClickMap.get(key) ?? 0;
+        return {
+          source,
+          medium,
+          campaign,
+          visits,
+          clicks,
+          ctr: visits > 0 ? clicks / visits : 0,
+        };
+      })
+      .sort((left, right) => right.visits - left.visits || right.clicks - left.clicks)
+      .slice(0, 10),
+    geos: [...geoKeys]
+      .map((key) => {
+        const [country, city] = key.split("|");
+        const visits = geoVisitMap.get(key) ?? 0;
+        const clicks = geoClickMap.get(key) ?? 0;
+        return {
+          country,
+          city,
+          visits,
+          clicks,
+          ctr: visits > 0 ? clicks / visits : 0,
+        };
+      })
+      .sort((left, right) => right.visits - left.visits || right.clicks - left.clicks)
+      .slice(0, 10),
+    devices: [...deviceLabels]
+      .map((label) => {
+        const visits = deviceVisitMap.get(label) ?? 0;
+        const clicks = deviceClickMap.get(label) ?? 0;
+        return {
+          label,
+          visits,
+          clicks,
+          ctr: visits > 0 ? clicks / visits : 0,
+        };
+      })
+      .sort((left, right) => right.visits - left.visits || right.clicks - left.clicks)
+      .slice(0, 6),
     songs: songs.map((entry) => ({
       songId: entry.song_id,
       slug: entry.slug,
       title: entry.title,
       visits: Number(entry.visits),
-      clicks: Number(entry.clicks),
+      clicks: songClickMap.get(entry.song_id) ?? Number(entry.clicks),
+      ctr:
+        Number(entry.visits) > 0
+          ? (songClickMap.get(entry.song_id) ?? Number(entry.clicks)) /
+            Number(entry.visits)
+          : 0,
     })),
+    daily,
   };
 }
 

@@ -23,11 +23,11 @@ export default async function EditSongPage({
 
   return (
     <section className="grid gap-5">
-      <div className="app-card rounded-[1.75rem] p-5">
-        <p className="app-kicker">
+      <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
+        <p className="app-kicker text-[var(--app-muted)]">
           Review and publish
         </p>
-        <h2 className="mt-3 text-3xl font-semibold text-[var(--app-text)]">
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
           {page.song.artistName} • {page.song.title}
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">

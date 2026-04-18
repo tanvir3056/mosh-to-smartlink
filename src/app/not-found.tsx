@@ -6,10 +6,10 @@ export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center px-5">
       <div className="app-card w-full max-w-md rounded-[2rem] p-8 text-center">
-        <p className="app-kicker">
+        <p className="text-xs uppercase tracking-[0.28em] text-[var(--app-muted)]">
           Not found
         </p>
-        <h1 className="mt-4 text-4xl font-semibold text-[var(--app-text)]">
+        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
           That song page is not live.
         </h1>
         <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">

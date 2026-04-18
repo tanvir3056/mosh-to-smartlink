@@ -5,37 +5,53 @@ export default async function NewSongPage() {
   const session = await requireAdminSession();
 
   return (
-    <section className="grid gap-5">
-      <div className="app-card rounded-[1.75rem] p-5">
-        <p className="app-kicker">
-          Create song page
-        </p>
-        <h2 className="mt-3 text-3xl font-semibold text-[var(--app-text)]">
-          Import from one Spotify track URL
+    <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(420px,0.85fr)] xl:items-start">
+      <div className="app-card rounded-[1.75rem] p-5 sm:p-6 xl:sticky xl:top-6">
+        <p className="app-kicker text-[var(--app-muted)]">Import</p>
+        <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
+          Start a new song page
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
-          The importer fetches Spotify metadata, artwork, and preview when available,
-          then attempts free-only best-effort matching across Apple Music, YouTube
-          Music, Amazon Music, Deezer, and TIDAL. Every result still lands on a
-          manual review screen before publish.
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
+          Paste one released Spotify track URL. The importer pulls metadata, artwork,
+          and preview, then sends you straight into review before anything goes live.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+
+        <div className="mt-6 grid gap-3">
           {[
-            "1. Paste one released Spotify track URL",
-            "2. Review links and optionally replace artwork",
-            "3. Publish and copy the live fan page URL",
-          ].map((step) => (
+            {
+              title: "Spotify first",
+              body: "One track URL is enough to create the draft.",
+            },
+            {
+              title: "Review before publish",
+              body: "Fix service links or swap artwork before the public page is live.",
+            },
+            {
+              title: "Requested by",
+              body: session.email,
+            },
+          ].map((step, index) => (
             <div
-              key={step}
-              className="app-card-soft rounded-[1.2rem] px-4 py-3 text-sm text-[var(--app-text)]"
+              key={step.title}
+              className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-4"
             >
-              {step}
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2 text-xs font-semibold text-[var(--app-text)]">
+                  0{index + 1}
+                </span>
+                <div className="text-sm font-semibold text-[var(--app-text)]">
+                  {step.title}
+                </div>
+              </div>
+              <div className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
+                {step.body}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="app-card rounded-[1.75rem] p-5">
+      <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
         <ImportSongForm requestedBy={session.email} />
       </div>
     </section>

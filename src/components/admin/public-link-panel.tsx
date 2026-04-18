@@ -8,8 +8,8 @@ import type { PageStatus } from "@/lib/types";
 
 function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
   return tone === "primary"
-    ? "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(84,113,89,0.16)] transition hover:bg-[var(--app-accent-strong)]"
-    : "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white/82 px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[rgba(111,143,116,0.24)] hover:bg-white";
+    ? "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--app-accent)] px-4 text-sm font-semibold text-[#062c28] shadow-[0_16px_36px_rgba(63,212,196,0.24)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-[#062c28] active:shadow-[0_8px_18px_rgba(63,212,196,0.2)]"
+    : "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]";
 }
 
 export function PublicLinkPanel({
@@ -42,7 +42,7 @@ export function PublicLinkPanel({
   return (
     <section className="app-card grid gap-4 rounded-[1.6rem] p-5">
       <div className="grid gap-2">
-        <p className="app-kicker">
+        <p className="app-kicker text-[var(--app-muted)]">
           Fan-facing page
         </p>
         <h3 className="text-2xl font-semibold text-[var(--app-text)]">
@@ -55,11 +55,13 @@ export function PublicLinkPanel({
         </p>
       </div>
 
-      <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white/76 px-4 py-4">
-        <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--app-muted-2)]">
+      <div className="app-card-soft rounded-[1.2rem] px-4 py-4">
+        <div className="app-kicker text-[var(--app-muted)]">
           URL
         </div>
-        <div className="mt-2 break-all text-sm text-[var(--app-text)]">{publicUrl}</div>
+        <div className="mt-2 break-all text-sm font-medium text-[var(--app-text)]">
+          {publicUrl}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">

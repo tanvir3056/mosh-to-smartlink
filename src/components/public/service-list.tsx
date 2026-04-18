@@ -1,10 +1,9 @@
 "use client";
 
-import { ServiceIcon } from "@/components/service-icon";
+import { ServiceBranding } from "@/components/service-icon";
 import {
   SERVICE_CTAS,
   SERVICE_HINTS,
-  SERVICE_LABELS,
   STREAMING_SERVICES,
 } from "@/lib/constants";
 import type { SongPageWithLinks } from "@/lib/types";
@@ -27,45 +26,60 @@ export function ServiceList({
 }) {
   const byService = new Map(page.links.map((link) => [link.service, link]));
   const isPreview = mode === "preview";
+  const services = STREAMING_SERVICES.filter((service) =>
+    isPreview ? true : Boolean(byService.get(service)?.url),
+  );
 
   return (
-    <div className="bg-[var(--app-surface)] text-[var(--app-surface-text)]">
-      {STREAMING_SERVICES.map((service, index) => {
+    <div className="bg-[#f3efe7] text-[#13151c]">
+      {services.map((service, index) => {
         const link = byService.get(service);
         const isReady = Boolean(link?.url);
         const liveHref = `/go/${page.page.slug}/${service}${searchString ? `?${searchString}` : ""}`;
         const href = isReady ? (isPreview ? (link?.url ?? undefined) : liveHref) : undefined;
-        const helperText =
+        const helperText = isPreview
+          ? !isReady
+            ? "Link missing"
+            : link?.matchStatus === "search_fallback"
+              ? "Search fallback"
+              : SERVICE_HINTS[service]
+          : null;
+        const ctaLabel =
           link?.matchStatus === "search_fallback"
-            ? "Search-result fallback"
-            : isReady
-              ? SERVICE_HINTS[service]
-              : "Link unavailable";
+            ? "Search"
+            : SERVICE_CTAS[service];
+
+        const content = (
+          <>
+            <ServiceBranding service={service} supportingText={helperText} />
+            <span
+              className={cn(
+                "inline-flex h-[2.375rem] w-24 items-center justify-center rounded-[0.5rem] border text-[0.96rem] font-medium tracking-[-0.01em] transition-[background-color,border-color,color] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151922]",
+                isReady
+                  ? "border-[#d8d0c3] bg-[#fbfaf7] text-[#2a2d33] group-hover:border-[#cdc5b8] group-hover:bg-white group-active:bg-[#f2ede3]"
+                  : "border-dashed border-[#d8d1c4] bg-[#ece6db] text-[#91948b]",
+              )}
+            >
+              {ctaLabel}
+            </span>
+          </>
+        );
 
         return (
           <div
             key={service}
-            className={cn(
-              "flex items-center gap-3 px-4 py-4 transition hover:bg-[#f3f4ee] sm:px-5",
-              index !== 0 && "border-t border-[var(--app-surface-line)]",
-            )}
+            className={cn(index !== 0 && "border-t border-[#dfd8cb]")}
           >
-            <ServiceIcon service={service} />
-            <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold tracking-[-0.02em]">
-                {SERVICE_LABELS[service]}
-              </div>
-              <div className="text-xs text-[var(--app-surface-muted)]">
-                {helperText}
-              </div>
-            </div>
             {isReady ? (
               <a
                 href={href}
                 data-testid={`service-link-${service}`}
                 target={isPreview ? "_blank" : undefined}
                 rel={isPreview ? "noreferrer" : undefined}
-                className="inline-flex min-h-11 min-w-24 items-center justify-center rounded-2xl border border-[#d9dfd5] bg-white px-4 text-sm font-semibold text-[#233128] shadow-[0_1px_0_rgba(255,255,255,0.7),0_8px_16px_rgba(53,69,56,0.06)] transition hover:border-[#bcc8bc] hover:bg-[#f6f8f3]"
+                className={cn(
+                  "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5",
+                  isPreview && helperText ? "py-3" : "py-0",
+                )}
                 onClick={() => {
                   if (!isPreview && page.tracking.metaPixelEnabled && window.fbq) {
                     window.fbq("trackCustom", "StreamingServiceClick", {
@@ -77,15 +91,18 @@ export function ServiceList({
                   }
                 }}
               >
-                {SERVICE_CTAS[service]}
+                {content}
               </a>
             ) : (
-              <span
+              <div
                 data-testid={`service-link-${service}`}
-                className="inline-flex min-h-11 min-w-24 items-center justify-center rounded-2xl border border-dashed border-[#d3d8d0] px-4 text-sm font-medium text-[#778178]"
+                className={cn(
+                  "grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5",
+                  isPreview && helperText ? "py-3" : "py-0",
+                )}
               >
-                Unavailable
-              </span>
+                {content}
+              </div>
             )}
           </div>
         );

@@ -186,8 +186,12 @@ describe("core data flow", () => {
     expect(analytics.totalVisits).toBe(1);
     expect(analytics.uniqueVisitors).toBe(1);
     expect(analytics.totalClicks).toBe(1);
+    expect(analytics.clickThroughRate).toBe(1);
     expect(analytics.referrers[0]?.label).toBe("instagram.com");
+    expect(analytics.referrers[0]?.clicks).toBe(0);
     expect(analytics.utms[0]?.source).toBe("instagram");
+    expect(analytics.devices[0]?.label).toBe("mobile");
+    expect(analytics.daily).toHaveLength(30);
 
     const deleted = await deleteSongById(songId);
     expect(deleted.slug).toBe(adminPage!.page.slug);

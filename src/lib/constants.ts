@@ -1,10 +1,10 @@
 import type { StreamingService } from "@/lib/types";
 
-export const APP_NAME = "Ampveil";
-export const APP_TAGLINE = "Quiet release pages for busy launch days.";
+export const APP_NAME = "Backstage";
+export const APP_TAGLINE = "Release control for artists running paid traffic.";
 export const APP_DESCRIPTION =
-  "Calm, mobile-first release pages with first-party analytics, private review, and clean fan routing.";
-export const APP_DOMAIN_HINT = "ampveil.to";
+  "Private release pages, destination review, and first-party campaign insights for artists running paid social.";
+export const APP_DOMAIN_HINT = "backstage.to";
 export const VISITOR_COOKIE = "ffm_visitor_id";
 export const LAST_VISIT_COOKIE = "ffm_last_visit_id";
 export const ADMIN_SESSION_COOKIE = "ffm_admin_session";
@@ -37,21 +37,12 @@ export const SERVICE_CTAS: Record<StreamingService, string> = {
 };
 
 export const SERVICE_HINTS: Record<StreamingService, string> = {
-  spotify: "Open the Spotify release page",
+  spotify: "Open in Spotify",
   apple_music: "Listen on Apple Music",
   youtube_music: "Open in YouTube Music",
   amazon_music: "Open in Amazon Music",
-  deezer: "Open the Deezer release page",
+  deezer: "Open in Deezer",
   tidal: "Listen on TIDAL",
-};
-
-export const SERVICE_ACCENTS: Record<StreamingService, string> = {
-  spotify: "#1ed760",
-  apple_music: "#ff5f7f",
-  youtube_music: "#ff4438",
-  amazon_music: "#6678ff",
-  deezer: "#ff7a59",
-  tidal: "#111214",
 };
 
 export const SERVICE_SEARCH_URLS: Record<StreamingService, string> = {

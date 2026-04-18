@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 
 import { signOutAction } from "@/app/admin/actions";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { AdminNav, AdminNavLinks } from "@/components/admin/admin-nav";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { APP_DOMAIN_HINT } from "@/lib/constants";
@@ -17,56 +18,75 @@ export default async function AdminDashboardLayout({
   const session = await requireAdminSession();
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-4 sm:px-8 sm:py-8">
-      <div className="overflow-hidden rounded-[2.25rem] border border-[var(--app-line)] bg-[linear-gradient(180deg,rgba(231,238,228,0.96),rgba(246,249,242,0.78))] shadow-[0_24px_70px_rgba(63,84,69,0.08)] backdrop-blur-xl">
-        <div className="flex flex-col gap-5 px-5 py-6 lg:flex-row lg:items-end lg:justify-between sm:px-8 sm:py-8">
+    <div className="min-h-screen bg-[var(--app-surface)] text-[var(--app-text)]">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1680px] lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden border-r border-[var(--app-line)] bg-[linear-gradient(180deg,#fbfaf6_0%,#f3efe7_100%)] lg:flex lg:min-h-screen lg:flex-col lg:px-5 lg:py-6">
           <div>
-            <BrandLockup includeDomain tagline="Private release-link ops for one artist, one catalog, and one source of truth." />
-            <h1 className="mt-5 font-[var(--font-display)] text-4xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-              Release control room
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
-              Import a Spotify release, review the links, publish the fan-facing
-              page, and track what happens after paid social clicks land.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--app-muted)]">
-              <span className="app-chip">
-                One admin
-              </span>
-              <span className="app-chip">
-                First-party analytics
-              </span>
-              <span className="app-chip">
-                {APP_DOMAIN_HINT}
-              </span>
-            </div>
+            <BrandLockup
+              includeDomain
+              tagline={null}
+              tone="light"
+              className="items-start"
+            />
           </div>
 
-          <div className="flex flex-col gap-3 lg:items-end">
-            <Link href="/admin/songs/new">
-              <Button>Import a song</Button>
-            </Link>
-            <div className="rounded-full border border-[var(--app-line)] bg-white/75 px-3 py-2 text-sm text-[var(--app-muted)]">
-              Signed in as {session.email}
+          <Link href="/admin/songs/new" className="mt-8">
+            <Button className="w-full justify-center shadow-none">
+              <Plus className="h-4 w-4" />
+              Import song
+            </Button>
+          </Link>
+
+          <div className="mt-8">
+            <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--app-muted)]">
+              Navigation
+            </div>
+            <AdminNav />
+          </div>
+
+          <div className="mt-auto space-y-3">
+            <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-muted)]">
+                Account
+              </div>
+              <div className="mt-2 text-sm text-[var(--app-text)]">{session.email}</div>
+            </div>
+            <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
+              Live links use {APP_DOMAIN_HINT} style URLs.
             </div>
             <form action={signOutAction}>
-              <Button type="submit" tone="secondary">
+              <Button type="submit" tone="secondary" className="w-full justify-center">
                 Sign out
               </Button>
             </form>
           </div>
-        </div>
+        </aside>
 
-        <div className="border-t border-[var(--app-line)] bg-white/48 px-5 py-4 backdrop-blur-md sm:px-8">
-          <AdminNav />
-        </div>
+        <div className="min-w-0">
+          <header className="border-b border-[var(--app-line)] bg-[rgba(252,251,248,0.88)] px-4 py-4 backdrop-blur-xl sm:px-6 lg:hidden">
+            <div className="flex items-start justify-between gap-4">
+              <BrandLockup includeDomain tagline={null} tone="light" compact />
+              <div className="flex items-center gap-2">
+                <Link href="/admin/songs/new">
+                  <Button className="shadow-none">Import</Button>
+                </Link>
+                <form action={signOutAction}>
+                  <Button type="submit" tone="secondary" className="shadow-none">
+                    Sign out
+                  </Button>
+                </form>
+              </div>
+            </div>
 
-        <div className="mx-5 mt-5 rounded-[1.35rem] border border-[var(--app-line)] bg-white/58 px-4 py-4 text-sm text-[var(--app-muted)] sm:mx-8">
-          Workflow: import a track, tighten the links and artwork, publish, then
-          push the live URL into ads, bios, and social posts.
-        </div>
+            <div className="mt-4 overflow-x-auto">
+              <AdminNavLinks orientation="horizontal" />
+            </div>
+          </header>
 
-        <div className="mt-6 px-5 pb-5 sm:px-8 sm:pb-8">{children}</div>
+          <main className="px-4 pb-8 pt-5 sm:px-6 sm:pb-12 sm:pt-6 lg:px-8 lg:py-8">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -43,9 +43,9 @@ test("imports, publishes, visits, and tracks a song page", async ({ page }) => {
   await page.waitForURL(/open\.spotify\.com/, { timeout: 15000 });
 
   await page.goto("/admin/analytics");
-  await expect(page.getByText("Page visits")).toBeVisible();
-  await expect(page.getByText("Outbound clicks")).toBeVisible();
-  await expect(page.getByText("instagram")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("Page visits", { exact: true })).toBeVisible();
+  await expect(page.getByText("Outbound clicks", { exact: true })).toBeVisible();
+  await expect(page.locator("text=instagram").first()).toBeVisible({ timeout: 15000 });
 
   await page.goto(`/admin/songs/${songId}`);
   page.once("dialog", (dialog) => dialog.accept());

@@ -49,7 +49,7 @@ const PAGE: SongPageWithLinks = {
     },
   ],
   tracking: {
-    siteName: "Ampveil",
+    siteName: "Backstage",
     metaPixelId: null,
     metaPixelEnabled: false,
     metaTestEventCode: null,
@@ -57,20 +57,15 @@ const PAGE: SongPageWithLinks = {
 };
 
 describe("ServiceList", () => {
-  test("renders static service order with pending fallbacks", () => {
+  test("renders only ready services on the live page", () => {
     render(<ServiceList page={PAGE} searchString="" />);
 
     expect(screen.getByTestId("service-link-spotify")).toHaveAttribute(
       "href",
       "/go/echo-vale-afterlight/spotify",
     );
-    expect(screen.getByTestId("service-link-apple_music")).toHaveTextContent(
-      "Unavailable",
-    );
-    expect(screen.getByTestId("service-link-youtube_music")).toHaveTextContent(
-      "Unavailable",
-    );
-    expect(screen.getAllByText("Unavailable")).toHaveLength(5);
+    expect(screen.queryByTestId("service-link-apple_music")).toBeNull();
+    expect(screen.queryByTestId("service-link-youtube_music")).toBeNull();
   });
 
   test("fires a Meta Pixel custom event on live outbound clicks when enabled", async () => {
