@@ -1,9 +1,14 @@
+import { loadEnvConfig } from "@next/env";
 import { createClient } from "@supabase/supabase-js";
 
-import { ensureAdminAccess } from "../src/lib/data";
-import { appEnv } from "../src/lib/env";
+loadEnvConfig(process.cwd());
 
 async function main() {
+  const [{ ensureAdminAccess }, { appEnv }] = await Promise.all([
+    import("../src/lib/data"),
+    import("../src/lib/env"),
+  ]);
+
   const email = process.argv[2] ?? appEnv.adminEmail;
   const password = process.argv[3] ?? appEnv.demoAdminPassword;
 

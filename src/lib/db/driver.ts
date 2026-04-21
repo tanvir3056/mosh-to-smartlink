@@ -30,9 +30,50 @@ declare global {
 let runtimePromise: Promise<DatabaseRuntime> | null =
   globalThis.__ffmDatabaseRuntimePromise ?? null;
 
+function isSupabaseConnectionString(connectionString: string) {
+  return (
+    connectionString.includes(".supabase.co") ||
+    connectionString.includes(".pooler.supabase.com")
+  );
+}
+
+function isSupabasePoolerConnection(connectionString: string) {
+  return (
+    connectionString.includes(".pooler.supabase.com") ||
+    connectionString.includes(":6543/")
+  );
+}
+
+function hasExplicitSslConfig(connectionString: string) {
+  return /(?:^|[?&])(sslmode|ssl)=/i.test(connectionString);
+}
+
 async function createPgPoolRuntime(): Promise<DatabaseRuntime> {
+  const connectionString = appEnv.postgresUrl ?? undefined;
+  const isSupabaseConnection = connectionString
+    ? isSupabaseConnectionString(connectionString)
+    : false;
+  const isPoolerConnection = connectionString
+    ? isSupabasePoolerConnection(connectionString)
+    : false;
+
   const pool = new Pool({
-    connectionString: appEnv.postgresUrl ?? undefined,
+    connectionString,
+    // Keep serverless connection usage tight so Vercel instances do not fan out
+    // into a surprising number of database clients.
+    max: isPoolerConnection ? 1 : 4,
+    min: 0,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 10_000,
+    keepAlive: true,
+    allowExitOnIdle: true,
+    application_name: "ffm-smartlink",
+    ssl:
+      connectionString &&
+      isSupabaseConnection &&
+      !hasExplicitSslConfig(connectionString)
+        ? { rejectUnauthorized: false }
+        : undefined,
   });
 
   return {

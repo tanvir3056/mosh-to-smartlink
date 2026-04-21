@@ -73,6 +73,7 @@ npm run dev
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `ADMIN_EMAIL`
    - `NEXT_PUBLIC_APP_URL`
+   - For Vercel/serverless, use the Supabase pooler connection string instead of the direct Postgres URL.
 3. Apply the migration:
 
 ```bash
