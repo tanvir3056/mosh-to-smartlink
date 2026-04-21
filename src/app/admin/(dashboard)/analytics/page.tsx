@@ -244,7 +244,7 @@ export default async function AdminAnalyticsPage({
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="inline-grid grid-cols-3 gap-2 rounded-full border border-[var(--app-line)] bg-white/78 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-sm">
             {RANGE_OPTIONS.map((option) => {
               const active = option.days === rangeDays;
 
@@ -253,7 +253,7 @@ export default async function AdminAnalyticsPage({
                   <span
                     key={option.days}
                     aria-current="page"
-                    className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-line-strong)] bg-[var(--app-panel-muted)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.06)]"
+                    className="inline-flex min-h-11 w-[4.75rem] items-center justify-center rounded-full border border-[var(--app-line-strong)] bg-[var(--app-panel-muted)] px-3 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.06)] sm:w-[6.25rem] sm:px-4"
                     style={{
                       color: "#151922",
                       WebkitTextFillColor: "#151922",
@@ -275,7 +275,7 @@ export default async function AdminAnalyticsPage({
                 <Link
                   key={option.days}
                   href={`/admin/analytics?range=${option.days}`}
-                  className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+                  className="inline-flex min-h-11 w-[4.75rem] items-center justify-center rounded-full border border-[var(--app-line)] bg-white px-3 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] sm:w-[6.25rem] sm:px-4"
                   style={{
                     color: "#151922",
                     WebkitTextFillColor: "#151922",
