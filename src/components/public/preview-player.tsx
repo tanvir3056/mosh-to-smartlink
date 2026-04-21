@@ -62,14 +62,25 @@ export function PreviewPlayer({
       <div className="relative aspect-square overflow-hidden rounded-t-[1.55rem]">
         <Image
           src={artworkUrl}
+          alt=""
+          fill
+          priority
+          aria-hidden="true"
+          sizes="(max-width: 640px) 100vw, 432px"
+          className="scale-[1.08] object-cover opacity-44 blur-[24px]"
+          unoptimized={artworkUrl.startsWith("data:")}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_42%),linear-gradient(180deg,rgba(8,10,14,0.02),rgba(8,10,14,0.18)_45%,rgba(8,10,14,0.5)_100%)]" />
+        <Image
+          src={artworkUrl}
           alt={`${artistName} - ${title} artwork`}
           fill
           priority
           sizes="(max-width: 640px) 100vw, 432px"
-          className="object-cover"
+          className="object-contain"
           unoptimized={artworkUrl.startsWith("data:")}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0)_55%,rgba(8,10,14,0.12)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0)_55%,rgba(8,10,14,0.14)_100%)]" />
         {previewUrl ? (
           <button
             type="button"

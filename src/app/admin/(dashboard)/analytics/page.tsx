@@ -247,21 +247,48 @@ export default async function AdminAnalyticsPage({
           <div className="flex flex-wrap gap-2">
             {RANGE_OPTIONS.map((option) => {
               const active = option.days === rangeDays;
+
+              if (active) {
+                return (
+                  <span
+                    key={option.days}
+                    aria-current="page"
+                    className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-text)] bg-[var(--app-text)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                    style={{
+                      color: "#fcfbf8",
+                      WebkitTextFillColor: "#fcfbf8",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#fcfbf8",
+                        WebkitTextFillColor: "#fcfbf8",
+                      }}
+                    >
+                      {option.label}
+                    </span>
+                  </span>
+                );
+              }
+
               return (
                 <Link
                   key={option.days}
                   href={`/admin/analytics?range=${option.days}`}
-                  aria-current={active ? "page" : undefined}
-                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out ${
-                    active
-                      ? "border-[var(--app-text)] bg-[var(--app-text)] text-[#fcfbf8] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                      : "border-[var(--app-line)] bg-white text-[var(--app-text)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
-                  }`}
+                  className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
                   style={{
-                    WebkitTextFillColor: active ? "#fcfbf8" : "#151922",
+                    color: "#151922",
+                    WebkitTextFillColor: "#151922",
                   }}
                 >
-                  {option.label}
+                  <span
+                    style={{
+                      color: "#151922",
+                      WebkitTextFillColor: "#151922",
+                    }}
+                  >
+                    {option.label}
+                  </span>
                 </Link>
               );
             })}
