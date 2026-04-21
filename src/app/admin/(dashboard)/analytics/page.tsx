@@ -253,16 +253,16 @@ export default async function AdminAnalyticsPage({
                   <span
                     key={option.days}
                     aria-current="page"
-                    className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-text)] bg-[var(--app-text)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                    className="inline-flex min-h-11 min-w-[6.25rem] items-center justify-center rounded-full border border-[var(--app-line-strong)] bg-[var(--app-panel-muted)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.06)]"
                     style={{
-                      color: "#fcfbf8",
-                      WebkitTextFillColor: "#fcfbf8",
+                      color: "#151922",
+                      WebkitTextFillColor: "#151922",
                     }}
                   >
                     <span
                       style={{
-                        color: "#fcfbf8",
-                        WebkitTextFillColor: "#fcfbf8",
+                        color: "#151922",
+                        WebkitTextFillColor: "#151922",
                       }}
                     >
                       {option.label}

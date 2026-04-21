@@ -52,13 +52,80 @@ async function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
   });
 }
 
+function getVisibleBounds(image: HTMLImageElement) {
+  const probeCanvas = document.createElement("canvas");
+  probeCanvas.width = image.naturalWidth;
+  probeCanvas.height = image.naturalHeight;
+
+  const context = probeCanvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context) {
+    return {
+      x: 0,
+      y: 0,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    };
+  }
+
+  context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+  const { data, width, height } = context.getImageData(
+    0,
+    0,
+    image.naturalWidth,
+    image.naturalHeight,
+  );
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      const alpha = data[index + 3];
+
+      if (alpha > 16) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return {
+      x: 0,
+      y: 0,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    };
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+  };
+}
+
 async function compressArtwork(file: File) {
   const dataUrl = await fileToDataUrl(file);
   const image = await loadImage(dataUrl);
-  const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const bounds = getVisibleBounds(image);
+  const cropSize = Math.min(bounds.width, bounds.height);
   const outputSize = Math.max(1, Math.min(cropSize, MAX_ARTWORK_DIMENSION));
-  const sourceX = Math.max(0, Math.round((image.naturalWidth - cropSize) / 2));
-  const sourceY = Math.max(0, Math.round((image.naturalHeight - cropSize) / 2));
+  const sourceX = Math.max(
+    0,
+    Math.round(bounds.x + (bounds.width - cropSize) / 2),
+  );
+  const sourceY = Math.max(
+    0,
+    Math.round(bounds.y + (bounds.height - cropSize) / 2),
+  );
 
   const canvas = document.createElement("canvas");
   canvas.width = outputSize;
@@ -72,6 +139,8 @@ async function compressArtwork(file: File) {
 
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
+  context.fillStyle = "#0b0d11";
+  context.fillRect(0, 0, outputSize, outputSize);
   context.drawImage(
     image,
     sourceX,
@@ -127,7 +196,7 @@ export function ArtworkUploadField({
           Upload artwork manually
         </label>
         <span className="text-xs leading-6 text-[var(--app-muted)]">
-          Large uploads are center-cropped to square cover art, compressed automatically, and stored directly with the song page in V1.
+          Large uploads are trimmed, square-cropped, compressed automatically, and stored directly with the song page in V1.
         </span>
       </div>
 
