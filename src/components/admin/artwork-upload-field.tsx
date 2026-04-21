@@ -3,6 +3,11 @@
 import { ImagePlus, LoaderCircle } from "lucide-react";
 import { useId, useState } from "react";
 
+const MAX_ARTWORK_DIMENSION = 1200;
+const TARGET_ARTWORK_BYTES = 450 * 1024;
+const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68, 0.6] as const;
+const FINAL_QUALITY_STEP = QUALITY_STEPS[QUALITY_STEPS.length - 1];
+
 async function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -21,18 +26,43 @@ async function loadImage(dataUrl: string) {
   });
 }
 
+async function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("The artwork file could not be processed."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("The browser could not encode this image."));
+          return;
+        }
+
+        resolve(blob);
+      },
+      "image/webp",
+      quality,
+    );
+  });
+}
+
 async function compressArtwork(file: File) {
   const dataUrl = await fileToDataUrl(file);
   const image = await loadImage(dataUrl);
-  const maxSide = 1600;
-  const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
-  const scale = largestSide > maxSide ? maxSide / largestSide : 1;
-  const width = Math.max(1, Math.round(image.naturalWidth * scale));
-  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const outputSize = Math.max(1, Math.min(cropSize, MAX_ARTWORK_DIMENSION));
+  const sourceX = Math.max(0, Math.round((image.naturalWidth - cropSize) / 2));
+  const sourceY = Math.max(0, Math.round((image.naturalHeight - cropSize) / 2));
 
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = outputSize;
+  canvas.height = outputSize;
 
   const context = canvas.getContext("2d");
 
@@ -40,8 +70,29 @@ async function compressArtwork(file: File) {
     throw new Error("The browser could not process this image.");
   }
 
-  context.drawImage(image, 0, 0, width, height);
-  return canvas.toDataURL("image/webp", 0.9);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    cropSize,
+    cropSize,
+    0,
+    0,
+    outputSize,
+    outputSize,
+  );
+
+  for (const quality of QUALITY_STEPS) {
+    const blob = await canvasToBlob(canvas, quality);
+
+    if (blob.size <= TARGET_ARTWORK_BYTES || quality === FINAL_QUALITY_STEP) {
+      return blobToDataUrl(blob);
+    }
+  }
+
+  throw new Error("The artwork file could not be optimized.");
 }
 
 export function ArtworkUploadField({
@@ -76,7 +127,7 @@ export function ArtworkUploadField({
           Upload artwork manually
         </label>
         <span className="text-xs leading-6 text-[var(--app-muted)]">
-          Large uploads are resized automatically and stored directly with the song page in V1.
+          Large uploads are center-cropped to square cover art, compressed automatically, and stored directly with the song page in V1.
         </span>
       </div>
 

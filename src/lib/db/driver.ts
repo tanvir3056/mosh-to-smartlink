@@ -9,6 +9,7 @@ type DatabaseMode = "postgres" | "local";
 
 interface DatabaseRuntime {
   mode: DatabaseMode;
+  close(): Promise<void>;
   query<T extends QueryResultRow = QueryResultRow>(
     text: string,
     params?: unknown[],
@@ -29,6 +30,59 @@ declare global {
 
 let runtimePromise: Promise<DatabaseRuntime> | null =
   globalThis.__ffmDatabaseRuntimePromise ?? null;
+
+function normalizeErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message.toLowerCase();
+  }
+
+  return String(error).toLowerCase();
+}
+
+function shouldRetryDatabaseError(error: unknown) {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String(error.code)
+      : null;
+  const message = normalizeErrorMessage(error);
+
+  return (
+    code === "53300" ||
+    code === "57P01" ||
+    code === "57P03" ||
+    code === "08001" ||
+    code === "08006" ||
+    code === "XX000" ||
+    message.includes("connection terminated unexpectedly") ||
+    message.includes("client has encountered a connection error") ||
+    message.includes("terminating connection") ||
+    message.includes("timeout expired") ||
+    message.includes("connection timeout") ||
+    message.includes("too many clients") ||
+    message.includes("remaining connection slots are reserved") ||
+    message.includes("econnreset") ||
+    message.includes("econnrefused") ||
+    message.includes("etimedout") ||
+    message.includes("socket hang up")
+  );
+}
+
+async function resetDatabaseRuntime() {
+  if (!runtimePromise) {
+    globalThis.__ffmDatabaseRuntimePromise = undefined;
+    return;
+  }
+
+  try {
+    const runtime = await runtimePromise;
+    await runtime.close();
+  } catch {
+    // Ignore shutdown errors while rotating the runtime.
+  } finally {
+    runtimePromise = null;
+    globalThis.__ffmDatabaseRuntimePromise = undefined;
+  }
+}
 
 function isSupabaseConnectionString(connectionString: string) {
   return (
@@ -78,6 +132,9 @@ async function createPgPoolRuntime(): Promise<DatabaseRuntime> {
 
   return {
     mode: "postgres",
+    async close() {
+      await pool.end();
+    },
     async query<T extends QueryResultRow = QueryResultRow>(
       text: string,
       params?: unknown[],
@@ -141,6 +198,9 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
 
   return {
     mode: "local",
+    async close() {
+      await pool.end();
+    },
     async query<T extends QueryResultRow = QueryResultRow>(
       text: string,
       params?: unknown[],
@@ -190,8 +250,24 @@ export async function dbQuery<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[],
 ) {
-  const runtime = await getDatabaseRuntime();
-  return runtime.query<T>(text, params);
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const runtime = await getDatabaseRuntime();
+      return await runtime.query<T>(text, params);
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === 1 || !shouldRetryDatabaseError(error)) {
+        throw error;
+      }
+
+      await resetDatabaseRuntime();
+    }
+  }
+
+  throw lastError;
 }
 
 export async function dbTransaction<T>(

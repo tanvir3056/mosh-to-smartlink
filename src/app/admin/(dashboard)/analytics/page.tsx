@@ -251,11 +251,15 @@ export default async function AdminAnalyticsPage({
                 <Link
                   key={option.days}
                   href={`/admin/analytics?range=${option.days}`}
-                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold transition ${
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out ${
                     active
-                      ? "border-[var(--app-text)] bg-[var(--app-text)] text-white"
-                      : "border-[var(--app-line)] bg-white text-[var(--app-text)] hover:bg-[var(--app-panel-muted)]"
+                      ? "border-[var(--app-text)] bg-[var(--app-text)] text-[#fcfbf8] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      : "border-[var(--app-line)] bg-white text-[var(--app-text)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
                   }`}
+                  style={{
+                    WebkitTextFillColor: active ? "#fcfbf8" : "#151922",
+                  }}
                 >
                   {option.label}
                 </Link>
