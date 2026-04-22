@@ -23,6 +23,22 @@ export function slugify(value: string) {
     .slice(0, 64);
 }
 
+export function normalizeUsername(value: string) {
+  return slugify(value);
+}
+
+export function buildPublicSongPath(username: string, slug: string) {
+  return `/${username}/${slug}`;
+}
+
+export function buildServiceRedirectPath(
+  username: string,
+  slug: string,
+  service: StreamingService,
+) {
+  return `/go/${username}/${slug}/${service}`;
+}
+
 export function parseSpotifyTrackId(value: string) {
   const match = value.match(
     /(?:spotify:track:|open\.spotify\.com\/track\/)([A-Za-z0-9]{22})/,

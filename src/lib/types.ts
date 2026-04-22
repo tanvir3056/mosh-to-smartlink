@@ -21,6 +21,16 @@ export interface TrackingConfig {
   metaTestEventCode: string | null;
 }
 
+export interface AppUserRecord {
+  id: string;
+  authUserId: string | null;
+  username: string;
+  loginEmail: string;
+  passwordHash: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StreamingLinkRecord {
   id: string;
   songId: string;
@@ -37,6 +47,7 @@ export interface StreamingLinkRecord {
 
 export interface SongRecord {
   id: string;
+  ownerUserId: string;
   spotifyTrackId: string;
   spotifyTrackUrl: string;
   title: string;
@@ -54,7 +65,9 @@ export interface SongRecord {
 
 export interface SongPageRecord {
   id: string;
+  ownerUserId: string;
   songId: string;
+  username: string;
   slug: string;
   headline: string;
   status: PageStatus;
@@ -73,6 +86,8 @@ export interface SongPageWithLinks {
 
 export interface DashboardSongRow {
   songId: string;
+  ownerUserId: string;
+  username: string;
   title: string;
   artistName: string;
   artworkUrl: string;
@@ -131,6 +146,7 @@ export interface DeviceRow {
 
 export interface SongPerformanceRow {
   songId: string;
+  username: string;
   slug: string;
   title: string;
   visits: number;

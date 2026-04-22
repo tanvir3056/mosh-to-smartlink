@@ -6,7 +6,7 @@ import { AdminNav, AdminNavLinks } from "@/components/admin/admin-nav";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { APP_DOMAIN_HINT } from "@/lib/constants";
-import { requireAdminSession } from "@/lib/auth";
+import { requireUserSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function AdminDashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await requireAdminSession();
+  const session = await requireUserSession();
 
   return (
     <div className="min-h-screen bg-[var(--app-surface)] text-[var(--app-text)]">
@@ -49,10 +49,11 @@ export default async function AdminDashboardLayout({
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-muted)]">
                 Account
               </div>
-              <div className="mt-2 text-sm text-[var(--app-text)]">{session.email}</div>
+              <div className="mt-2 text-sm font-medium text-[var(--app-text)]">@{session.username}</div>
+              <div className="mt-1 text-xs text-[var(--app-muted)]">{session.loginEmail}</div>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
-              Live links use {APP_DOMAIN_HINT} style URLs.
+              Live links use {APP_DOMAIN_HINT} style URLs with your username in the path.
             </div>
             <form action={signOutAction}>
               <Button type="submit" tone="secondary" className="w-full justify-center">

@@ -7,7 +7,7 @@ import {
   STREAMING_SERVICES,
 } from "@/lib/constants";
 import type { SongPageWithLinks } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { buildServiceRedirectPath, cn } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -35,7 +35,7 @@ export function ServiceList({
       {services.map((service, index) => {
         const link = byService.get(service);
         const isReady = Boolean(link?.url);
-        const liveHref = `/go/${page.page.slug}/${service}${searchString ? `?${searchString}` : ""}`;
+        const liveHref = `${buildServiceRedirectPath(page.page.username, page.page.slug, service)}${searchString ? `?${searchString}` : ""}`;
         const href = isReady ? (isPreview ? (link?.url ?? undefined) : liveHref) : undefined;
         const helperText = isPreview
           ? !isReady
@@ -86,6 +86,7 @@ export function ServiceList({
                       service,
                       song: page.song.title,
                       artist: page.song.artistName,
+                      username: page.page.username,
                       slug: page.page.slug,
                     });
                   }

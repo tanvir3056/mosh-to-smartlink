@@ -1,8 +1,8 @@
 import { ImportSongForm } from "@/components/admin/import-song-form";
-import { requireAdminSession } from "@/lib/auth";
+import { requireUserSession } from "@/lib/auth";
 
 export default async function NewSongPage() {
-  const session = await requireAdminSession();
+  const session = await requireUserSession();
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(420px,0.85fr)] xl:items-start">
@@ -28,7 +28,7 @@ export default async function NewSongPage() {
             },
             {
               title: "Requested by",
-              body: session.email,
+              body: `@${session.username}`,
             },
           ].map((step, index) => (
             <div
@@ -52,7 +52,7 @@ export default async function NewSongPage() {
       </div>
 
       <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
-        <ImportSongForm requestedBy={session.email} />
+        <ImportSongForm requestedBy={`@${session.username}`} />
       </div>
     </section>
   );

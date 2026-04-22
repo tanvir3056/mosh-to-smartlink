@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PublicSongPage } from "@/components/public/song-page";
-import { getPublishedSongPageBySlug } from "@/lib/data";
+import { getPublishedSongPage } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ username: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const page = await getPublishedSongPageBySlug(slug);
+  const { username, slug } = await params;
+  const page = await getPublishedSongPage(username, slug);
 
   if (!page) {
     return {
@@ -39,11 +39,11 @@ export default async function PublicSongRoute({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ username: string; slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ slug }, search] = await Promise.all([params, searchParams]);
-  const page = await getPublishedSongPageBySlug(slug);
+  const [{ username, slug }, search] = await Promise.all([params, searchParams]);
+  const page = await getPublishedSongPage(username, slug);
 
   if (!page) {
     notFound();

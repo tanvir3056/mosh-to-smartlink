@@ -8,6 +8,7 @@ import type { SongPageWithLinks } from "@/lib/types";
 const PAGE: SongPageWithLinks = {
   song: {
     id: "song_1",
+    ownerUserId: "user_1",
     spotifyTrackId: "track_1",
     spotifyTrackUrl: "https://open.spotify.com/track/track_1",
     title: "Afterlight",
@@ -24,7 +25,9 @@ const PAGE: SongPageWithLinks = {
   },
   page: {
     id: "page_1",
+    ownerUserId: "user_1",
     songId: "song_1",
+    username: "echo-vale",
     slug: "echo-vale-afterlight",
     headline: "Stream now",
     status: "published",
@@ -62,7 +65,7 @@ describe("ServiceList", () => {
 
     expect(screen.getByTestId("service-link-spotify")).toHaveAttribute(
       "href",
-      "/go/echo-vale-afterlight/spotify",
+      "/go/echo-vale/echo-vale-afterlight/spotify",
     );
     expect(screen.queryByTestId("service-link-apple_music")).toBeNull();
     expect(screen.queryByTestId("service-link-youtube_music")).toBeNull();
@@ -93,6 +96,7 @@ describe("ServiceList", () => {
       service: "spotify",
       song: "Afterlight",
       artist: "Echo Vale",
+      username: "echo-vale",
       slug: "echo-vale-afterlight",
     });
   });

@@ -2,8 +2,8 @@ import type { QueryResultRow } from "pg";
 
 import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
 import { dbQuery, dbTransaction } from "@/lib/db/driver";
-import { appEnv } from "@/lib/env";
 import type {
+  AppUserRecord,
   AnalyticsSnapshot,
   DashboardSnapshot,
   ImportBundle,
@@ -14,9 +14,15 @@ import type {
   TrackingContext,
   UTMAttribution,
 } from "@/lib/types";
-import { createId, slugify } from "@/lib/utils";
+import {
+  createId,
+  normalizeUsername,
+  slugify,
+} from "@/lib/utils";
 
 type SongPageJoinRow = QueryResultRow & {
+  owner_user_id: string;
+  username: string;
   song_id: string;
   spotify_track_id: string;
   spotify_track_url: string;
@@ -53,6 +59,32 @@ type SongPageJoinRow = QueryResultRow & {
   site_name: string | null;
 };
 
+type AppUserRow = QueryResultRow & {
+  id: string;
+  auth_user_id: string | null;
+  username: string;
+  login_email: string;
+  password_hash: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapUser(row: AppUserRow | undefined): AppUserRecord | null {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    authUserId: row.auth_user_id,
+    username: row.username,
+    loginEmail: row.login_email,
+    passwordHash: row.password_hash,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function defaultTrackingConfig(): TrackingConfig {
   return {
     siteName: APP_NAME,
@@ -79,28 +111,6 @@ function normalizeDateKey(value: string | Date) {
   return new Date(raw).toISOString().slice(0, 10);
 }
 
-async function ensureSingletonRows() {
-  await dbQuery(
-    `
-      insert into tracking_config (id, site_name)
-      values ('singleton', $1)
-      on conflict (id) do nothing
-    `,
-    [APP_NAME],
-  );
-
-  await dbQuery(
-    `
-      insert into admin_access (id, email)
-      values ('singleton', $1)
-      on conflict (id) do update set
-        email = excluded.email,
-        updated_at = current_timestamp
-    `,
-    [appEnv.adminEmail],
-  );
-}
-
 function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
   const firstRow = rows[0];
 
@@ -111,6 +121,7 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
   return {
     song: {
       id: firstRow.song_id,
+      ownerUserId: firstRow.owner_user_id,
       spotifyTrackId: firstRow.spotify_track_id,
       spotifyTrackUrl: firstRow.spotify_track_url,
       title: firstRow.song_title,
@@ -127,7 +138,9 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
     },
     page: {
       id: firstRow.page_id,
+      ownerUserId: firstRow.owner_user_id,
       songId: firstRow.song_id,
+      username: firstRow.username,
       slug: firstRow.slug,
       headline: firstRow.headline,
       status: firstRow.status,
@@ -167,6 +180,7 @@ async function createUniqueSlug(
     text: string,
     params?: unknown[],
   ) => Promise<T[]>,
+  ownerUserId: string,
   artistName: string,
   title: string,
   songId?: string,
@@ -180,11 +194,12 @@ async function createUniqueSlug(
       `
         select slug
         from song_pages
-        where slug = $1
-          and ($2::text is null or song_id <> $2)
+        where owner_user_id = $1
+          and slug = $2
+          and ($3::text is null or song_id <> $3)
         limit 1
       `,
-      [candidate, songId ?? null],
+      [ownerUserId, candidate, songId ?? null],
     );
 
     if (rows.length === 0) {
@@ -214,6 +229,36 @@ async function upsertStreamingLinks(
       notes: "Add a service URL before publishing.",
     };
 
+    const updated = await query(
+      `
+        update streaming_links
+        set url = $3,
+          match_status = $4,
+          match_source = $5,
+          confidence = $6,
+          notes = $7,
+          position = $8,
+          updated_at = current_timestamp
+        where song_id = $1
+          and service = $2
+        returning id
+      `,
+      [
+        songId,
+        service,
+        link.url,
+        link.matchStatus,
+        link.matchSource,
+        link.confidence,
+        link.notes,
+        index,
+      ],
+    );
+
+    if (updated.length > 0) {
+      continue;
+    }
+
     await query(
       `
         insert into streaming_links (
@@ -228,14 +273,6 @@ async function upsertStreamingLinks(
           position
         )
         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        on conflict (song_id, service) do update set
-          url = excluded.url,
-          match_status = excluded.match_status,
-          match_source = excluded.match_source,
-          confidence = excluded.confidence,
-          notes = excluded.notes,
-          position = excluded.position,
-          updated_at = current_timestamp
       `,
       [
         createId("link"),
@@ -253,26 +290,149 @@ async function upsertStreamingLinks(
 }
 
 export async function ensureAppData() {
-  await ensureSingletonRows();
+  return;
 }
 
-export async function ensureAdminAccess(email: string, userId?: string | null) {
-  await ensureAppData();
+export async function getUserById(userId: string) {
+  const rows = await dbQuery<AppUserRow>(
+    `
+      select id, auth_user_id, username, login_email, password_hash, created_at, updated_at
+      from app_users
+      where id = $1
+      limit 1
+    `,
+    [userId],
+  );
+
+  return mapUser(rows[0]);
+}
+
+export async function getUserByAuthUserId(authUserId: string) {
+  const rows = await dbQuery<AppUserRow>(
+    `
+      select id, auth_user_id, username, login_email, password_hash, created_at, updated_at
+      from app_users
+      where auth_user_id = $1
+      limit 1
+    `,
+    [authUserId],
+  );
+
+  return mapUser(rows[0]);
+}
+
+export async function getUserByUsername(username: string) {
+  const normalizedUsername = normalizeUsername(username);
+  const rows = await dbQuery<AppUserRow>(
+    `
+      select id, auth_user_id, username, login_email, password_hash, created_at, updated_at
+      from app_users
+      where username = $1
+      limit 1
+    `,
+    [normalizedUsername],
+  );
+
+  return mapUser(rows[0]);
+}
+
+export async function getUserByLoginEmail(loginEmail: string) {
+  const rows = await dbQuery<AppUserRow>(
+    `
+      select id, auth_user_id, username, login_email, password_hash, created_at, updated_at
+      from app_users
+      where login_email = $1
+      limit 1
+    `,
+    [loginEmail],
+  );
+
+  return mapUser(rows[0]);
+}
+
+export async function createAccountOwner(input: {
+  userId: string;
+  username: string;
+  loginEmail: string;
+  authUserId?: string | null;
+  passwordHash?: string | null;
+}) {
+  const normalizedUsername = normalizeUsername(input.username);
+  const rows = await dbQuery<AppUserRow>(
+    `
+      insert into app_users (
+        id,
+        auth_user_id,
+        username,
+        login_email,
+        password_hash
+      )
+      values ($1, $2, $3, $4, $5)
+      returning id, auth_user_id, username, login_email, password_hash, created_at, updated_at
+    `,
+    [
+      input.userId,
+      input.authUserId ?? null,
+      normalizedUsername,
+      input.loginEmail,
+      input.passwordHash ?? null,
+    ],
+  );
+
+  const existingTracking = await dbQuery<{ id: string }>(
+    `
+      select id
+      from tracking_config
+      where owner_user_id = $1
+      limit 1
+    `,
+    [rows[0].id],
+  );
+
+  if (existingTracking.length === 0) {
+    await dbQuery(
+      `
+        insert into tracking_config (id, owner_user_id, site_name)
+        values ($1, $2, $3)
+      `,
+      [createId("tracking"), rows[0].id, APP_NAME],
+    );
+  }
+
+  const user = mapUser(rows[0]);
+
+  if (!user) {
+    throw new Error("The account could not be saved.");
+  }
+
+  return user;
+}
+
+export async function updateLocalPasswordHash(userId: string, passwordHash: string) {
   await dbQuery(
     `
-      insert into admin_access (id, email, user_id)
-      values ('singleton', $1, $2)
-      on conflict (id) do update set
-        email = excluded.email,
-        user_id = excluded.user_id,
-        updated_at = current_timestamp
+      update app_users
+      set password_hash = $2,
+          updated_at = current_timestamp
+      where id = $1
     `,
-    [email, userId ?? null],
+    [userId, passwordHash],
   );
 }
 
-export async function getTrackingConfig() {
-  await ensureAppData();
+export async function linkUserAuthIdentity(userId: string, authUserId: string) {
+  await dbQuery(
+    `
+      update app_users
+      set auth_user_id = $2,
+          updated_at = current_timestamp
+      where id = $1
+    `,
+    [userId, authUserId],
+  );
+}
+
+export async function getTrackingConfig(ownerUserId: string) {
   const rows = await dbQuery<{
     site_name: string;
     meta_pixel_id: string | null;
@@ -282,9 +442,10 @@ export async function getTrackingConfig() {
     `
       select site_name, meta_pixel_id, meta_pixel_enabled, meta_test_event_code
       from tracking_config
-      where id = 'singleton'
+      where owner_user_id = $1
       limit 1
     `,
+    [ownerUserId],
   );
 
   const row = rows[0];
@@ -301,26 +462,46 @@ export async function getTrackingConfig() {
   } satisfies TrackingConfig;
 }
 
-export async function saveTrackingConfig(input: TrackingConfig) {
-  await ensureAppData();
+export async function saveTrackingConfig(ownerUserId: string, input: TrackingConfig) {
+  const updated = await dbQuery<{ id: string }>(
+    `
+      update tracking_config
+      set site_name = $2,
+          meta_pixel_id = $3,
+          meta_pixel_enabled = $4,
+          meta_test_event_code = $5,
+          updated_at = current_timestamp
+      where owner_user_id = $1
+      returning id
+    `,
+    [
+      ownerUserId,
+      input.siteName,
+      input.metaPixelId,
+      input.metaPixelEnabled,
+      input.metaTestEventCode,
+    ],
+  );
+
+  if (updated.length > 0) {
+    return;
+  }
+
   await dbQuery(
     `
       insert into tracking_config (
         id,
+        owner_user_id,
         site_name,
         meta_pixel_id,
         meta_pixel_enabled,
         meta_test_event_code
       )
-      values ('singleton', $1, $2, $3, $4)
-      on conflict (id) do update set
-        site_name = excluded.site_name,
-        meta_pixel_id = excluded.meta_pixel_id,
-        meta_pixel_enabled = excluded.meta_pixel_enabled,
-        meta_test_event_code = excluded.meta_test_event_code,
-        updated_at = current_timestamp
+      values ($1, $2, $3, $4, $5, $6)
     `,
     [
+      createId("tracking"),
+      ownerUserId,
       input.siteName,
       input.metaPixelId,
       input.metaPixelEnabled,
@@ -330,28 +511,30 @@ export async function saveTrackingConfig(input: TrackingConfig) {
 }
 
 export async function listPublishedPages() {
-  await ensureAppData();
   return dbQuery<{
+    username: string;
     slug: string;
     title: string;
     artist_name: string;
     artwork_url: string;
   }>(
     `
-      select p.slug, s.title, s.artist_name, s.artwork_url
+      select u.username, p.slug, s.title, s.artist_name, s.artwork_url
       from song_pages p
       join songs s on s.id = p.song_id
+      join app_users u on u.id = p.owner_user_id
       where p.status = 'published'
       order by p.published_at desc nulls last, p.updated_at desc
     `,
   );
 }
 
-export async function getPublishedSongPageBySlug(slug: string) {
-  await ensureAppData();
+export async function getPublishedSongPage(username: string, slug: string) {
   const rows = await dbQuery<SongPageJoinRow>(
     `
       select
+        s.owner_user_id,
+        u.username,
         s.id as song_id,
         s.spotify_track_id,
         s.spotify_track_url,
@@ -388,23 +571,46 @@ export async function getPublishedSongPageBySlug(slug: string) {
         tc.meta_test_event_code
       from song_pages p
       join songs s on s.id = p.song_id
+      join app_users u on u.id = s.owner_user_id
       left join streaming_links l on l.song_id = s.id
-      left join tracking_config tc on tc.id = 'singleton'
-      where p.slug = $1
+      left join tracking_config tc on tc.owner_user_id = s.owner_user_id
+      where u.username = $1
+        and p.slug = $2
         and p.status = 'published'
       order by coalesce(l.position, 999) asc
     `,
-    [slug],
+    [normalizeUsername(username), slug],
   );
 
   return mapSongPage(rows);
 }
 
-export async function getAdminSongPageBySongId(songId: string) {
-  await ensureAppData();
+export async function getPublishedSongPageBySlug(slug: string) {
+  const rows = await dbQuery<{ username: string }>(
+    `
+      select u.username
+      from song_pages p
+      join app_users u on u.id = p.owner_user_id
+      where p.slug = $1
+        and p.status = 'published'
+      limit 2
+    `,
+    [slug],
+  );
+
+  if (rows.length !== 1) {
+    return null;
+  }
+
+  return getPublishedSongPage(rows[0].username, slug);
+}
+
+export async function getAdminSongPageBySongId(songId: string, ownerUserId: string) {
   const rows = await dbQuery<SongPageJoinRow>(
     `
       select
+        s.owner_user_id,
+        u.username,
         s.id as song_id,
         s.spotify_track_id,
         s.spotify_track_url,
@@ -441,12 +647,14 @@ export async function getAdminSongPageBySongId(songId: string) {
         tc.meta_test_event_code
       from songs s
       join song_pages p on p.song_id = s.id
+      join app_users u on u.id = s.owner_user_id
       left join streaming_links l on l.song_id = s.id
-      left join tracking_config tc on tc.id = 'singleton'
+      left join tracking_config tc on tc.owner_user_id = s.owner_user_id
       where s.id = $1
+        and s.owner_user_id = $2
       order by coalesce(l.position, 999) asc
     `,
-    [songId],
+    [songId, ownerUserId],
   );
 
   return mapSongPage(rows);
@@ -455,9 +663,8 @@ export async function getAdminSongPageBySongId(songId: string) {
 export async function createSongImportDraft(
   bundle: ImportBundle,
   requestedBy: string,
+  ownerUserId: string,
 ) {
-  await ensureAppData();
-
   return dbTransaction(async (query) => {
     const existingSong = await query<{
       id: string;
@@ -466,15 +673,17 @@ export async function createSongImportDraft(
       `
         select id, preview_url
         from songs
-        where spotify_track_id = $1
+        where owner_user_id = $1
+          and spotify_track_id = $2
         limit 1
       `,
-      [bundle.song.spotifyTrackId],
+      [ownerUserId, bundle.song.spotifyTrackId],
     );
 
     const songId = existingSong[0]?.id ?? createId("song");
     const slug = await createUniqueSlug(
       query,
+      ownerUserId,
       bundle.song.artistName,
       bundle.song.title,
       songId,
@@ -517,6 +726,7 @@ export async function createSongImportDraft(
         `
           insert into songs (
             id,
+            owner_user_id,
             spotify_track_id,
             spotify_track_url,
             title,
@@ -529,10 +739,11 @@ export async function createSongImportDraft(
             explicit,
             duration_ms
           )
-          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         `,
         [
           songId,
+          ownerUserId,
           bundle.song.spotifyTrackId,
           bundle.song.spotifyTrackUrl,
           bundle.song.title,
@@ -553,9 +764,10 @@ export async function createSongImportDraft(
         select id
         from song_pages
         where song_id = $1
+          and owner_user_id = $2
         limit 1
       `,
-      [songId],
+      [songId, ownerUserId],
     );
 
     if (pageRows[0]) {
@@ -567,16 +779,17 @@ export async function createSongImportDraft(
             headline = 'Stream now',
             updated_at = current_timestamp
           where song_id = $1
+            and owner_user_id = $3
         `,
-        [songId, slug],
+        [songId, slug, ownerUserId],
       );
     } else {
       await query(
         `
-          insert into song_pages (id, song_id, slug, headline, status)
-          values ($1, $2, $3, 'Stream now', 'draft')
+          insert into song_pages (id, owner_user_id, song_id, slug, headline, status)
+          values ($1, $2, $3, $4, 'Stream now', 'draft')
         `,
-        [createId("page"), songId, slug],
+        [createId("page"), ownerUserId, songId, slug],
       );
     }
 
@@ -587,6 +800,7 @@ export async function createSongImportDraft(
         insert into import_attempts (
           id,
           song_id,
+          owner_user_id,
           spotify_track_id,
           spotify_url,
           status,
@@ -594,11 +808,12 @@ export async function createSongImportDraft(
           request_payload,
           response_payload
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
       [
         createId("import"),
         songId,
+        ownerUserId,
         bundle.song.spotifyTrackId,
         bundle.song.spotifyTrackUrl,
         bundle.importStatus,
@@ -615,6 +830,7 @@ export async function createSongImportDraft(
 }
 
 export async function updateSongDraft(input: {
+  ownerUserId: string;
   songId: string;
   title: string;
   artistName: string;
@@ -626,11 +842,10 @@ export async function updateSongDraft(input: {
   status: "draft" | "published" | "unpublished";
   links: MatchCandidate[];
 }) {
-  await ensureAppData();
-
   return dbTransaction(async (query) => {
     const uniqueSlug = await createUniqueSlug(
       query,
+      input.ownerUserId,
       input.artistName,
       input.title,
       input.songId,
@@ -639,7 +854,7 @@ export async function updateSongDraft(input: {
     const finalSlug =
       desiredSlug === uniqueSlug
         ? desiredSlug
-        : await createUniqueSlug(query, "", desiredSlug, input.songId);
+        : await createUniqueSlug(query, input.ownerUserId, "", desiredSlug, input.songId);
 
     await query(
       `
@@ -653,6 +868,7 @@ export async function updateSongDraft(input: {
           preview_source = case when $6::text is null then null else coalesce(preview_source, 'manual') end,
           updated_at = current_timestamp
         where id = $1
+          and owner_user_id = $7
       `,
       [
         input.songId,
@@ -661,6 +877,7 @@ export async function updateSongDraft(input: {
         input.albumName,
         input.artworkUrl,
         input.previewUrl,
+        input.ownerUserId,
       ],
     );
 
@@ -675,35 +892,37 @@ export async function updateSongDraft(input: {
           unpublished_at = case when $4 = 'unpublished' then current_timestamp else null end,
           updated_at = current_timestamp
         where song_id = $1
+          and owner_user_id = $5
       `,
-      [input.songId, finalSlug, input.headline, input.status],
+      [input.songId, finalSlug, input.headline, input.status, input.ownerUserId],
     );
 
     await upsertStreamingLinks(query, input.songId, input.links);
   });
 }
 
-export async function deleteSongById(songId: string) {
-  await ensureAppData();
-
+export async function deleteSongById(songId: string, ownerUserId: string) {
   return dbTransaction(async (query) => {
-    const pageRows = await query<{ slug: string | null }>(
+    const pageRows = await query<{ slug: string | null; username: string | null }>(
       `
-        select slug
-        from song_pages
-        where song_id = $1
+        select p.slug, u.username
+        from song_pages p
+        join app_users u on u.id = p.owner_user_id
+        where p.song_id = $1
+          and p.owner_user_id = $2
         limit 1
       `,
-      [songId],
+      [songId, ownerUserId],
     );
 
     const deletedRows = await query<{ id: string }>(
       `
         delete from songs
         where id = $1
+          and owner_user_id = $2
         returning id
       `,
-      [songId],
+      [songId, ownerUserId],
     );
 
     if (!deletedRows[0]) {
@@ -713,12 +932,12 @@ export async function deleteSongById(songId: string) {
     return {
       songId: deletedRows[0].id,
       slug: pageRows[0]?.slug ?? null,
+      username: pageRows[0]?.username ?? null,
     };
   });
 }
 
-export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  await ensureAppData();
+export async function getDashboardSnapshot(ownerUserId: string): Promise<DashboardSnapshot> {
   const [totals, songs] = await Promise.all([
     dbQuery<{
       total_songs: string | number;
@@ -729,15 +948,18 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     }>(
       `
         select
-          (select count(*) from songs) as total_songs,
-          (select count(*) from song_pages where status = 'published') as published_songs,
-          (select count(*) from song_pages where status = 'draft') as draft_songs,
-          (select count(*) from visits) as total_visits,
-          (select count(*) from click_events) as total_clicks
+          (select count(*) from songs where owner_user_id = $1) as total_songs,
+          (select count(*) from song_pages where owner_user_id = $1 and status = 'published') as published_songs,
+          (select count(*) from song_pages where owner_user_id = $1 and status = 'draft') as draft_songs,
+          (select count(*) from visits where owner_user_id = $1) as total_visits,
+          (select count(*) from click_events where owner_user_id = $1) as total_clicks
       `,
+      [ownerUserId],
     ),
     dbQuery<{
       song_id: string;
+      owner_user_id: string;
+      username: string;
       title: string;
       artist_name: string;
       artwork_url: string;
@@ -751,6 +973,8 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       `
         select
           s.id as song_id,
+          s.owner_user_id,
+          u.username,
           s.title,
           s.artist_name,
           s.artwork_url,
@@ -765,18 +989,23 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
           coalesce(c.click_count, 0) as click_count
         from songs s
         join song_pages p on p.song_id = s.id
+        join app_users u on u.id = s.owner_user_id
         left join (
           select song_id, count(*) as visit_count
           from visits
+          where owner_user_id = $1
           group by song_id
         ) v on v.song_id = s.id
         left join (
           select song_id, count(*) as click_count
           from click_events
+          where owner_user_id = $1
           group by song_id
         ) c on c.song_id = s.id
+        where s.owner_user_id = $1
         order by updated_at desc
       `,
+      [ownerUserId],
     ),
   ]);
 
@@ -790,6 +1019,8 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     totalClicks: Number(row?.total_clicks ?? 0),
     songs: songs.map((song) => ({
       songId: song.song_id,
+      ownerUserId: song.owner_user_id,
+      username: song.username,
       title: song.title,
       artistName: song.artist_name,
       artworkUrl: song.artwork_url,
@@ -804,9 +1035,9 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
 }
 
 export async function getAnalyticsSnapshot(
+  ownerUserId: string,
   rangeDays = 30,
 ): Promise<AnalyticsSnapshot> {
-  await ensureAppData();
   const sinceIso = createSinceIso(rangeDays);
 
   const [
@@ -832,11 +1063,11 @@ export async function getAnalyticsSnapshot(
     }>(
       `
         select
-          (select count(*) from visits where created_at >= $1::timestamptz) as total_visits,
-          (select count(distinct visitor_id) from visits where created_at >= $1::timestamptz) as unique_visitors,
-          (select count(*) from click_events where created_at >= $1::timestamptz) as total_clicks
+          (select count(*) from visits where owner_user_id = $2 and created_at >= $1::timestamptz) as total_visits,
+          (select count(distinct visitor_id) from visits where owner_user_id = $2 and created_at >= $1::timestamptz) as unique_visitors,
+          (select count(*) from click_events where owner_user_id = $2 and created_at >= $1::timestamptz) as total_clicks
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       service: StreamingLinkRecord["service"];
@@ -845,11 +1076,12 @@ export async function getAnalyticsSnapshot(
       `
         select service, count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by service
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       created_at: string;
@@ -858,9 +1090,10 @@ export async function getAnalyticsSnapshot(
       `
         select created_at, visitor_id
         from visits
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       created_at: string;
@@ -868,9 +1101,10 @@ export async function getAnalyticsSnapshot(
       `
         select created_at
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       label: string | null;
@@ -879,12 +1113,13 @@ export async function getAnalyticsSnapshot(
       `
         select coalesce(referrer_host, 'Direct') as label, count(*) as visits
         from visits
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by label
         order by visits desc
         limit 10
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       label: string | null;
@@ -893,11 +1128,12 @@ export async function getAnalyticsSnapshot(
       `
         select coalesce(referrer_host, 'Direct') as label, count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by label
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       source: string | null;
@@ -912,12 +1148,13 @@ export async function getAnalyticsSnapshot(
           coalesce(utm_campaign, '(none)') as campaign,
           count(*) as visits
         from visits
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by source, medium, campaign
         order by visits desc
         limit 10
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       source: string | null;
@@ -932,11 +1169,12 @@ export async function getAnalyticsSnapshot(
           coalesce(utm_campaign, '(none)') as campaign,
           count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by source, medium, campaign
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       country: string | null;
@@ -949,12 +1187,13 @@ export async function getAnalyticsSnapshot(
           coalesce(city, 'Unknown') as city,
           count(*) as visits
         from visits
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by country, city
         order by visits desc
         limit 10
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       country: string | null;
@@ -967,11 +1206,12 @@ export async function getAnalyticsSnapshot(
           coalesce(city, 'Unknown') as city,
           count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by country, city
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       label: string | null;
@@ -982,11 +1222,12 @@ export async function getAnalyticsSnapshot(
           coalesce(device_type, 'Unknown') as label,
           count(*) as visits
         from visits
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by label
         order by visits desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       label: string | null;
@@ -997,14 +1238,16 @@ export async function getAnalyticsSnapshot(
           coalesce(device_type, 'Unknown') as label,
           count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by label
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       song_id: string;
+      username: string;
       slug: string;
       title: string;
       visits: string | number;
@@ -1013,27 +1256,32 @@ export async function getAnalyticsSnapshot(
       `
         select
           s.id as song_id,
+          u.username,
           p.slug,
           s.title,
           coalesce(v.visits, 0) as visits,
           coalesce(c.clicks, 0) as clicks
         from songs s
         join song_pages p on p.song_id = s.id
+        join app_users u on u.id = s.owner_user_id
         left join (
           select song_id, count(*) as visits
           from visits
-          where created_at >= $1::timestamptz
+          where owner_user_id = $2
+            and created_at >= $1::timestamptz
           group by song_id
         ) v on v.song_id = s.id
         left join (
           select song_id, count(*) as clicks
           from click_events
-          where created_at >= $1::timestamptz
+          where owner_user_id = $2
+            and created_at >= $1::timestamptz
           group by song_id
         ) c on c.song_id = s.id
+        where s.owner_user_id = $2
         order by visits desc, clicks desc, title asc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
     dbQuery<{
       song_id: string;
@@ -1042,11 +1290,12 @@ export async function getAnalyticsSnapshot(
       `
         select song_id, count(*) as clicks
         from click_events
-        where created_at >= $1::timestamptz
+        where owner_user_id = $2
+          and created_at >= $1::timestamptz
         group by song_id
         order by clicks desc
       `,
-      [sinceIso],
+      [sinceIso, ownerUserId],
     ),
   ]);
 
@@ -1218,6 +1467,7 @@ export async function getAnalyticsSnapshot(
       .slice(0, 6),
     songs: songs.map((entry) => ({
       songId: entry.song_id,
+      username: entry.username,
       slug: entry.slug,
       title: entry.title,
       visits: Number(entry.visits),
@@ -1233,18 +1483,18 @@ export async function getAnalyticsSnapshot(
 }
 
 export async function recordVisit(input: {
+  ownerUserId: string;
   songId: string;
   pageId: string;
   path: string;
   context: TrackingContext;
 }) {
-  await ensureAppData();
-
   const visitId = createId("visit");
   await dbQuery(
     `
       insert into visits (
         id,
+        owner_user_id,
         song_id,
         page_id,
         visitor_id,
@@ -1264,10 +1514,11 @@ export async function recordVisit(input: {
         city,
         ip_hash
       )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
     `,
     [
       visitId,
+      input.ownerUserId,
       input.songId,
       input.pageId,
       input.context.visitorId,
@@ -1306,14 +1557,14 @@ function mergeAttribution(
 }
 
 export async function recordClickBySlug(input: {
+  username: string;
   slug: string;
   service: StreamingLinkRecord["service"];
   context: TrackingContext;
   lastVisitId: string | null;
   fallbackAttribution: UTMAttribution;
 }) {
-  await ensureAppData();
-  const page = await getPublishedSongPageBySlug(input.slug);
+  const page = await getPublishedSongPage(input.username, input.slug);
 
   if (!page) {
     return null;
@@ -1334,6 +1585,7 @@ export async function recordClickBySlug(input: {
       insert into click_events (
         id,
         visit_id,
+        owner_user_id,
         song_id,
         page_id,
         streaming_link_id,
@@ -1355,11 +1607,12 @@ export async function recordClickBySlug(input: {
         city,
         ip_hash
       )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     `,
     [
       createId("click"),
       input.lastVisitId,
+      page.song.ownerUserId,
       page.song.id,
       page.page.id,
       link.id,

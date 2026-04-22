@@ -1,8 +1,10 @@
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
+import { requireUserSession } from "@/lib/auth";
 import { getTrackingConfig } from "@/lib/data";
 
 export default async function AdminSettingsPage() {
-  const trackingConfig = await getTrackingConfig();
+  const session = await requireUserSession();
+  const trackingConfig = await getTrackingConfig(session.userId);
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)] xl:items-start">

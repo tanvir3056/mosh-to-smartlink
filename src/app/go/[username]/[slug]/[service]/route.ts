@@ -6,6 +6,7 @@ import { LAST_VISIT_COOKIE, STREAMING_SERVICES, VISITOR_COOKIE } from "@/lib/con
 import { recordClickBySlug } from "@/lib/data";
 import { appEnv } from "@/lib/env";
 import type { StreamingService } from "@/lib/types";
+import { buildPublicSongPath } from "@/lib/utils";
 
 function isStreamingService(value: string): value is StreamingService {
   return STREAMING_SERVICES.includes(value as StreamingService);
@@ -15,12 +16,13 @@ export async function GET(
   request: Request,
   context: {
     params: Promise<{
+      username: string;
       slug: string;
       service: string;
     }>;
   },
 ) {
-  const { slug, service } = await context.params;
+  const { username, slug, service } = await context.params;
 
   if (!isStreamingService(service)) {
     return NextResponse.redirect(new URL("/", request.url));
@@ -37,6 +39,7 @@ export async function GET(
   });
 
   const click = await recordClickBySlug({
+    username,
     slug,
     service,
     context: contextSnapshot,
@@ -45,7 +48,7 @@ export async function GET(
   });
 
   if (!click?.destinationUrl) {
-    return NextResponse.redirect(new URL(`/${slug}`, request.url));
+    return NextResponse.redirect(new URL(buildPublicSongPath(username, slug), request.url));
   }
 
   const response = NextResponse.redirect(click.destinationUrl, { status: 307 });

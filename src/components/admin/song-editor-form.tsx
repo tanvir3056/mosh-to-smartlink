@@ -147,6 +147,7 @@ export function SongEditorForm({
           </div>
 
           <PublicLinkPanel
+            username={page.page.username}
             slug={page.page.slug}
             status={page.page.status}
             previewHref={`/admin/preview/${page.song.id}`}

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import type { ActionState } from "@/app/admin/action-types";
 import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
-import { signInAdmin, signOutAdmin } from "@/lib/auth";
+import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/auth";
 import {
   createSongImportDraft,
   deleteSongById,
@@ -15,6 +15,7 @@ import {
 import { buildImportBundle } from "@/lib/matching";
 import type { MatchCandidate, MatchStatus, TrackingConfig } from "@/lib/types";
 import { fetchSpotifyTrackImport } from "@/lib/spotify";
+import { buildPublicSongPath } from "@/lib/utils";
 
 function getStringValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -61,17 +62,43 @@ export async function signInAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const email = getStringValue(formData, "email");
+  const username = getStringValue(formData, "username");
   const password = getStringValue(formData, "password");
 
-  if (!email || !password) {
+  if (!username || !password) {
     return {
-      error: "Enter the admin email and password.",
+      error: "Enter your username and password.",
       success: null,
     };
   }
 
-  const result = await signInAdmin(email, password);
+  const result = await signInUser(username, password);
+
+  if (result.error) {
+    return {
+      error: result.error,
+      success: null,
+    };
+  }
+
+  redirect("/admin");
+}
+
+export async function signUpAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const username = getStringValue(formData, "username");
+  const password = getStringValue(formData, "password");
+
+  if (!username || !password) {
+    return {
+      error: "Choose a username and password to create your account.",
+      success: null,
+    };
+  }
+
+  const result = await signUpUser(username, password);
 
   if (result.error) {
     return {
@@ -84,8 +111,8 @@ export async function signInAction(
 }
 
 export async function signOutAction() {
-  await signOutAdmin();
-  redirect("/admin/sign-in");
+  await signOutUser();
+  redirect("/sign-in");
 }
 
 export async function importSpotifyTrackAction(
@@ -93,7 +120,8 @@ export async function importSpotifyTrackAction(
   formData: FormData,
 ): Promise<ActionState> {
   const spotifyUrl = getStringValue(formData, "spotify_url");
-  const requestedBy = getStringValue(formData, "requested_by") || "admin";
+  const session = await requireUserSession();
+  const requestedBy = session.username;
 
   if (!spotifyUrl) {
     return {
@@ -107,7 +135,7 @@ export async function importSpotifyTrackAction(
   try {
     const track = await fetchSpotifyTrackImport(spotifyUrl);
     const bundle = await buildImportBundle(track);
-    songId = await createSongImportDraft(bundle, requestedBy);
+    songId = await createSongImportDraft(bundle, requestedBy, session.userId);
   } catch (error) {
     return {
       error:
@@ -145,10 +173,13 @@ export async function updateSongAction(
       ? "published"
       : intent === "unpublish"
         ? "unpublished"
-        : "draft";
+      : "draft";
+
+  const session = await requireUserSession();
 
   try {
     await updateSongDraft({
+      ownerUserId: session.userId,
       songId,
       title,
       artistName,
@@ -164,6 +195,8 @@ export async function updateSongAction(
     revalidatePath("/admin");
     revalidatePath("/admin/analytics");
     revalidatePath(`/admin/songs/${songId}`);
+    const slug = getStringValue(formData, "slug") || `${artistName}-${title}`;
+    revalidatePath(buildPublicSongPath(session.username, slug));
 
     return {
       error: null,
@@ -189,6 +222,7 @@ export async function saveTrackingSettingsAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const session = await requireUserSession();
   const input: TrackingConfig = {
     siteName: getStringValue(formData, "site_name") || APP_NAME,
     metaPixelId: getNullableStringValue(formData, "meta_pixel_id"),
@@ -196,7 +230,7 @@ export async function saveTrackingSettingsAction(
     metaTestEventCode: getNullableStringValue(formData, "meta_test_event_code"),
   };
 
-  await saveTrackingConfig(input);
+  await saveTrackingConfig(session.userId, input);
 
   revalidatePath("/admin/settings");
   revalidatePath("/admin");
@@ -209,19 +243,20 @@ export async function saveTrackingSettingsAction(
 
 export async function deleteSongAction(formData: FormData) {
   const songId = getStringValue(formData, "song_id");
+  const session = await requireUserSession();
 
   if (!songId) {
     throw new Error("Missing song id.");
   }
 
-  const deleted = await deleteSongById(songId);
+  const deleted = await deleteSongById(songId, session.userId);
 
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/analytics");
 
-  if (deleted.slug) {
-    revalidatePath(`/${deleted.slug}`);
+  if (deleted.slug && deleted.username) {
+    revalidatePath(buildPublicSongPath(deleted.username, deleted.slug));
   }
 
   redirect("/admin");

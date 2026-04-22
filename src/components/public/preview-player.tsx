@@ -77,7 +77,7 @@ export function PreviewPlayer({
           fill
           priority
           sizes="(max-width: 640px) 100vw, 432px"
-          className="object-cover object-top"
+          className="object-cover object-center"
           unoptimized={artworkUrl.startsWith("data:")}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0)_55%,rgba(8,10,14,0.14)_100%)]" />

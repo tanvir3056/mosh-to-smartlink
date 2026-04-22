@@ -6,19 +6,19 @@ function escapeForInlineScript(value: unknown) {
 }
 
 export function VisitTracker({
-  songId,
-  pageId,
+  username,
+  slug,
   path,
   searchString,
 }: {
-  songId: string;
-  pageId: string;
+  username: string;
+  slug: string;
   path: string;
   searchString: string;
 }) {
   const payload = escapeForInlineScript({
-    songId,
-    pageId,
+    username,
+    slug,
     path,
     searchString,
   });
@@ -29,7 +29,7 @@ export function VisitTracker({
         __html: `
           (() => {
             const payload = ${payload};
-            const cacheKey = [payload.pageId, payload.path, payload.searchString].join("::");
+            const cacheKey = [payload.username, payload.slug, payload.path, payload.searchString].join("::");
 
             if (window.__ffmLastTrackedVisit === cacheKey) {
               return;

@@ -1,64 +1,100 @@
 import { loadEnvConfig } from "@next/env";
-import { createClient } from "@supabase/supabase-js";
 
 loadEnvConfig(process.cwd());
 
 async function main() {
-  const [{ ensureAdminAccess }, { appEnv }] = await Promise.all([
-    import("../src/lib/data"),
-    import("../src/lib/env"),
-  ]);
+  const [{ createAdminSupabaseClient }, { createAccountOwner, getUserByUsername, linkUserAuthIdentity, updateLocalPasswordHash }, { appEnv }, { hashPassword }, { normalizeUsername }] =
+    await Promise.all([
+      import("../src/lib/auth"),
+      import("../src/lib/data"),
+      import("../src/lib/env"),
+      import("../src/lib/passwords"),
+      import("../src/lib/utils"),
+    ]);
 
-  const email = process.argv[2] ?? appEnv.adminEmail;
+  const firstArg = process.argv[2] ?? appEnv.adminEmail;
   const password = process.argv[3] ?? appEnv.demoAdminPassword;
+  const username = normalizeUsername(
+    firstArg.includes("@") ? firstArg.split("@")[0] ?? "owner" : firstArg,
+  );
+  const loginEmail =
+    firstArg.includes("@") ? firstArg : `${username}@users.backstage.local`;
 
-  await ensureAdminAccess(email, null);
+  const existingUser = await getUserByUsername(username);
 
   if (!appEnv.hasSupabaseAdmin || !appEnv.supabaseUrl || !appEnv.supabaseServiceRoleKey) {
-    console.log("Supabase admin credentials are not configured.");
-    console.log(`Local demo admin email: ${email}`);
-    console.log(`Local demo admin password: ${password}`);
+    const passwordHash = await hashPassword(password);
+
+    if (existingUser) {
+      await updateLocalPasswordHash(existingUser.id, passwordHash);
+      console.log(`Local user updated: ${username}`);
+      return;
+    }
+
+    await createAccountOwner({
+      userId: `user_${crypto.randomUUID()}`,
+      username,
+      loginEmail,
+      passwordHash,
+    });
+
+    console.log(`Local user ready: ${username}`);
     return;
   }
 
-  const supabase = createClient(appEnv.supabaseUrl, appEnv.supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  const supabase = createAdminSupabaseClient();
 
-  const { data: existingUsers, error: listError } =
-    await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
+  const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 200,
+  });
 
   if (listError) {
     throw listError;
   }
 
-  const existingUser = existingUsers.users.find((user) => user.email === email);
+  const existingAuthUser =
+    existingUsers.users.find((user) => user.email === loginEmail) ??
+    (existingUser?.authUserId
+      ? existingUsers.users.find((user) => user.id === existingUser.authUserId)
+      : undefined);
 
-  const { data, error } = existingUser
-    ? await supabase.auth.admin.updateUserById(existingUser.id, {
-        email,
+  const { data, error } = existingAuthUser
+    ? await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+        email: loginEmail,
         password,
         email_confirm: true,
+        user_metadata: {
+          username,
+        },
       })
     : await supabase.auth.admin.createUser({
-        email,
+        email: loginEmail,
         password,
         email_confirm: true,
+        user_metadata: {
+          username,
+        },
       });
 
-  if (error) {
-    throw error;
+  if (error || !data.user?.id) {
+    throw error ?? new Error("The Supabase user could not be created.");
   }
 
-  await ensureAdminAccess(email, data.user.id);
+  if (existingUser) {
+    await linkUserAuthIdentity(existingUser.id, data.user.id);
+    console.log(`User updated: ${username}`);
+    return;
+  }
 
-  console.log(`Admin user ready: ${email}`);
+  await createAccountOwner({
+    userId: data.user.id,
+    authUserId: data.user.id,
+    username,
+    loginEmail,
+  });
+
+  console.log(`User ready: ${username}`);
 }
 
 main().catch((error) => {

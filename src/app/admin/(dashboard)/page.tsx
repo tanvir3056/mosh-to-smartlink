@@ -13,8 +13,9 @@ import {
 import { DeleteSongButton } from "@/components/admin/delete-song-button";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Button } from "@/components/ui/button";
+import { requireUserSession } from "@/lib/auth";
 import { getDashboardSnapshot } from "@/lib/data";
-import { formatDateTime } from "@/lib/utils";
+import { buildPublicSongPath, formatDateTime } from "@/lib/utils";
 
 function ctr(clicks: number, visits: number) {
   if (visits <= 0) {
@@ -25,7 +26,8 @@ function ctr(clicks: number, visits: number) {
 }
 
 export default async function AdminOverviewPage() {
-  const snapshot = await getDashboardSnapshot();
+  const session = await requireUserSession();
+  const snapshot = await getDashboardSnapshot(session.userId);
   const liveRate =
     snapshot.totalSongs > 0
       ? `${Math.round((snapshot.publishedSongs / snapshot.totalSongs) * 100)}% live`
@@ -178,6 +180,7 @@ export default async function AdminOverviewPage() {
                         <div className="text-sm text-[var(--app-muted)]">{song.artistName}</div>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-[var(--app-muted)]">
                           <span>/{song.slug}</span>
+                          <span>@{song.username}</span>
                           <span>Updated {formatDateTime(song.updatedAt)}</span>
                         </div>
                       </div>
@@ -216,7 +219,7 @@ export default async function AdminOverviewPage() {
                         </Button>
                       </Link>
                       {song.status === "published" ? (
-                        <Link href={`/${song.slug}`}>
+                        <Link href={buildPublicSongPath(song.username, song.slug)}>
                           <Button tone="secondary">
                             <ArrowUpRight className="h-4 w-4" />
                             Live

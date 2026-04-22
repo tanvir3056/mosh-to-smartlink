@@ -5,6 +5,7 @@ import { PreviewPlayer } from "@/components/public/preview-player";
 import { ServiceList } from "@/components/public/service-list";
 import { VisitTracker } from "@/components/public/visit-tracker";
 import type { SongPageWithLinks } from "@/lib/types";
+import { buildPublicSongPath } from "@/lib/utils";
 
 export function PublicSongPage({
   page,
@@ -80,9 +81,9 @@ export function PublicSongPage({
 
       {!isPreview ? (
         <VisitTracker
-          songId={page.song.id}
-          pageId={page.page.id}
-          path={`/${page.page.slug}`}
+          username={page.page.username}
+          slug={page.page.slug}
+          path={buildPublicSongPath(page.page.username, page.page.slug)}
           searchString={searchString}
         />
       ) : null}

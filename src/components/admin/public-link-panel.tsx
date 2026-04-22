@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import type { PageStatus } from "@/lib/types";
+import { buildPublicSongPath } from "@/lib/utils";
 
 function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
   return tone === "primary"
@@ -13,10 +14,12 @@ function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
 }
 
 export function PublicLinkPanel({
+  username,
   slug,
   status,
   previewHref,
 }: {
+  username: string;
   slug: string;
   status: PageStatus;
   previewHref: string;
@@ -33,7 +36,7 @@ export function PublicLinkPanel({
   }, [copied]);
 
   const isPublished = status === "published";
-  const publicPath = `/${slug}`;
+  const publicPath = buildPublicSongPath(username, slug);
   const publicUrl =
     typeof window === "undefined"
       ? publicPath

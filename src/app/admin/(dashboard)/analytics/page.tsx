@@ -9,8 +9,10 @@ import {
   Users,
 } from "lucide-react";
 
+import { requireUserSession } from "@/lib/auth";
 import { SERVICE_LABELS } from "@/lib/constants";
 import { getAnalyticsSnapshot } from "@/lib/data";
+import { buildPublicSongPath } from "@/lib/utils";
 
 const RANGE_OPTIONS = [
   { label: "7D", days: 7 },
@@ -209,7 +211,8 @@ export default async function AdminAnalyticsPage({
 }) {
   const params = (await searchParams) ?? {};
   const rangeDays = parseRangeDays(params.range);
-  const analytics = await getAnalyticsSnapshot(rangeDays);
+  const session = await requireUserSession();
+  const analytics = await getAnalyticsSnapshot(session.userId, rangeDays);
 
   const topService = analytics.serviceBreakdown[0];
   const topReferrer = analytics.referrers[0];
@@ -244,7 +247,7 @@ export default async function AdminAnalyticsPage({
             </p>
           </div>
 
-          <div className="inline-grid grid-cols-3 gap-2 rounded-full border border-[var(--app-line)] bg-white/78 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-sm">
+          <div className="grid w-full max-w-[18rem] grid-cols-3 rounded-full border border-[var(--app-line)] bg-white/82 p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-sm sm:w-auto">
             {RANGE_OPTIONS.map((option) => {
               const active = option.days === rangeDays;
 
@@ -253,7 +256,7 @@ export default async function AdminAnalyticsPage({
                   <span
                     key={option.days}
                     aria-current="page"
-                    className="inline-flex min-h-11 w-[4.75rem] items-center justify-center rounded-full border border-[var(--app-line-strong)] bg-[var(--app-panel-muted)] px-3 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.06)] sm:w-[6.25rem] sm:px-4"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-panel-muted)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]"
                     style={{
                       color: "#151922",
                       WebkitTextFillColor: "#151922",
@@ -275,7 +278,7 @@ export default async function AdminAnalyticsPage({
                 <Link
                   key={option.days}
                   href={`/admin/analytics?range=${option.days}`}
-                  className="inline-flex min-h-11 w-[4.75rem] items-center justify-center rounded-full border border-[var(--app-line)] bg-white px-3 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] sm:w-[6.25rem] sm:px-4"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,color] duration-200 ease-out hover:bg-[var(--app-panel-muted)]"
                   style={{
                     color: "#151922",
                     WebkitTextFillColor: "#151922",
@@ -680,7 +683,9 @@ export default async function AdminAnalyticsPage({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-medium text-[var(--app-text)]">{row.title}</div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">/{row.slug}</div>
+                      <div className="mt-1 text-sm text-[var(--app-muted)]">
+                        {buildPublicSongPath(row.username, row.slug)}
+                      </div>
                     </div>
                     <div className="text-sm text-[var(--app-text)]">
                       {row.visits} visits • {row.clicks} clicks • {formatPercent(row.ctr)} CTR

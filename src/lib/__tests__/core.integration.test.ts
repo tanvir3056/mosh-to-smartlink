@@ -74,6 +74,10 @@ const IMPORT_BUNDLE: ImportBundle = {
   importStatus: "partial",
 };
 
+const USER_ID = "user_test_owner";
+const USERNAME = "north-vale";
+const LOGIN_EMAIL = "north-vale@users.backstage.local";
+
 beforeEach(() => {
   process.env.POSTGRES_URL = "";
   process.env.LOCAL_DB_PATH = "memory://";
@@ -86,23 +90,32 @@ beforeEach(() => {
 describe("core data flow", () => {
   test("imports, publishes, records analytics, and exposes the public page", async () => {
     const {
+      createAccountOwner,
       createSongImportDraft,
       deleteSongById,
       getAdminSongPageBySongId,
-      getPublishedSongPageBySlug,
+      getPublishedSongPage,
       updateSongDraft,
       recordVisit,
       recordClickBySlug,
       getAnalyticsSnapshot,
     } = await import("@/lib/data");
 
-    const songId = await createSongImportDraft(IMPORT_BUNDLE, "admin@local.test");
-    const adminPage = await getAdminSongPageBySongId(songId);
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
+    const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
 
     expect(adminPage).not.toBeNull();
-    expect(await getPublishedSongPageBySlug(adminPage!.page.slug)).toBeNull();
+    expect(await getPublishedSongPage(USERNAME, adminPage!.page.slug)).toBeNull();
 
     await updateSongDraft({
+      ownerUserId: USER_ID,
       songId,
       title: adminPage!.song.title,
       artistName: adminPage!.song.artistName,
@@ -122,15 +135,16 @@ describe("core data flow", () => {
       })),
     });
 
-    const publishedPage = await getPublishedSongPageBySlug(adminPage!.page.slug);
+    const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
 
     expect(publishedPage?.song.title).toBe("Glass Hearts");
     expect(publishedPage?.page.status).toBe("published");
 
     const visitId = await recordVisit({
+      ownerUserId: USER_ID,
       songId: publishedPage!.song.id,
       pageId: publishedPage!.page.id,
-      path: `/${publishedPage!.page.slug}`,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
       context: {
         visitorId: "visitor_1",
         referrer: "https://instagram.com",
@@ -151,11 +165,12 @@ describe("core data flow", () => {
     });
 
     const click = await recordClickBySlug({
+      username: USERNAME,
       slug: publishedPage!.page.slug,
       service: "spotify",
       context: {
         visitorId: "visitor_1",
-        referrer: `http://localhost:3000/${publishedPage!.page.slug}`,
+        referrer: `http://localhost:3000/${USERNAME}/${publishedPage!.page.slug}`,
         referrerHost: "localhost:3000",
         userAgent: "Mozilla/5.0",
         browserName: "Chrome",
@@ -182,7 +197,7 @@ describe("core data flow", () => {
 
     expect(click?.destinationUrl).toContain("spotify.com");
 
-    const analytics = await getAnalyticsSnapshot();
+    const analytics = await getAnalyticsSnapshot(USER_ID);
     expect(analytics.totalVisits).toBe(1);
     expect(analytics.uniqueVisitors).toBe(1);
     expect(analytics.totalClicks).toBe(1);
@@ -193,12 +208,12 @@ describe("core data flow", () => {
     expect(analytics.devices[0]?.label).toBe("mobile");
     expect(analytics.daily).toHaveLength(30);
 
-    const deleted = await deleteSongById(songId);
+    const deleted = await deleteSongById(songId, USER_ID);
     expect(deleted.slug).toBe(adminPage!.page.slug);
-    expect(await getAdminSongPageBySongId(songId)).toBeNull();
-    expect(await getPublishedSongPageBySlug(adminPage!.page.slug)).toBeNull();
+    expect(await getAdminSongPageBySongId(songId, USER_ID)).toBeNull();
+    expect(await getPublishedSongPage(USERNAME, adminPage!.page.slug)).toBeNull();
 
-    const analyticsAfterDelete = await getAnalyticsSnapshot();
+    const analyticsAfterDelete = await getAnalyticsSnapshot(USER_ID);
     expect(analyticsAfterDelete.totalVisits).toBe(0);
     expect(analyticsAfterDelete.totalClicks).toBe(0);
   });

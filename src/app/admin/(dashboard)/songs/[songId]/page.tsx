@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { SongEditorForm } from "@/components/admin/song-editor-form";
+import { requireUserSession } from "@/lib/auth";
 import { getAdminSongPageBySongId, getDashboardSnapshot } from "@/lib/data";
 
 export default async function EditSongPage({
@@ -8,10 +9,11 @@ export default async function EditSongPage({
 }: {
   params: Promise<{ songId: string }>;
 }) {
+  const session = await requireUserSession();
   const { songId } = await params;
   const [page, dashboard] = await Promise.all([
-    getAdminSongPageBySongId(songId),
-    getDashboardSnapshot(),
+    getAdminSongPageBySongId(songId, session.userId),
+    getDashboardSnapshot(session.userId),
   ]);
 
   if (!page) {

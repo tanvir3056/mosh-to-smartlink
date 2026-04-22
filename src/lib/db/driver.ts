@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
@@ -178,20 +178,91 @@ async function queryPgClient<T extends QueryResultRow = QueryResultRow>(
   return result.rows;
 }
 
+function prepareMigrationSqlForLocalRuntime(entry: string, sql: string) {
+  let prepared = sql
+    .replace(/do\s+\$\$[\s\S]*?\$\$;/gi, "")
+    .replace(
+      /alter table(?:\s+if exists)?\s+tracking_config\s+drop constraint(?:\s+if exists)?\s+tracking_config_id_check\s*;/gi,
+      "",
+    )
+    .replace(
+      /alter table(?:\s+if exists)?\s+songs\s+drop constraint(?:\s+if exists)?\s+songs_spotify_track_id_key\s*;/gi,
+      "",
+    )
+    .replace(
+      /alter table(?:\s+if exists)?\s+song_pages\s+drop constraint(?:\s+if exists)?\s+song_pages_slug_key\s*;/gi,
+      "",
+    )
+    .replace(/\bif not exists\b/gi, "")
+    .replace(/\bif exists\b/gi, "");
+
+  if (entry === "20260417193000_initial.sql") {
+    prepared = prepared
+      .replace(
+        /id text primary key check \(id = 'singleton'\),/g,
+        "id text primary key,",
+      )
+      .replace(/spotify_track_id text not null unique,/g, "spotify_track_id text not null,")
+      .replace(/slug text not null unique,/g, "slug text not null,");
+  }
+
+  if (entry === "20260422183000_multi_account.sql") {
+    return `
+create table app_users (
+  id text primary key,
+  auth_user_id text unique,
+  username text not null unique,
+  login_email text not null unique,
+  password_hash text,
+  created_at timestamptz not null default current_timestamp,
+  updated_at timestamptz not null default current_timestamp
+);
+
+alter table tracking_config add column owner_user_id text references app_users(id) on delete cascade;
+alter table songs add column owner_user_id text references app_users(id) on delete cascade;
+alter table song_pages add column owner_user_id text references app_users(id) on delete cascade;
+alter table visits add column owner_user_id text references app_users(id) on delete cascade;
+alter table click_events add column owner_user_id text references app_users(id) on delete cascade;
+alter table import_attempts add column owner_user_id text references app_users(id) on delete cascade;
+
+alter table songs
+  add constraint songs_owner_spotify_track_key unique (owner_user_id, spotify_track_id);
+alter table song_pages
+  add constraint song_pages_owner_slug_key unique (owner_user_id, slug);
+alter table tracking_config
+  add constraint tracking_config_owner_user_id_key unique (owner_user_id);
+create index if not exists songs_owner_updated_idx
+  on songs (owner_user_id, updated_at desc);
+create index if not exists song_pages_owner_status_idx
+  on song_pages (owner_user_id, status, updated_at desc);
+create index if not exists visits_owner_created_idx
+  on visits (owner_user_id, created_at desc);
+create index if not exists click_events_owner_created_idx
+  on click_events (owner_user_id, created_at desc);
+create index if not exists import_attempts_owner_created_idx
+  on import_attempts (owner_user_id, created_at desc);
+`;
+  }
+
+  return prepared;
+}
+
 async function createLocalRuntime(): Promise<DatabaseRuntime> {
   const { newDb } = await import("pg-mem");
-  const migrationPath = path.join(
-    process.cwd(),
-    "supabase",
-    "migrations",
-    "20260417193000_initial.sql",
-  );
-  const migrationSql = await readFile(migrationPath, "utf8");
+  const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
+  const migrationEntries = (await readdir(migrationDirectory))
+    .filter((entry) => entry.endsWith(".sql"))
+    .sort((left, right) => left.localeCompare(right));
   const memoryDb = newDb({
     autoCreateForeignKeyIndices: true,
   });
 
-  memoryDb.public.none(migrationSql);
+  for (const entry of migrationEntries) {
+    const migrationPath = path.join(migrationDirectory, entry);
+    const migrationSql = await readFile(migrationPath, "utf8");
+    memoryDb.public.none(prepareMigrationSqlForLocalRuntime(entry, migrationSql));
+  }
+
   const adapter = memoryDb.adapters.createPg();
   const LocalPool = adapter.Pool as typeof Pool;
   const pool = new LocalPool();

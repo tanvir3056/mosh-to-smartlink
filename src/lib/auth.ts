@@ -1,17 +1,28 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ADMIN_SESSION_COOKIE } from "@/lib/constants";
-import { ensureAdminAccess } from "@/lib/data";
-import { appEnv } from "@/lib/env";
+import {
+  createAccountOwner,
+  getUserByAuthUserId,
+  getUserById,
+  getUserByLoginEmail,
+  getUserByUsername,
+  linkUserAuthIdentity,
+} from "@/lib/data";
+import { appEnv, assertSupabaseAdminEnv } from "@/lib/env";
+import { hashPassword, verifyPassword } from "@/lib/passwords";
+import { createId, normalizeUsername } from "@/lib/utils";
 
-export interface AdminSession {
-  email: string;
-  userId: string | null;
-  mode: "supabase" | "demo";
+export interface AppSession {
+  userId: string;
+  username: string;
+  loginEmail: string;
+  mode: "supabase" | "local";
 }
 
 function signPayload(value: string) {
@@ -20,17 +31,23 @@ function signPayload(value: string) {
     .digest("hex");
 }
 
-function encodeSession(email: string) {
-  const payload = JSON.stringify({
-    email,
+function encodeSession(payload: {
+  userId: string;
+  username: string;
+  loginEmail: string;
+}) {
+  const raw = JSON.stringify({
+    ...payload,
     issuedAt: Date.now(),
   });
-  const encoded = Buffer.from(payload).toString("base64url");
+  const encoded = Buffer.from(raw).toString("base64url");
   const signature = signPayload(encoded);
   return `${encoded}.${signature}`;
 }
 
-function decodeSession(token: string | undefined) {
+function decodeSession(
+  token: string | undefined,
+): { userId: string; username: string; loginEmail: string } | null {
   if (!token) {
     return null;
   }
@@ -50,18 +67,58 @@ function decodeSession(token: string | undefined) {
 
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as {
-      email?: string;
-      issuedAt?: number;
+      userId?: string;
+      username?: string;
+      loginEmail?: string;
     };
 
-    if (!payload.email) {
+    if (!payload.userId || !payload.username || !payload.loginEmail) {
       return null;
     }
 
-    return payload;
+    return {
+      userId: payload.userId,
+      username: payload.username,
+      loginEmail: payload.loginEmail,
+    };
   } catch {
     return null;
   }
+}
+
+function buildSyntheticLoginEmail(username: string) {
+  return `${normalizeUsername(username)}@users.backstage.local`;
+}
+
+function validateUsername(username: string) {
+  const normalized = normalizeUsername(username);
+
+  if (normalized.length < 3) {
+    return {
+      normalized,
+      error: "Usernames need at least 3 characters.",
+    };
+  }
+
+  if (normalized.length > 32) {
+    return {
+      normalized,
+      error: "Usernames must stay under 32 characters.",
+    };
+  }
+
+  return {
+    normalized,
+    error: null,
+  };
+}
+
+function validatePassword(password: string) {
+  if (password.length < 8) {
+    return "Passwords need at least 8 characters.";
+  }
+
+  return null;
 }
 
 export async function createServerSupabaseClient() {
@@ -82,126 +139,261 @@ export async function createServerSupabaseClient() {
             cookieStore.set(name, value, options),
           );
         } catch {
-          // Next.js blocks cookie mutation in some render contexts; route handlers
-          // and server actions still apply the session cookies correctly.
+          // Cookie mutation is blocked in some render contexts; sign-in/out server
+          // actions still apply session cookies correctly.
         }
       },
     },
   });
 }
 
-async function getDemoAdminSession() {
+export function createAdminSupabaseClient() {
+  assertSupabaseAdminEnv();
+
+  return createClient(appEnv.supabaseUrl!, appEnv.supabaseServiceRoleKey!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+async function writeLocalSessionCookie(session: {
+  userId: string;
+  username: string;
+  loginEmail: string;
+}) {
+  const cookieStore = await cookies();
+  cookieStore.set(ADMIN_SESSION_COOKIE, encodeSession(session), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: appEnv.nodeEnv === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
+async function getLocalSession() {
   const cookieStore = await cookies();
   const payload = decodeSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 
-  if (!payload || payload.email !== appEnv.adminEmail) {
+  if (!payload) {
     return null;
   }
 
-  await ensureAdminAccess(payload.email, null);
+  const user = await getUserById(payload.userId);
+
+  if (!user || user.username !== payload.username || user.loginEmail !== payload.loginEmail) {
+    return null;
+  }
+
   return {
-    email: payload.email,
-    userId: null,
-    mode: "demo",
-  } satisfies AdminSession;
+    userId: user.id,
+    username: user.username,
+    loginEmail: user.loginEmail,
+    mode: "local",
+  } satisfies AppSession;
 }
 
-export async function getAdminSession(): Promise<AdminSession | null> {
+export async function getUserSession(): Promise<AppSession | null> {
   if (appEnv.hasSupabaseAuth) {
     const supabase = await createServerSupabaseClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user?.email || user.email !== appEnv.adminEmail) {
+    if (!user?.id) {
       return null;
     }
 
-    await ensureAdminAccess(user.email, user.id);
+    let appUser = await getUserByAuthUserId(user.id);
+
+    if (!appUser && user.email) {
+      const loginEmail = user.email;
+      appUser = await getUserByLoginEmail(loginEmail);
+
+      if (appUser && !appUser.authUserId) {
+        await linkUserAuthIdentity(appUser.id, user.id);
+        appUser = {
+          ...appUser,
+          authUserId: user.id,
+        };
+      }
+    }
+
+    if (!appUser) {
+      return null;
+    }
 
     return {
-      email: user.email,
-      userId: user.id,
+      userId: appUser.id,
+      username: appUser.username,
+      loginEmail: appUser.loginEmail,
       mode: "supabase",
     };
   }
 
-  if (appEnv.isDemoAuthEnabled) {
-    return getDemoAdminSession();
-  }
-
-  return null;
+  return getLocalSession();
 }
 
-export async function requireAdminSession() {
-  const session = await getAdminSession();
+export async function requireUserSession() {
+  const session = await getUserSession();
 
   if (!session) {
-    redirect("/admin/sign-in");
+    redirect("/sign-in");
   }
 
   return session;
 }
 
-export async function signInAdmin(email: string, password: string) {
-  if (email !== appEnv.adminEmail) {
+export async function signInUser(username: string, password: string) {
+  const normalizedUsername = normalizeUsername(username);
+  const user = await getUserByUsername(normalizedUsername);
+
+  if (!user) {
     return {
-      error: "This deployment is locked to the configured single admin account.",
+      error: "That username or password is incorrect.",
     };
   }
 
   if (appEnv.hasSupabaseAuth) {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: user.loginEmail,
       password,
     });
 
-    if (error) {
+    if (error || !data.user?.id) {
       return {
-        error: error.message,
+        error: "That username or password is incorrect.",
       };
     }
 
-    if (data.user?.email !== appEnv.adminEmail) {
-      await supabase.auth.signOut();
-      return {
-        error: "This account is not allowed to access the admin dashboard.",
-      };
+    if (data.user.id !== user.authUserId) {
+      await linkUserAuthIdentity(user.id, data.user.id);
     }
 
-    await ensureAdminAccess(data.user.email, data.user.id);
     return { error: null };
   }
 
-  if (!appEnv.isDemoAuthEnabled) {
+  const matches = await verifyPassword(password, user.passwordHash);
+
+  if (!matches) {
     return {
-      error:
-        "Supabase auth is not configured. Add Supabase env vars or enable local demo auth in development.",
+      error: "That username or password is incorrect.",
     };
   }
 
-  if (password !== appEnv.demoAdminPassword) {
-    return {
-      error: "Incorrect local admin password.",
-    };
-  }
-
-  const cookieStore = await cookies();
-  cookieStore.set(ADMIN_SESSION_COOKIE, encodeSession(email), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: appEnv.nodeEnv === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+  await writeLocalSessionCookie({
+    userId: user.id,
+    username: user.username,
+    loginEmail: user.loginEmail,
   });
-
-  await ensureAdminAccess(email, null);
 
   return { error: null };
 }
 
-export async function signOutAdmin() {
+export async function signUpUser(username: string, password: string) {
+  const { normalized, error: usernameError } = validateUsername(username);
+
+  if (usernameError) {
+    return {
+      error: usernameError,
+    };
+  }
+
+  const passwordError = validatePassword(password);
+
+  if (passwordError) {
+    return {
+      error: passwordError,
+    };
+  }
+
+  const existingUser = await getUserByUsername(normalized);
+
+  if (existingUser) {
+    return {
+      error: "That username is already taken.",
+    };
+  }
+
+  const loginEmail = buildSyntheticLoginEmail(normalized);
+
+  if (appEnv.hasSupabaseAuth) {
+    if (!appEnv.hasSupabaseAdmin) {
+      return {
+        error: "This deployment is missing the server-side Supabase auth key needed for sign-up.",
+      };
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { data, error } = await admin.auth.admin.createUser({
+      email: loginEmail,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        username: normalized,
+      },
+    });
+
+    if (error || !data.user?.id) {
+      return {
+        error: error?.message ?? "The account could not be created.",
+      };
+    }
+
+    try {
+      await createAccountOwner({
+        userId: data.user.id,
+        authUserId: data.user.id,
+        username: normalized,
+        loginEmail,
+      });
+    } catch (accountError) {
+      await admin.auth.admin.deleteUser(data.user.id);
+      return {
+        error:
+          accountError instanceof Error
+            ? accountError.message
+            : "The account could not be created.",
+      };
+    }
+
+    const supabase = await createServerSupabaseClient();
+    const signIn = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password,
+    });
+
+    if (signIn.error) {
+      return {
+        error: signIn.error.message,
+      };
+    }
+
+    return { error: null };
+  }
+
+  const userId = createId("user");
+  const passwordHash = await hashPassword(password);
+  const user = await createAccountOwner({
+    userId,
+    username: normalized,
+    loginEmail,
+    passwordHash,
+  });
+
+  await writeLocalSessionCookie({
+    userId: user.id,
+    username: user.username,
+    loginEmail: user.loginEmail,
+  });
+
+  return { error: null };
+}
+
+export async function signOutUser() {
   if (appEnv.hasSupabaseAuth) {
     const supabase = await createServerSupabaseClient();
     await supabase.auth.signOut();

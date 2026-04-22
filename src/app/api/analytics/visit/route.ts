@@ -3,19 +3,19 @@ import { NextResponse } from "next/server";
 
 import { LAST_VISIT_COOKIE, VISITOR_COOKIE } from "@/lib/constants";
 import { summariseRequestContext } from "@/lib/analytics";
-import { recordVisit } from "@/lib/data";
+import { getPublishedSongPage, recordVisit } from "@/lib/data";
 import { appEnv } from "@/lib/env";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
-    songId?: string;
-    pageId?: string;
+    username?: string;
+    slug?: string;
     path?: string;
     searchString?: string;
     referrer?: string | null;
   };
 
-  if (!body.songId || !body.pageId || !body.path) {
+  if (!body.username || !body.slug || !body.path) {
     return NextResponse.json(
       {
         error: "Missing tracking payload.",
@@ -32,9 +32,21 @@ export async function POST(request: Request) {
     referrer: body.referrer ?? null,
     searchParams,
   });
+  const page = await getPublishedSongPage(body.username, body.slug);
+
+  if (!page) {
+    return NextResponse.json(
+      {
+        error: "Song page not found.",
+      },
+      { status: 404 },
+    );
+  }
+
   const visitId = await recordVisit({
-    songId: body.songId,
-    pageId: body.pageId,
+    ownerUserId: page.song.ownerUserId,
+    songId: page.song.id,
+    pageId: page.page.id,
     path: body.path,
     context,
   });
