@@ -194,7 +194,11 @@ export function SongEditorForm({
               <input name="headline" defaultValue={page.page.headline} className="app-input" />
             </MetaField>
 
-            <ArtworkUploadField value={artworkUrl} onChange={setArtworkUrl} />
+            <ArtworkUploadField
+              value={artworkUrl}
+              onChange={setArtworkUrl}
+              songId={page.song.id}
+            />
 
             <MetaField label="Preview URL">
               <input

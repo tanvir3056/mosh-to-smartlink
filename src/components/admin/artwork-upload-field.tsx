@@ -30,15 +30,6 @@ async function loadImage(dataUrl: string) {
   });
 }
 
-async function blobToDataUrl(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("The artwork file could not be processed."));
-    reader.readAsDataURL(blob);
-  });
-}
-
 async function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
@@ -649,19 +640,52 @@ async function exportArtwork(
     const blob = await canvasToBlob(canvas, quality);
 
     if (blob.size <= TARGET_ARTWORK_BYTES || quality === FINAL_QUALITY_STEP) {
-      return blobToDataUrl(blob);
+      return blob;
     }
   }
 
   throw new Error("The artwork file could not be optimized.");
 }
 
+async function uploadArtworkBlob(input: {
+  fileName: string;
+  songId: string | null;
+  blob: Blob;
+}) {
+  const formData = new FormData();
+  formData.set("file", new File([input.blob], input.fileName.replace(/\.[^.]+$/, ".webp"), {
+    type: "image/webp",
+  }));
+
+  if (input.songId) {
+    formData.set("songId", input.songId);
+  }
+
+  const response = await fetch("/api/admin/artwork", {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = (await response.json()) as {
+    artworkUrl?: string;
+    error?: string;
+  };
+
+  if (!response.ok || !payload.artworkUrl) {
+    throw new Error(payload.error || "The artwork upload failed.");
+  }
+
+  return payload.artworkUrl;
+}
+
 export function ArtworkUploadField({
   value,
   onChange,
+  songId,
 }: {
   value: string;
   onChange: (value: string) => void;
+  songId: string | null;
 }) {
   const inputId = useId();
   const [error, setError] = useState<string | null>(null);
@@ -1011,7 +1035,12 @@ export function ArtworkUploadField({
                       setError(null);
 
                       try {
-                        const nextValue = await exportArtwork(cropSession.image, cropSession);
+                        const exported = await exportArtwork(cropSession.image, cropSession);
+                        const nextValue = await uploadArtworkBlob({
+                          fileName: cropSession.fileName,
+                          songId,
+                          blob: exported,
+                        });
                         onChange(nextValue);
                         setCropSession(null);
                       } catch (nextError) {
