@@ -1,12 +1,13 @@
 "use client";
 
-import { ImagePlus, LoaderCircle } from "lucide-react";
-import { useId, useState } from "react";
+import { ImagePlus, LoaderCircle, RotateCcw, Scissors, X, ZoomIn } from "lucide-react";
+import { useId, useMemo, useRef, useState } from "react";
 
 const MAX_ARTWORK_DIMENSION = 1200;
 const TARGET_ARTWORK_BYTES = 450 * 1024;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68, 0.6] as const;
 const FINAL_QUALITY_STEP = QUALITY_STEPS[QUALITY_STEPS.length - 1];
+const PREVIEW_SIZE = 300;
 
 async function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -65,6 +66,29 @@ interface ProbeImageData {
   height: number;
 }
 
+interface CropSession {
+  image: HTMLImageElement;
+  imageDataUrl: string;
+  fileName: string;
+  centerX: number;
+  centerY: number;
+  zoom: number;
+  defaultCenterX: number;
+  defaultCenterY: number;
+  defaultZoom: number;
+  maxZoom: number;
+}
+
+interface CropGeometry {
+  centerX: number;
+  centerY: number;
+  zoom: number;
+  cropSize: number;
+  sourceX: number;
+  sourceY: number;
+  outputSize: number;
+}
+
 const MAX_PROBE_DIMENSION = 1600;
 const BACKGROUND_MATCH_THRESHOLD = 0.988;
 const COLOR_DISTANCE_THRESHOLD = 44;
@@ -77,6 +101,10 @@ const FOCUS_PADDING_RATIO = 0.22;
 const FOCUS_PADDING_MAX = 180;
 const FOCUS_BOUNDS_RATIO = 0.84;
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function createFullBounds(width: number, height: number): Bounds {
   return {
     x: 0,
@@ -86,7 +114,11 @@ function createFullBounds(width: number, height: number): Bounds {
   };
 }
 
-function scaleBounds(bounds: Bounds, source: { width: number; height: number }, target: { width: number; height: number }): Bounds {
+function scaleBounds(
+  bounds: Bounds,
+  source: { width: number; height: number },
+  target: { width: number; height: number },
+): Bounds {
   return {
     x: Math.max(0, Math.round((bounds.x / source.width) * target.width)),
     y: Math.max(0, Math.round((bounds.y / source.height) * target.height)),
@@ -397,23 +429,22 @@ function getVisibleBounds(image: HTMLImageElement) {
   const focusBounds = mergeBounds(alphaBounds, foregroundBounds);
   const focusHeightRatio = focusBounds.height / probe.height;
   const focusWidthRatio = focusBounds.width / probe.width;
-  const shouldPreferFocusedCrop =
-    focusHeightRatio < FOCUS_BOUNDS_RATIO || focusWidthRatio < FOCUS_BOUNDS_RATIO;
-  const mergedBounds = shouldPreferFocusedCrop
-    ? expandBounds(
-        focusBounds,
-        probe.width,
-        probe.height,
-        FOCUS_PADDING_RATIO,
-        FOCUS_PADDING_MAX,
-      )
-    : expandBounds(
-        mergeBounds(alphaBounds, backgroundBounds, foregroundBounds),
-        probe.width,
-        probe.height,
-        CONTENT_PADDING_RATIO,
-        CONTENT_PADDING_MAX,
-      );
+  const mergedBounds =
+    focusHeightRatio < FOCUS_BOUNDS_RATIO || focusWidthRatio < FOCUS_BOUNDS_RATIO
+      ? expandBounds(
+          focusBounds,
+          probe.width,
+          probe.height,
+          FOCUS_PADDING_RATIO,
+          FOCUS_PADDING_MAX,
+        )
+      : expandBounds(
+          mergeBounds(alphaBounds, backgroundBounds, foregroundBounds),
+          probe.width,
+          probe.height,
+          CONTENT_PADDING_RATIO,
+          CONTENT_PADDING_MAX,
+        );
 
   return scaleBounds(
     mergedBounds,
@@ -422,24 +453,74 @@ function getVisibleBounds(image: HTMLImageElement) {
   );
 }
 
-async function compressArtwork(file: File) {
-  const dataUrl = await fileToDataUrl(file);
-  const image = await loadImage(dataUrl);
-  const bounds = getVisibleBounds(image);
-  const cropSize = Math.min(bounds.width, bounds.height);
-  const outputSize = Math.max(1, Math.min(cropSize, MAX_ARTWORK_DIMENSION));
-  const sourceX = Math.max(
-    0,
-    Math.round(bounds.x + (bounds.width - cropSize) / 2),
-  );
-  const sourceY = Math.max(
-    0,
-    Math.round(bounds.y + (bounds.height - cropSize) / 2),
-  );
+function getMaxZoom(image: HTMLImageElement) {
+  const baseCropSize = Math.min(image.naturalWidth, image.naturalHeight);
+  return Math.max(1, Math.min(8, baseCropSize / 140));
+}
 
+function getCropGeometry(
+  image: HTMLImageElement,
+  crop: Pick<CropSession, "centerX" | "centerY" | "zoom">,
+): CropGeometry {
+  const baseCropSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const zoom = clamp(crop.zoom, 1, getMaxZoom(image));
+  const cropSize = baseCropSize / zoom;
+  const half = cropSize / 2;
+  const centerX = clamp(crop.centerX, half, image.naturalWidth - half);
+  const centerY = clamp(crop.centerY, half, image.naturalHeight - half);
+  const sourceX = clamp(centerX - half, 0, image.naturalWidth - cropSize);
+  const sourceY = clamp(centerY - half, 0, image.naturalHeight - cropSize);
+
+  return {
+    centerX,
+    centerY,
+    zoom,
+    cropSize,
+    sourceX,
+    sourceY,
+    outputSize: Math.max(1, Math.min(Math.round(cropSize), MAX_ARTWORK_DIMENSION)),
+  };
+}
+
+function getSuggestedCropSession(
+  image: HTMLImageElement,
+  imageDataUrl: string,
+  fileName: string,
+): CropSession {
+  const bounds = getVisibleBounds(image);
+  const maxZoom = getMaxZoom(image);
+  const baseCropSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const focusSize = Math.max(bounds.width, bounds.height);
+  const desiredCropSize = clamp(focusSize, 160, baseCropSize);
+  const zoom = clamp(baseCropSize / desiredCropSize, 1, maxZoom);
+  const geometry = getCropGeometry(image, {
+    centerX: bounds.x + bounds.width / 2,
+    centerY: bounds.y + bounds.height / 2,
+    zoom,
+  });
+
+  return {
+    image,
+    imageDataUrl,
+    fileName,
+    centerX: geometry.centerX,
+    centerY: geometry.centerY,
+    zoom: geometry.zoom,
+    defaultCenterX: geometry.centerX,
+    defaultCenterY: geometry.centerY,
+    defaultZoom: geometry.zoom,
+    maxZoom,
+  };
+}
+
+async function exportArtwork(
+  image: HTMLImageElement,
+  crop: Pick<CropSession, "centerX" | "centerY" | "zoom">,
+) {
+  const geometry = getCropGeometry(image, crop);
   const canvas = document.createElement("canvas");
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  canvas.width = geometry.outputSize;
+  canvas.height = geometry.outputSize;
 
   const context = canvas.getContext("2d");
 
@@ -450,17 +531,17 @@ async function compressArtwork(file: File) {
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
   context.fillStyle = "#0b0d11";
-  context.fillRect(0, 0, outputSize, outputSize);
+  context.fillRect(0, 0, geometry.outputSize, geometry.outputSize);
   context.drawImage(
     image,
-    sourceX,
-    sourceY,
-    cropSize,
-    cropSize,
+    Math.round(geometry.sourceX),
+    Math.round(geometry.sourceY),
+    Math.round(geometry.cropSize),
+    Math.round(geometry.cropSize),
     0,
     0,
-    outputSize,
-    outputSize,
+    geometry.outputSize,
+    geometry.outputSize,
   );
 
   for (const quality of QUALITY_STEPS) {
@@ -484,68 +565,329 @@ export function ArtworkUploadField({
   const inputId = useId();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [cropSession, setCropSession] = useState<CropSession | null>(null);
+  const dragState = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    centerX: number;
+    centerY: number;
+  } | null>(null);
+
+  const cropGeometry = useMemo(() => {
+    if (!cropSession) {
+      return null;
+    }
+
+    return getCropGeometry(cropSession.image, cropSession);
+  }, [cropSession]);
+
+  const previewStyle =
+    cropSession && cropGeometry
+      ? {
+          backgroundImage: `url(${cropSession.imageDataUrl})`,
+          backgroundSize: `${(cropSession.image.naturalWidth / cropGeometry.cropSize) * PREVIEW_SIZE}px ${(cropSession.image.naturalHeight / cropGeometry.cropSize) * PREVIEW_SIZE}px`,
+          backgroundPosition: `${-(cropGeometry.sourceX / cropGeometry.cropSize) * PREVIEW_SIZE}px ${-(cropGeometry.sourceY / cropGeometry.cropSize) * PREVIEW_SIZE}px`,
+        }
+      : undefined;
 
   return (
-    <div className="grid gap-3">
-      <label className="grid gap-2">
-        <span className="text-sm font-medium text-[var(--app-text)]">Artwork URL</span>
-        <input
-          name="artwork_url"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="app-input"
-        />
-      </label>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label
-          htmlFor={inputId}
-          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
-        >
-          {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-          Upload artwork manually
+    <>
+      <div className="grid gap-3">
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-[var(--app-text)]">Artwork URL</span>
+          <input
+            name="artwork_url"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            className="app-input"
+          />
         </label>
-        <span className="text-xs leading-6 text-[var(--app-muted)]">
-          Large uploads are trimmed, square-cropped, compressed automatically, and stored directly with the song page in V1.
-        </span>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label
+            htmlFor={inputId}
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
+          >
+            {busy ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImagePlus className="h-4 w-4" />
+            )}
+            Upload artwork manually
+          </label>
+          <span className="text-xs leading-6 text-[var(--app-muted)]">
+            Uploads are automatically compressed. After choosing a file, you can drag and zoom the square crop before saving.
+          </span>
+        </div>
+
+        <input
+          id={inputId}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+
+            if (!file) {
+              return;
+            }
+
+            setBusy(true);
+            setError(null);
+
+            try {
+              const imageDataUrl = await fileToDataUrl(file);
+              const image = await loadImage(imageDataUrl);
+              setCropSession(getSuggestedCropSession(image, imageDataUrl, file.name));
+            } catch (nextError) {
+              setError(
+                nextError instanceof Error
+                  ? nextError.message
+                  : "The artwork upload failed.",
+              );
+            } finally {
+              setBusy(false);
+              event.target.value = "";
+            }
+          }}
+        />
+
+        {error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
       </div>
 
-      <input
-        id={inputId}
-        type="file"
-        accept="image/*"
-        className="sr-only"
-        onChange={async (event) => {
-          const file = event.target.files?.[0];
+      {cropSession && cropGeometry ? (
+        <div className="fixed inset-0 z-[70] bg-[rgba(7,9,12,0.7)] px-4 py-6 backdrop-blur-[3px]">
+          <div className="mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+            <div>
+              <div
+                role="img"
+                aria-label="Artwork crop preview"
+                className="relative mx-auto aspect-square w-full max-w-[300px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] bg-no-repeat shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                style={previewStyle}
+                onPointerDown={(event) => {
+                  dragState.current = {
+                    pointerId: event.pointerId,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    centerX: cropSession.centerX,
+                    centerY: cropSession.centerY,
+                  };
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                }}
+                onPointerMove={(event) => {
+                  if (
+                    !dragState.current ||
+                    dragState.current.pointerId !== event.pointerId
+                  ) {
+                    return;
+                  }
 
-          if (!file) {
-            return;
-          }
+                  const deltaX = event.clientX - dragState.current.startX;
+                  const deltaY = event.clientY - dragState.current.startY;
+                  const nextCenterX =
+                    dragState.current.centerX - (deltaX / PREVIEW_SIZE) * cropGeometry.cropSize;
+                  const nextCenterY =
+                    dragState.current.centerY - (deltaY / PREVIEW_SIZE) * cropGeometry.cropSize;
 
-          setBusy(true);
-          setError(null);
+                  setCropSession((current) =>
+                    current
+                      ? {
+                          ...current,
+                          centerX: nextCenterX,
+                          centerY: nextCenterY,
+                        }
+                      : current,
+                  );
+                }}
+                onPointerUp={(event) => {
+                  if (dragState.current?.pointerId === event.pointerId) {
+                    dragState.current = null;
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                }}
+                onPointerCancel={(event) => {
+                  if (dragState.current?.pointerId === event.pointerId) {
+                    dragState.current = null;
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                }}
+              >
+                <div className="absolute inset-0 border border-white/14" />
+                <div className="pointer-events-none absolute inset-[14%] rounded-[1.35rem] border border-white/28 shadow-[0_0_0_999px_rgba(7,9,12,0.18)]" />
+                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/12" />
+                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/12" />
+              </div>
 
-          try {
-            const nextValue = await compressArtwork(file);
-            onChange(nextValue);
-          } catch (nextError) {
-            setError(
-              nextError instanceof Error
-                ? nextError.message
-                : "The artwork upload failed.",
-            );
-          } finally {
-            setBusy(false);
-            event.target.value = "";
-          }
-        }}
-      />
+              <p className="mt-3 text-center text-xs leading-6 text-white/52">
+                Drag the artwork preview to reposition it inside the square.
+              </p>
+            </div>
 
-      {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+            <div className="grid gap-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
+                    Artwork crop
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                    Choose exactly what fans see
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-white/58">
+                    Sparse artwork and black-heavy covers can fool auto-crop. Adjust the square manually, then the final image is exported as a compressed WebP for faster public loads.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCropSession(null)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/72 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Close crop editor"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="grid gap-4">
+                <label className="grid gap-2">
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-white">
+                    <ZoomIn className="h-4 w-4 text-white/58" />
+                    Zoom
+                  </span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={cropSession.maxZoom}
+                    step={0.01}
+                    value={cropSession.zoom}
+                    onChange={(event) => {
+                      const zoom = Number.parseFloat(event.target.value);
+                      setCropSession((current) =>
+                        current
+                          ? {
+                              ...current,
+                              zoom,
+                            }
+                          : current,
+                      );
+                    }}
+                  />
+                </label>
+
+                <label className="grid gap-2">
+                  <span className="text-sm font-medium text-white">Horizontal position</span>
+                  <input
+                    type="range"
+                    min={cropGeometry.cropSize / 2}
+                    max={cropSession.image.naturalWidth - cropGeometry.cropSize / 2}
+                    step={1}
+                    value={cropGeometry.centerX}
+                    onChange={(event) => {
+                      const centerX = Number.parseFloat(event.target.value);
+                      setCropSession((current) =>
+                        current
+                          ? {
+                              ...current,
+                              centerX,
+                            }
+                          : current,
+                      );
+                    }}
+                  />
+                </label>
+
+                <label className="grid gap-2">
+                  <span className="text-sm font-medium text-white">Vertical position</span>
+                  <input
+                    type="range"
+                    min={cropGeometry.cropSize / 2}
+                    max={cropSession.image.naturalHeight - cropGeometry.cropSize / 2}
+                    step={1}
+                    value={cropGeometry.centerY}
+                    onChange={(event) => {
+                      const centerY = Number.parseFloat(event.target.value);
+                      setCropSession((current) =>
+                        current
+                          ? {
+                              ...current,
+                              centerY,
+                            }
+                          : current,
+                      );
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCropSession((current) =>
+                      current
+                        ? {
+                            ...current,
+                            centerX: current.defaultCenterX,
+                            centerY: current.defaultCenterY,
+                            zoom: current.defaultZoom,
+                          }
+                        : current,
+                    )
+                  }
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 text-sm font-semibold text-white/82 transition hover:bg-white/10"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset auto crop
+                </button>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => setCropSession(null)}
+                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-transparent px-4 text-sm font-semibold text-white/72 transition hover:bg-white/6 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setBusy(true);
+                      setError(null);
+
+                      try {
+                        const nextValue = await exportArtwork(cropSession.image, cropSession);
+                        onChange(nextValue);
+                        setCropSession(null);
+                      } catch (nextError) {
+                        setError(
+                          nextError instanceof Error
+                            ? nextError.message
+                            : "The artwork upload failed.",
+                        );
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                    disabled={busy}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-[#10141b] transition hover:bg-[#f1ede3] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {busy ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Scissors className="h-4 w-4" />
+                    )}
+                    Apply crop
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
