@@ -1,5 +1,6 @@
 "use client";
 
+import NextImage from "next/image";
 import { ImagePlus, LoaderCircle, RotateCcw, Scissors, X, ZoomIn } from "lucide-react";
 import { useId, useMemo, useRef, useState } from "react";
 
@@ -7,7 +8,9 @@ const MAX_ARTWORK_DIMENSION = 1200;
 const TARGET_ARTWORK_BYTES = 450 * 1024;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68, 0.6] as const;
 const FINAL_QUALITY_STEP = QUALITY_STEPS[QUALITY_STEPS.length - 1];
-const PREVIEW_SIZE = 300;
+const PREVIEW_SIZE = 332;
+const SOURCE_PREVIEW_WIDTH = 360;
+const SOURCE_PREVIEW_HEIGHT = 228;
 
 async function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -95,11 +98,14 @@ const COLOR_DISTANCE_THRESHOLD = 44;
 const ALPHA_DISTANCE_THRESHOLD = 36;
 const FOREGROUND_DISTANCE_THRESHOLD = 54;
 const FOREGROUND_ALPHA_THRESHOLD = 30;
+const HIGHLIGHT_LUMA_THRESHOLD = 118;
+const HIGHLIGHT_CONTRAST_THRESHOLD = 56;
 const CONTENT_PADDING_RATIO = 0.08;
 const CONTENT_PADDING_MAX = 96;
 const FOCUS_PADDING_RATIO = 0.22;
 const FOCUS_PADDING_MAX = 180;
 const FOCUS_BOUNDS_RATIO = 0.84;
+const HIGHLIGHT_BOUNDS_RATIO = 0.44;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -374,7 +380,61 @@ function findForegroundBounds(probe: ProbeImageData): Bounds {
   };
 }
 
-function mergeBounds(...bounds: Bounds[]): Bounds {
+function getLuminance(pixel: { r: number; g: number; b: number }) {
+  return 0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b;
+}
+
+function findHighlightBounds(probe: ProbeImageData): Bounds {
+  if (!probe.width || !probe.height) {
+    return createFullBounds(1, 1);
+  }
+
+  const background = getBackgroundColor(probe);
+  const backgroundLuminance = getLuminance(background);
+  let minX = probe.width;
+  let minY = probe.height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < probe.height; y += 1) {
+    for (let x = 0; x < probe.width; x += 1) {
+      const pixel = samplePixel(probe.data, probe.width, x, y);
+
+      if (pixel.a <= FOREGROUND_ALPHA_THRESHOLD) {
+        continue;
+      }
+
+      const luminance = getLuminance(pixel);
+      const contrast =
+        Math.abs(pixel.r - background.r) +
+        Math.abs(pixel.g - background.g) +
+        Math.abs(pixel.b - background.b);
+
+      if (
+        luminance >= Math.max(HIGHLIGHT_LUMA_THRESHOLD, backgroundLuminance + 34) ||
+        (luminance >= backgroundLuminance + 18 && contrast >= HIGHLIGHT_CONTRAST_THRESHOLD)
+      ) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return createFullBounds(probe.width, probe.height);
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+  };
+}
+
+function intersectBounds(...bounds: Bounds[]): Bounds {
   const minX = Math.max(...bounds.map((bound) => bound.x));
   const minY = Math.max(...bounds.map((bound) => bound.y));
   const maxX = Math.min(...bounds.map((bound) => bound.x + bound.width));
@@ -390,6 +450,10 @@ function mergeBounds(...bounds: Bounds[]): Bounds {
     width: Math.max(1, maxX - minX),
     height: Math.max(1, maxY - minY),
   };
+}
+
+function getBoundsCoverage(bounds: Bounds, width: number, height: number) {
+  return (bounds.width * bounds.height) / (width * height);
 }
 
 function expandBounds(
@@ -426,20 +490,28 @@ function getVisibleBounds(image: HTMLImageElement) {
   const alphaBounds = findAlphaBounds(probe);
   const backgroundBounds = findBackgroundBounds(probe);
   const foregroundBounds = findForegroundBounds(probe);
-  const focusBounds = mergeBounds(alphaBounds, foregroundBounds);
-  const focusHeightRatio = focusBounds.height / probe.height;
-  const focusWidthRatio = focusBounds.width / probe.width;
+  const highlightBounds = findHighlightBounds(probe);
+  const highlightCoverage = getBoundsCoverage(highlightBounds, probe.width, probe.height);
+  const foregroundCoverage = getBoundsCoverage(foregroundBounds, probe.width, probe.height);
+  const focusCandidate =
+    highlightCoverage < HIGHLIGHT_BOUNDS_RATIO
+      ? highlightBounds
+      : intersectBounds(alphaBounds, foregroundBounds);
+  const focusHeightRatio = focusCandidate.height / probe.height;
+  const focusWidthRatio = focusCandidate.width / probe.width;
   const mergedBounds =
-    focusHeightRatio < FOCUS_BOUNDS_RATIO || focusWidthRatio < FOCUS_BOUNDS_RATIO
+    focusHeightRatio < FOCUS_BOUNDS_RATIO ||
+    focusWidthRatio < FOCUS_BOUNDS_RATIO ||
+    foregroundCoverage < FOCUS_BOUNDS_RATIO
       ? expandBounds(
-          focusBounds,
+          focusCandidate,
           probe.width,
           probe.height,
           FOCUS_PADDING_RATIO,
           FOCUS_PADDING_MAX,
         )
       : expandBounds(
-          mergeBounds(alphaBounds, backgroundBounds, foregroundBounds),
+          intersectBounds(alphaBounds, backgroundBounds, foregroundBounds),
           probe.width,
           probe.height,
           CONTENT_PADDING_RATIO,
@@ -513,6 +585,35 @@ function getSuggestedCropSession(
   };
 }
 
+function normalizeCropSession(session: CropSession): CropSession {
+  const geometry = getCropGeometry(session.image, session);
+
+  return {
+    ...session,
+    centerX: geometry.centerX,
+    centerY: geometry.centerY,
+    zoom: geometry.zoom,
+  };
+}
+
+function getContainedRect(
+  imageWidth: number,
+  imageHeight: number,
+  boxWidth: number,
+  boxHeight: number,
+) {
+  const scale = Math.min(boxWidth / imageWidth, boxHeight / imageHeight);
+  const width = imageWidth * scale;
+  const height = imageHeight * scale;
+
+  return {
+    left: (boxWidth - width) / 2,
+    top: (boxHeight - height) / 2,
+    width,
+    height,
+  };
+}
+
 async function exportArtwork(
   image: HTMLImageElement,
   crop: Pick<CropSession, "centerX" | "centerY" | "zoom">,
@@ -582,6 +683,16 @@ export function ArtworkUploadField({
     return getCropGeometry(cropSession.image, cropSession);
   }, [cropSession]);
 
+  const sourcePreviewRect =
+    cropSession && cropGeometry
+      ? getContainedRect(
+          cropSession.image.naturalWidth,
+          cropSession.image.naturalHeight,
+          SOURCE_PREVIEW_WIDTH,
+          SOURCE_PREVIEW_HEIGHT,
+        )
+      : null;
+
   const previewStyle =
     cropSession && cropGeometry
       ? {
@@ -590,6 +701,30 @@ export function ArtworkUploadField({
           backgroundPosition: `${-(cropGeometry.sourceX / cropGeometry.cropSize) * PREVIEW_SIZE}px ${-(cropGeometry.sourceY / cropGeometry.cropSize) * PREVIEW_SIZE}px`,
         }
       : undefined;
+
+  const cropBoxStyle =
+    cropSession && cropGeometry && sourcePreviewRect
+      ? {
+          left:
+            sourcePreviewRect.left +
+            (cropGeometry.sourceX / cropSession.image.naturalWidth) * sourcePreviewRect.width,
+          top:
+            sourcePreviewRect.top +
+            (cropGeometry.sourceY / cropSession.image.naturalHeight) * sourcePreviewRect.height,
+          width:
+            (cropGeometry.cropSize / cropSession.image.naturalWidth) * sourcePreviewRect.width,
+          height:
+            (cropGeometry.cropSize / cropSession.image.naturalHeight) * sourcePreviewRect.height,
+        }
+      : undefined;
+
+  const updateCropSession = (
+    updater: (current: CropSession) => Partial<CropSession>,
+  ) => {
+    setCropSession((current) =>
+      current ? normalizeCropSession({ ...current, ...updater(current) }) : current,
+    );
+  };
 
   return (
     <>
@@ -662,12 +797,20 @@ export function ArtworkUploadField({
 
       {cropSession && cropGeometry ? (
         <div className="fixed inset-0 z-[70] bg-[rgba(7,9,12,0.7)] px-4 py-6 backdrop-blur-[3px]">
-          <div className="mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-            <div>
+          <div className="mx-auto grid max-h-full w-full max-w-5xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+            <div className="grid gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
+                  Final cover
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/58">
+                  This square is exactly what will appear on the public song page.
+                </p>
+              </div>
               <div
                 role="img"
                 aria-label="Artwork crop preview"
-                className="relative mx-auto aspect-square w-full max-w-[300px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] bg-no-repeat shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                className="relative mx-auto aspect-square w-full max-w-[332px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] bg-no-repeat shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
                 style={previewStyle}
                 onPointerDown={(event) => {
                   dragState.current = {
@@ -694,15 +837,10 @@ export function ArtworkUploadField({
                   const nextCenterY =
                     dragState.current.centerY - (deltaY / PREVIEW_SIZE) * cropGeometry.cropSize;
 
-                  setCropSession((current) =>
-                    current
-                      ? {
-                          ...current,
-                          centerX: nextCenterX,
-                          centerY: nextCenterY,
-                        }
-                      : current,
-                  );
+                  updateCropSession(() => ({
+                    centerX: nextCenterX,
+                    centerY: nextCenterY,
+                  }));
                 }}
                 onPointerUp={(event) => {
                   if (dragState.current?.pointerId === event.pointerId) {
@@ -716,6 +854,13 @@ export function ArtworkUploadField({
                     event.currentTarget.releasePointerCapture(event.pointerId);
                   }
                 }}
+                onWheel={(event) => {
+                  event.preventDefault();
+                  const direction = event.deltaY < 0 ? 0.16 : -0.16;
+                  updateCropSession((current) => ({
+                    zoom: current.zoom + direction,
+                  }));
+                }}
               >
                 <div className="absolute inset-0 border border-white/14" />
                 <div className="pointer-events-none absolute inset-[14%] rounded-[1.35rem] border border-white/28 shadow-[0_0_0_999px_rgba(7,9,12,0.18)]" />
@@ -723,9 +868,9 @@ export function ArtworkUploadField({
                 <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/12" />
               </div>
 
-              <p className="mt-3 text-center text-xs leading-6 text-white/52">
-                Drag the artwork preview to reposition it inside the square.
-              </p>
+              <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-6 text-white/56">
+                Drag the artwork to reposition it. Scroll or use the zoom slider if you want a tighter crop.
+              </div>
             </div>
 
             <div className="grid gap-5">
@@ -753,6 +898,69 @@ export function ArtworkUploadField({
               </div>
 
               <div className="grid gap-4">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                  <div className="rounded-[1.5rem] border border-white/10 bg-[#0b0f15] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
+                          Original upload
+                        </p>
+                        <p className="mt-1 text-xs text-white/52">
+                          The square outline shows the saved crop area.
+                        </p>
+                      </div>
+                      <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/36">
+                        {cropSession.image.naturalWidth}×{cropSession.image.naturalHeight}
+                      </div>
+                    </div>
+
+                    <div
+                      className="relative mt-3 overflow-hidden rounded-[1.25rem] border border-white/8 bg-[#06080d]"
+                      style={{
+                        width: SOURCE_PREVIEW_WIDTH,
+                        height: SOURCE_PREVIEW_HEIGHT,
+                        maxWidth: "100%",
+                      }}
+                    >
+                      {sourcePreviewRect ? (
+                        <>
+                          <NextImage
+                            src={cropSession.imageDataUrl}
+                            alt=""
+                            aria-hidden="true"
+                            unoptimized
+                            width={Math.round(sourcePreviewRect.width)}
+                            height={Math.round(sourcePreviewRect.height)}
+                            className="pointer-events-none absolute rounded-[1rem] object-contain"
+                            style={{
+                              left: sourcePreviewRect.left,
+                              top: sourcePreviewRect.top,
+                              width: sourcePreviewRect.width,
+                              height: sourcePreviewRect.height,
+                            }}
+                          />
+                          <div
+                            className="pointer-events-none absolute rounded-[1rem] border border-white/85 shadow-[0_0_0_999px_rgba(5,7,11,0.42)]"
+                            style={cropBoxStyle}
+                          />
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
+                      Export
+                    </p>
+                    <div className="mt-3 grid gap-2 text-sm leading-6 text-white/58">
+                      <div>Square crop</div>
+                      <div>Compressed WebP</div>
+                      <div>Up to 1200×1200</div>
+                      <div>Target under 450 KB</div>
+                    </div>
+                  </div>
+                </div>
+
                 <label className="grid gap-2">
                   <span className="inline-flex items-center gap-2 text-sm font-medium text-white">
                     <ZoomIn className="h-4 w-4 text-white/58" />
@@ -766,58 +974,7 @@ export function ArtworkUploadField({
                     value={cropSession.zoom}
                     onChange={(event) => {
                       const zoom = Number.parseFloat(event.target.value);
-                      setCropSession((current) =>
-                        current
-                          ? {
-                              ...current,
-                              zoom,
-                            }
-                          : current,
-                      );
-                    }}
-                  />
-                </label>
-
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-white">Horizontal position</span>
-                  <input
-                    type="range"
-                    min={cropGeometry.cropSize / 2}
-                    max={cropSession.image.naturalWidth - cropGeometry.cropSize / 2}
-                    step={1}
-                    value={cropGeometry.centerX}
-                    onChange={(event) => {
-                      const centerX = Number.parseFloat(event.target.value);
-                      setCropSession((current) =>
-                        current
-                          ? {
-                              ...current,
-                              centerX,
-                            }
-                          : current,
-                      );
-                    }}
-                  />
-                </label>
-
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-white">Vertical position</span>
-                  <input
-                    type="range"
-                    min={cropGeometry.cropSize / 2}
-                    max={cropSession.image.naturalHeight - cropGeometry.cropSize / 2}
-                    step={1}
-                    value={cropGeometry.centerY}
-                    onChange={(event) => {
-                      const centerY = Number.parseFloat(event.target.value);
-                      setCropSession((current) =>
-                        current
-                          ? {
-                              ...current,
-                              centerY,
-                            }
-                          : current,
-                      );
+                      updateCropSession(() => ({ zoom }));
                     }}
                   />
                 </label>
@@ -827,16 +984,11 @@ export function ArtworkUploadField({
                 <button
                   type="button"
                   onClick={() =>
-                    setCropSession((current) =>
-                      current
-                        ? {
-                            ...current,
-                            centerX: current.defaultCenterX,
-                            centerY: current.defaultCenterY,
-                            zoom: current.defaultZoom,
-                          }
-                        : current,
-                    )
+                    updateCropSession((current) => ({
+                      centerX: current.defaultCenterX,
+                      centerY: current.defaultCenterY,
+                      zoom: current.defaultZoom,
+                    }))
                   }
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 text-sm font-semibold text-white/82 transition hover:bg-white/10"
                 >
