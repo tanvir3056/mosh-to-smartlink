@@ -57,6 +57,15 @@ const PAGE: SongPageWithLinks = {
     metaPixelEnabled: false,
     metaTestEventCode: null,
   },
+  emailCapture: {
+    enabled: false,
+    title: null,
+    description: null,
+    buttonLabel: null,
+    downloadUrl: null,
+    downloadLabel: null,
+    tag: null,
+  },
 };
 
 describe("ServiceList", () => {

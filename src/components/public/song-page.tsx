@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EmailCaptureCard } from "@/components/public/email-capture-card";
 import { MetaPixel } from "@/components/public/meta-pixel";
 import { PreviewPlayer } from "@/components/public/preview-player";
 import { ServiceList } from "@/components/public/service-list";
@@ -70,6 +71,12 @@ export function PublicSongPage({
               {page.page.headline || "Stream now"}
             </p>
           </div>
+
+          <EmailCaptureCard
+            page={page}
+            searchString={searchString}
+            mode={isPreview ? "preview" : "live"}
+          />
 
           <ServiceList
             page={page}

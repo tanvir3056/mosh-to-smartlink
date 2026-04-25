@@ -1,16 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import NextImage from "next/image";
 import { ImagePlus, LoaderCircle, RotateCcw, Scissors, X, ZoomIn } from "lucide-react";
-import { useId, useMemo, useRef, useState } from "react";
-
-const MAX_ARTWORK_DIMENSION = 1200;
-const TARGET_ARTWORK_BYTES = 450 * 1024;
-const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68, 0.6] as const;
-const FINAL_QUALITY_STEP = QUALITY_STEPS[QUALITY_STEPS.length - 1];
-const PREVIEW_SIZE = 332;
-const SOURCE_PREVIEW_WIDTH = 360;
-const SOURCE_PREVIEW_HEIGHT = 228;
+import { useId, useMemo, useRef, useState, type CSSProperties } from "react";
 
 async function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -30,23 +22,6 @@ async function loadImage(dataUrl: string) {
   });
 }
 
-async function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error("The browser could not encode this image."));
-          return;
-        }
-
-        resolve(blob);
-      },
-      "image/webp",
-      quality,
-    );
-  });
-}
-
 interface Bounds {
   x: number;
   y: number;
@@ -61,9 +36,9 @@ interface ProbeImageData {
 }
 
 interface CropSession {
+  file: File;
   image: HTMLImageElement;
   imageDataUrl: string;
-  fileName: string;
   centerX: number;
   centerY: number;
   zoom: number;
@@ -80,7 +55,6 @@ interface CropGeometry {
   cropSize: number;
   sourceX: number;
   sourceY: number;
-  outputSize: number;
 }
 
 const MAX_PROBE_DIMENSION = 1600;
@@ -541,14 +515,13 @@ function getCropGeometry(
     cropSize,
     sourceX,
     sourceY,
-    outputSize: Math.max(1, Math.min(Math.round(cropSize), MAX_ARTWORK_DIMENSION)),
   };
 }
 
 function getSuggestedCropSession(
+  file: File,
   image: HTMLImageElement,
   imageDataUrl: string,
-  fileName: string,
 ): CropSession {
   const bounds = getVisibleBounds(image);
   const maxZoom = getMaxZoom(image);
@@ -563,9 +536,9 @@ function getSuggestedCropSession(
   });
 
   return {
+    file,
     image,
     imageDataUrl,
-    fileName,
     centerX: geometry.centerX,
     centerY: geometry.centerY,
     zoom: geometry.zoom,
@@ -587,79 +560,33 @@ function normalizeCropSession(session: CropSession): CropSession {
   };
 }
 
-function getContainedRect(
-  imageWidth: number,
-  imageHeight: number,
-  boxWidth: number,
-  boxHeight: number,
-) {
-  const scale = Math.min(boxWidth / imageWidth, boxHeight / imageHeight);
-  const width = imageWidth * scale;
-  const height = imageHeight * scale;
-
+function getArtworkFrameStyle(
+  session: CropSession,
+  geometry: CropGeometry,
+): CSSProperties {
   return {
-    left: (boxWidth - width) / 2,
-    top: (boxHeight - height) / 2,
-    width,
-    height,
+    width: `${(session.image.naturalWidth / geometry.cropSize) * 100}%`,
+    height: `${(session.image.naturalHeight / geometry.cropSize) * 100}%`,
+    left: `${-(geometry.sourceX / geometry.cropSize) * 100}%`,
+    top: `${-(geometry.sourceY / geometry.cropSize) * 100}%`,
   };
 }
 
-async function exportArtwork(
-  image: HTMLImageElement,
-  crop: Pick<CropSession, "centerX" | "centerY" | "zoom">,
-) {
-  const geometry = getCropGeometry(image, crop);
-  const canvas = document.createElement("canvas");
-  canvas.width = geometry.outputSize;
-  canvas.height = geometry.outputSize;
-
-  const context = canvas.getContext("2d");
-
-  if (!context) {
-    throw new Error("The browser could not process this image.");
-  }
-
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
-  context.fillStyle = "#0b0d11";
-  context.fillRect(0, 0, geometry.outputSize, geometry.outputSize);
-  context.drawImage(
-    image,
-    Math.round(geometry.sourceX),
-    Math.round(geometry.sourceY),
-    Math.round(geometry.cropSize),
-    Math.round(geometry.cropSize),
-    0,
-    0,
-    geometry.outputSize,
-    geometry.outputSize,
-  );
-
-  for (const quality of QUALITY_STEPS) {
-    const blob = await canvasToBlob(canvas, quality);
-
-    if (blob.size <= TARGET_ARTWORK_BYTES || quality === FINAL_QUALITY_STEP) {
-      return blob;
-    }
-  }
-
-  throw new Error("The artwork file could not be optimized.");
-}
-
-async function uploadArtworkBlob(input: {
-  fileName: string;
+async function uploadArtworkSelection(input: {
+  file: File;
   songId: string | null;
-  blob: Blob;
+  crop: CropGeometry;
 }) {
   const formData = new FormData();
-  formData.set("file", new File([input.blob], input.fileName.replace(/\.[^.]+$/, ".webp"), {
-    type: "image/webp",
-  }));
+  formData.set("file", input.file);
 
   if (input.songId) {
     formData.set("songId", input.songId);
   }
+
+  formData.set("sourceX", String(input.crop.sourceX));
+  formData.set("sourceY", String(input.crop.sourceY));
+  formData.set("cropSize", String(input.crop.cropSize));
 
   const response = await fetch("/api/admin/artwork", {
     method: "POST",
@@ -697,6 +624,7 @@ export function ArtworkUploadField({
     startY: number;
     centerX: number;
     centerY: number;
+    surfaceSize: number;
   } | null>(null);
 
   const cropGeometry = useMemo(() => {
@@ -707,40 +635,13 @@ export function ArtworkUploadField({
     return getCropGeometry(cropSession.image, cropSession);
   }, [cropSession]);
 
-  const sourcePreviewRect =
-    cropSession && cropGeometry
-      ? getContainedRect(
-          cropSession.image.naturalWidth,
-          cropSession.image.naturalHeight,
-          SOURCE_PREVIEW_WIDTH,
-          SOURCE_PREVIEW_HEIGHT,
-        )
-      : null;
+  const artworkFrameStyle = useMemo(() => {
+    if (!cropSession || !cropGeometry) {
+      return undefined;
+    }
 
-  const previewStyle =
-    cropSession && cropGeometry
-      ? {
-          backgroundImage: `url(${cropSession.imageDataUrl})`,
-          backgroundSize: `${(cropSession.image.naturalWidth / cropGeometry.cropSize) * PREVIEW_SIZE}px ${(cropSession.image.naturalHeight / cropGeometry.cropSize) * PREVIEW_SIZE}px`,
-          backgroundPosition: `${-(cropGeometry.sourceX / cropGeometry.cropSize) * PREVIEW_SIZE}px ${-(cropGeometry.sourceY / cropGeometry.cropSize) * PREVIEW_SIZE}px`,
-        }
-      : undefined;
-
-  const cropBoxStyle =
-    cropSession && cropGeometry && sourcePreviewRect
-      ? {
-          left:
-            sourcePreviewRect.left +
-            (cropGeometry.sourceX / cropSession.image.naturalWidth) * sourcePreviewRect.width,
-          top:
-            sourcePreviewRect.top +
-            (cropGeometry.sourceY / cropSession.image.naturalHeight) * sourcePreviewRect.height,
-          width:
-            (cropGeometry.cropSize / cropSession.image.naturalWidth) * sourcePreviewRect.width,
-          height:
-            (cropGeometry.cropSize / cropSession.image.naturalHeight) * sourcePreviewRect.height,
-        }
-      : undefined;
+    return getArtworkFrameStyle(cropSession, cropGeometry);
+  }, [cropGeometry, cropSession]);
 
   const updateCropSession = (
     updater: (current: CropSession) => Partial<CropSession>,
@@ -776,7 +677,7 @@ export function ArtworkUploadField({
             Upload artwork manually
           </label>
           <span className="text-xs leading-6 text-[var(--app-muted)]">
-            Uploads are automatically compressed. After choosing a file, you can drag and zoom the square crop before saving.
+            Pick an image, drag the crop, and the server handles the final square export and compression.
           </span>
         </div>
 
@@ -798,7 +699,9 @@ export function ArtworkUploadField({
             try {
               const imageDataUrl = await fileToDataUrl(file);
               const image = await loadImage(imageDataUrl);
-              setCropSession(getSuggestedCropSession(image, imageDataUrl, file.name));
+              setCropSession(
+                getSuggestedCropSession(file, image, imageDataUrl),
+              );
             } catch (nextError) {
               setError(
                 nextError instanceof Error
@@ -819,23 +722,37 @@ export function ArtworkUploadField({
         ) : null}
       </div>
 
-      {cropSession && cropGeometry ? (
+      {cropSession && cropGeometry && artworkFrameStyle ? (
         <div className="fixed inset-0 z-[70] bg-[rgba(7,9,12,0.7)] px-4 py-6 backdrop-blur-[3px]">
-          <div className="mx-auto grid max-h-full w-full max-w-5xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
             <div className="grid gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
-                  Final cover
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/58">
-                  This square is exactly what will appear on the public song page.
-                </p>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
+                    Crop artwork
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                    Choose the final square cover
+                  </h3>
+                  <p className="mt-2 max-w-xl text-sm leading-7 text-white/58">
+                    Drag the image to reposition it. Use zoom only if you want a tighter crop.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCropSession(null)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/72 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Close crop editor"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
+
               <div
                 role="img"
-                aria-label="Artwork crop preview"
-                className="relative mx-auto aspect-square w-full max-w-[332px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] bg-no-repeat shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
-                style={previewStyle}
+                aria-label="Artwork crop editor"
+                className="relative mx-auto aspect-square w-full max-w-[440px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
                 onPointerDown={(event) => {
                   dragState.current = {
                     pointerId: event.pointerId,
@@ -843,6 +760,7 @@ export function ArtworkUploadField({
                     startY: event.clientY,
                     centerX: cropSession.centerX,
                     centerY: cropSession.centerY,
+                    surfaceSize: event.currentTarget.getBoundingClientRect().width,
                   };
                   event.currentTarget.setPointerCapture(event.pointerId);
                 }}
@@ -856,10 +774,11 @@ export function ArtworkUploadField({
 
                   const deltaX = event.clientX - dragState.current.startX;
                   const deltaY = event.clientY - dragState.current.startY;
+                  const scaleBase = Math.max(dragState.current.surfaceSize, 1);
                   const nextCenterX =
-                    dragState.current.centerX - (deltaX / PREVIEW_SIZE) * cropGeometry.cropSize;
+                    dragState.current.centerX - (deltaX / scaleBase) * cropGeometry.cropSize;
                   const nextCenterY =
-                    dragState.current.centerY - (deltaY / PREVIEW_SIZE) * cropGeometry.cropSize;
+                    dragState.current.centerY - (deltaY / scaleBase) * cropGeometry.cropSize;
 
                   updateCropSession(() => ({
                     centerX: nextCenterX,
@@ -886,105 +805,41 @@ export function ArtworkUploadField({
                   }));
                 }}
               >
+                <img
+                  src={cropSession.imageDataUrl}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="pointer-events-none absolute max-w-none select-none"
+                  style={artworkFrameStyle}
+                />
                 <div className="absolute inset-0 border border-white/14" />
-                <div className="pointer-events-none absolute inset-[14%] rounded-[1.35rem] border border-white/28 shadow-[0_0_0_999px_rgba(7,9,12,0.18)]" />
                 <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/12" />
                 <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/12" />
               </div>
-
-              <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-6 text-white/56">
-                Drag the artwork to reposition it. Scroll or use the zoom slider if you want a tighter crop.
-              </div>
             </div>
 
-            <div className="grid gap-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
-                    Artwork crop
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
-                    Choose exactly what fans see
-                  </h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-7 text-white/58">
-                    Sparse artwork and black-heavy covers can fool auto-crop. Adjust the square manually, then the final image is exported as a compressed WebP for faster public loads.
-                  </p>
+            <div className="grid content-start gap-4">
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
+                  Final cover
+                </p>
+                <div className="relative mt-3 aspect-square overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#090c11]">
+                  <img
+                    src={cropSession.imageDataUrl}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    className="pointer-events-none absolute max-w-none select-none"
+                    style={artworkFrameStyle}
+                  />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCropSession(null)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/72 transition hover:bg-white/10 hover:text-white"
-                  aria-label="Close crop editor"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="mt-3 text-xs leading-6 text-white/52">
+                  {cropSession.image.naturalWidth}×{cropSession.image.naturalHeight} source
+                </div>
               </div>
 
-              <div className="grid gap-4">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
-                  <div className="rounded-[1.5rem] border border-white/10 bg-[#0b0f15] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
-                          Original upload
-                        </p>
-                        <p className="mt-1 text-xs text-white/52">
-                          The square outline shows the saved crop area.
-                        </p>
-                      </div>
-                      <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/36">
-                        {cropSession.image.naturalWidth}×{cropSession.image.naturalHeight}
-                      </div>
-                    </div>
-
-                    <div
-                      className="relative mt-3 overflow-hidden rounded-[1.25rem] border border-white/8 bg-[#06080d]"
-                      style={{
-                        width: SOURCE_PREVIEW_WIDTH,
-                        height: SOURCE_PREVIEW_HEIGHT,
-                        maxWidth: "100%",
-                      }}
-                    >
-                      {sourcePreviewRect ? (
-                        <>
-                          <NextImage
-                            src={cropSession.imageDataUrl}
-                            alt=""
-                            aria-hidden="true"
-                            unoptimized
-                            width={Math.round(sourcePreviewRect.width)}
-                            height={Math.round(sourcePreviewRect.height)}
-                            className="pointer-events-none absolute rounded-[1rem] object-contain"
-                            style={{
-                              left: sourcePreviewRect.left,
-                              top: sourcePreviewRect.top,
-                              width: sourcePreviewRect.width,
-                              height: sourcePreviewRect.height,
-                            }}
-                          />
-                          <div
-                            className="pointer-events-none absolute rounded-[1rem] border border-white/85 shadow-[0_0_0_999px_rgba(5,7,11,0.42)]"
-                            style={cropBoxStyle}
-                          />
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
-                      Export
-                    </p>
-                    <div className="mt-3 grid gap-2 text-sm leading-6 text-white/58">
-                      <div>Square crop</div>
-                      <div>Compressed WebP</div>
-                      <div>Up to 1200×1200</div>
-                      <div>Target under 450 KB</div>
-                    </div>
-                  </div>
-                </div>
-
+              <div className="rounded-[1.5rem] border border-white/10 bg-[#0b0f15] p-4">
                 <label className="grid gap-2">
                   <span className="inline-flex items-center gap-2 text-sm font-medium text-white">
                     <ZoomIn className="h-4 w-4 text-white/58" />
@@ -1004,7 +859,7 @@ export function ArtworkUploadField({
                 </label>
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-t border-white/10 pt-1">
                 <button
                   type="button"
                   onClick={() =>
@@ -1017,7 +872,7 @@ export function ArtworkUploadField({
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 text-sm font-semibold text-white/82 transition hover:bg-white/10"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Reset auto crop
+                  Reset suggested crop
                 </button>
 
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -1035,11 +890,10 @@ export function ArtworkUploadField({
                       setError(null);
 
                       try {
-                        const exported = await exportArtwork(cropSession.image, cropSession);
-                        const nextValue = await uploadArtworkBlob({
-                          fileName: cropSession.fileName,
+                        const nextValue = await uploadArtworkSelection({
+                          file: cropSession.file,
                           songId,
-                          blob: exported,
+                          crop: cropGeometry,
                         });
                         onChange(nextValue);
                         setCropSession(null);

@@ -1,28 +1,32 @@
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
 import { requireUserSession } from "@/lib/auth";
-import { getTrackingConfig } from "@/lib/data";
+import { getEmailConnectorConfig, getTrackingConfig } from "@/lib/data";
 
 export default async function AdminSettingsPage() {
   const session = await requireUserSession();
-  const trackingConfig = await getTrackingConfig(session.userId);
+  const [trackingConfig, emailConnector] = await Promise.all([
+    getTrackingConfig(session.userId),
+    getEmailConnectorConfig(session.userId),
+  ]);
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)] xl:items-start">
       <div className="app-card rounded-[1.75rem] p-5 sm:p-6 xl:sticky xl:top-6">
         <p className="app-kicker text-[var(--app-muted)]">Settings</p>
         <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-          Tracking and site settings
+          Tracking, leads, and site settings
         </h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
-          Keep V1 disciplined. First-party analytics is the main reporting layer,
-          and Meta Pixel stays optional.
+          Keep the core stack disciplined: first-party analytics, optional paid
+          traffic pixels, and lead capture connectors that turn a stream page into
+          a real fan-acquisition page.
         </p>
 
         <div className="mt-6 grid gap-3">
           {[
             "Site name appears across admin and public pages.",
             "Meta Pixel only fires on published public pages.",
-            "Anything not cleanly supported in V1 stays out of this screen.",
+            "Email leads always store locally first, then sync to Mailchimp when configured.",
           ].map((line) => (
             <div
               key={line}
@@ -35,7 +39,7 @@ export default async function AdminSettingsPage() {
       </div>
 
       <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
-        <TrackingSettingsForm config={trackingConfig} />
+        <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
       </div>
     </section>
   );

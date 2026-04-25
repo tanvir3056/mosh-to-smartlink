@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { PublicSongPage } from "@/components/public/song-page";
 import { getPublishedSongPage } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {

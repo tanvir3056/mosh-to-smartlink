@@ -85,6 +85,7 @@ export function SongEditorForm({
     <>
       <form action={formAction} className="grid gap-5 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
         <input type="hidden" name="song_id" value={page.song.id} />
+        <input type="hidden" name="current_slug" value={page.page.slug} />
 
         <aside className="grid gap-5 xl:sticky xl:top-6">
           <div className="app-card rounded-[1.75rem] p-5">
@@ -206,6 +207,85 @@ export function SongEditorForm({
                 defaultValue={page.song.previewUrl ?? ""}
                 className="app-input"
                 placeholder="Optional 30-second preview"
+              />
+            </MetaField>
+          </div>
+
+          <div className="app-card grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
+            <div>
+              <p className="app-kicker text-[var(--app-muted)]">Lead capture</p>
+              <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
+                Email offer on the song page
+              </h3>
+              <p className="mt-1 text-sm text-[var(--app-muted)]">
+                Turn this release page into a lightweight fan capture page. If a
+                download URL is set, fans get the reward right after they submit.
+              </p>
+            </div>
+
+            <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
+              <input
+                name="email_capture_enabled"
+                type="checkbox"
+                defaultChecked={page.emailCapture.enabled}
+                className="h-4 w-4 rounded border-slate-300 bg-transparent"
+              />
+              Enable email capture on this song page
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MetaField label="Offer title">
+                <input
+                  name="email_capture_title"
+                  defaultValue={page.emailCapture.title ?? ""}
+                  className="app-input"
+                  placeholder="Download the song for free"
+                />
+              </MetaField>
+              <MetaField label="Button label">
+                <input
+                  name="email_capture_button_label"
+                  defaultValue={page.emailCapture.buttonLabel ?? ""}
+                  className="app-input"
+                  placeholder="Get the download"
+                />
+              </MetaField>
+            </div>
+
+            <MetaField label="Offer description">
+              <textarea
+                name="email_capture_description"
+                defaultValue={page.emailCapture.description ?? ""}
+                className="app-input min-h-28 resize-y"
+                placeholder="Drop your email to unlock the track and hear about future releases first."
+              />
+            </MetaField>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MetaField label="Reward URL">
+                <input
+                  name="email_capture_download_url"
+                  defaultValue={page.emailCapture.downloadUrl ?? ""}
+                  className="app-input"
+                  placeholder="https://..."
+                />
+              </MetaField>
+              <MetaField label="Reward label">
+                <input
+                  name="email_capture_download_label"
+                  defaultValue={page.emailCapture.downloadLabel ?? ""}
+                  className="app-input"
+                  placeholder="Download song"
+                />
+              </MetaField>
+            </div>
+
+            <MetaField label="Connector tag">
+              <input
+                name="email_capture_tag"
+                defaultValue={page.emailCapture.tag ?? ""}
+                className="app-input"
+                placeholder="free-download"
               />
             </MetaField>
           </div>

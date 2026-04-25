@@ -21,6 +21,40 @@ export interface TrackingConfig {
   metaTestEventCode: string | null;
 }
 
+export type EmailConnectorProvider = "mailchimp";
+
+export type EmailLeadSyncStatus = "not_configured" | "synced" | "failed";
+
+export interface EmailCaptureConfig {
+  enabled: boolean;
+  title: string | null;
+  description: string | null;
+  buttonLabel: string | null;
+  downloadUrl: string | null;
+  downloadLabel: string | null;
+  tag: string | null;
+}
+
+export interface ResolvedEmailCaptureConfig {
+  enabled: boolean;
+  title: string;
+  description: string;
+  buttonLabel: string;
+  downloadUrl: string | null;
+  downloadLabel: string;
+  tag: string | null;
+  badgeLabel: string;
+}
+
+export interface EmailConnectorConfig {
+  provider: EmailConnectorProvider;
+  audienceId: string | null;
+  defaultTags: string | null;
+  doubleOptIn: boolean;
+  hasApiKey: boolean;
+  updatedAt: string | null;
+}
+
 export interface AppUserRecord {
   id: string;
   authUserId: string | null;
@@ -82,6 +116,38 @@ export interface SongPageWithLinks {
   page: SongPageRecord;
   links: StreamingLinkRecord[];
   tracking: TrackingConfig;
+  emailCapture: EmailCaptureConfig;
+}
+
+export interface EmailLeadRecord {
+  id: string;
+  ownerUserId: string;
+  songId: string;
+  pageId: string;
+  visitId: string | null;
+  visitorId: string;
+  email: string;
+  normalizedEmail: string;
+  referrer: string | null;
+  referrerHost: string | null;
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  term: string | null;
+  content: string | null;
+  userAgent: string | null;
+  browserName: string | null;
+  osName: string | null;
+  deviceType: string | null;
+  country: string | null;
+  city: string | null;
+  ipHash: string | null;
+  connectorProvider: EmailConnectorProvider | null;
+  connectorStatus: EmailLeadSyncStatus;
+  connectorError: string | null;
+  connectorSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DashboardSongRow {

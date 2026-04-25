@@ -84,6 +84,10 @@ beforeEach(() => {
   process.env.ADMIN_EMAIL = "admin@local.test";
   process.env.NEXT_PUBLIC_SUPABASE_URL = "";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "";
+  Object.assign(globalThis, {
+    __ffmDatabaseRuntimePromise: undefined,
+  });
+  vi.unstubAllGlobals();
   vi.resetModules();
 });
 
@@ -125,6 +129,15 @@ describe("core data flow", () => {
       headline: "Stream now",
       slug: adminPage!.page.slug,
       status: "published",
+      emailCapture: {
+        enabled: false,
+        title: null,
+        description: null,
+        buttonLabel: null,
+        downloadUrl: null,
+        downloadLabel: null,
+        tag: null,
+      },
       links: adminPage!.links.map((link) => ({
         service: link.service,
         url: link.url,
@@ -216,5 +229,128 @@ describe("core data flow", () => {
     const analyticsAfterDelete = await getAnalyticsSnapshot(USER_ID);
     expect(analyticsAfterDelete.totalVisits).toBe(0);
     expect(analyticsAfterDelete.totalClicks).toBe(0);
+  });
+
+  test("captures email leads and syncs them to Mailchimp when configured", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const {
+      createAccountOwner,
+      createSongImportDraft,
+      getAdminSongPageBySongId,
+      getPublishedSongPage,
+      recordEmailCaptureSubmission,
+      saveEmailConnectorConfig,
+      updateSongDraft,
+    } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    await saveEmailConnectorConfig(USER_ID, {
+      provider: "mailchimp",
+      audienceId: "aud_123",
+      defaultTags: "smart-link,release",
+      doubleOptIn: false,
+      apiKey: "mailchimp-test-us21",
+      clearApiKey: false,
+    });
+
+    const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
+    const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
+
+    await updateSongDraft({
+      ownerUserId: USER_ID,
+      songId,
+      title: adminPage!.song.title,
+      artistName: adminPage!.song.artistName,
+      albumName: adminPage!.song.albumName,
+      artworkUrl: adminPage!.song.artworkUrl,
+      previewUrl: adminPage!.song.previewUrl,
+      headline: "Stream now",
+      slug: adminPage!.page.slug,
+      status: "published",
+      emailCapture: {
+        enabled: true,
+        title: "Download the song for free",
+        description: "Join the list and unlock the track.",
+        buttonLabel: "Get the download",
+        downloadUrl: "https://downloads.example.com/glass-hearts.mp3",
+        downloadLabel: "Download Glass Hearts",
+        tag: "glass-hearts-download",
+      },
+      links: adminPage!.links.map((link) => ({
+        service: link.service,
+        url: link.url,
+        matchStatus: link.matchStatus,
+        matchSource: link.matchSource,
+        confidence: link.confidence,
+        notes: link.notes,
+      })),
+    });
+
+    const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
+    const result = await recordEmailCaptureSubmission({
+      page: publishedPage!,
+      email: "fan@example.com",
+      lastVisitId: null,
+      context: {
+        visitorId: "visitor_lead",
+        referrer: "https://instagram.com/reel/demo",
+        referrerHost: "instagram.com",
+        userAgent: "Mozilla/5.0",
+        browserName: "Chrome",
+        osName: "macOS",
+        deviceType: "mobile",
+        country: "NL",
+        city: "Amsterdam",
+        ipHash: "lead123",
+        source: "instagram",
+        medium: "organic-social",
+        campaign: "download-push",
+        term: null,
+        content: "reel-1",
+      },
+    });
+
+    expect(result.lead.email).toBe("fan@example.com");
+    expect(result.lead.normalizedEmail).toBe("fan@example.com");
+    expect(result.syncStatus).toBe("synced");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const calls = fetchMock.mock.calls as unknown as Array<
+      [unknown, { body?: BodyInit | null }?]
+    >;
+    const memberCall = calls[0];
+    const tagCall = calls[1];
+
+    expect(memberCall).toBeDefined();
+    expect(tagCall).toBeDefined();
+
+    if (!memberCall || !tagCall) {
+      throw new Error("Expected Mailchimp sync calls to be made.");
+    }
+
+    expect(String(memberCall[0])).toContain("/lists/aud_123/members/");
+    expect(String(tagCall[0])).toContain("/tags");
+    expect(JSON.parse(String(tagCall[1]?.body))).toEqual({
+      tags: [
+        { name: "smart-link", status: "active" },
+        { name: "release", status: "active" },
+        { name: "glass-hearts-download", status: "active" },
+      ],
+    });
   });
 });

@@ -19,6 +19,10 @@ export const appEnv = {
     process.env.DEMO_ADMIN_PASSWORD?.trim() || "dev-password",
   demoSessionSecret:
     process.env.DEMO_SESSION_SECRET?.trim() || "local-demo-session-secret",
+  connectorCredentialsSecret:
+    process.env.CONNECTOR_CREDENTIALS_SECRET?.trim() ||
+    process.env.DEMO_SESSION_SECRET?.trim() ||
+    "local-demo-session-secret",
   analyticsSalt:
     process.env.ANALYTICS_HASH_SALT?.trim() || "local-analytics-salt",
   supabaseUrl,

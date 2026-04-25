@@ -15,12 +15,17 @@ import {
 
 type AppleSearchItem = {
   artistName?: string;
+  collectionName?: string;
   previewUrl?: string;
+  releaseDate?: string;
   trackName?: string;
   trackViewUrl?: string;
 };
 
 type DeezerSearchItem = {
+  album?: {
+    title?: string;
+  };
   artist?: {
     name?: string;
   };
@@ -29,8 +34,71 @@ type DeezerSearchItem = {
   title?: string;
 };
 
-function buildSearchQuery(track: SpotifyTrackImport) {
-  return `${track.artistName} ${track.title}`;
+type SonglinkEntity = {
+  artistName?: string;
+  title?: string;
+};
+
+type SonglinkPlatformLink = {
+  entityUniqueId?: string;
+  url?: string;
+};
+
+type SonglinkResponse = {
+  entitiesByUniqueId?: Record<string, SonglinkEntity | undefined>;
+  linksByPlatform?: Record<string, SonglinkPlatformLink | undefined>;
+};
+
+const MATCH_NETWORK_TIMEOUT_MS = 4_500;
+const APPLE_MATCH_THRESHOLD = 0.78;
+const APPLE_REVIEW_THRESHOLD = 0.64;
+const DEEZER_MATCH_THRESHOLD = 0.76;
+const DEEZER_REVIEW_THRESHOLD = 0.62;
+const YOUTUBE_MATCH_THRESHOLD = 0.74;
+const YOUTUBE_REVIEW_THRESHOLD = 0.62;
+
+const SONG_LINK_PLATFORM_MAP = {
+  amazonMusic: "amazon_music",
+  appleMusic: "apple_music",
+  deezer: "deezer",
+  spotify: "spotify",
+  tidal: "tidal",
+  youtubeMusic: "youtube_music",
+} as const satisfies Record<string, StreamingService>;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function buildSearchQuery(
+  track: SpotifyTrackImport,
+  options?: {
+    includeAlbum?: boolean;
+  },
+) {
+  return [
+    track.artistName,
+    track.title,
+    options?.includeAlbum ? track.albumName : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function createMatchedMatch(
+  service: StreamingService,
+  url: string,
+  matchSource: string,
+  confidence: number,
+): MatchCandidate {
+  return {
+    service,
+    url,
+    matchStatus: "matched",
+    matchSource,
+    confidence: Number(confidence.toFixed(2)),
+    notes: null,
+  };
 }
 
 function createFallbackMatch(
@@ -48,66 +116,178 @@ function createFallbackMatch(
   };
 }
 
-function scoreCandidate(
-  expectedTitle: string,
-  expectedArtist: string,
-  candidateTitle: string | undefined,
-  candidateArtist: string | undefined,
-) {
-  const titleScore = scoreTextSimilarity(expectedTitle, candidateTitle ?? "");
-  const artistScore = scoreTextSimilarity(expectedArtist, candidateArtist ?? "");
-  return titleScore * 0.68 + artistScore * 0.32;
+function createReviewCandidate(
+  service: StreamingService,
+  url: string,
+  matchSource: string,
+  confidence: number,
+  notes: string,
+): MatchCandidate {
+  return {
+    service,
+    url,
+    matchStatus: "search_fallback",
+    matchSource,
+    confidence: Number(confidence.toFixed(2)),
+    notes,
+  };
 }
 
-async function matchAppleMusic(track: SpotifyTrackImport) {
+function scoreCandidate(
+  track: SpotifyTrackImport,
+  candidate: {
+    albumName?: string | null;
+    artistName?: string | null;
+    releaseDate?: string | null;
+    title?: string | null;
+  },
+) {
+  const titleScore = scoreTextSimilarity(track.title, candidate.title ?? "");
+  const artistScore = scoreTextSimilarity(track.artistName, candidate.artistName ?? "");
+  const albumScore =
+    track.albumName && candidate.albumName
+      ? scoreTextSimilarity(track.albumName, candidate.albumName)
+      : null;
+  const baseScore =
+    albumScore === null
+      ? titleScore * 0.7 + artistScore * 0.3
+      : titleScore * 0.58 + artistScore * 0.28 + albumScore * 0.14;
+  const yearBonus =
+    track.releaseYear && candidate.releaseDate?.startsWith(String(track.releaseYear))
+      ? 0.04
+      : 0;
+
+  return Math.min(1, baseScore + yearBonus);
+}
+
+function isResolverEntityCompatible(track: SpotifyTrackImport, entity: SonglinkEntity | undefined) {
+  if (!entity?.title || !entity.artistName) {
+    return true;
+  }
+
+  return scoreCandidate(track, entity) >= 0.7;
+}
+
+async function fetchJsonWithTimeout<T>(url: string) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(MATCH_NETWORK_TIMEOUT_MS),
+    headers: {
+      "user-agent": "Mozilla/5.0",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with ${response.status}.`);
+  }
+
+  return (await response.json()) as T;
+}
+
+async function resolveSonglinkMatches(track: SpotifyTrackImport) {
+  try {
+    const payload = await fetchJsonWithTimeout<SonglinkResponse>(
+      `https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(track.spotifyTrackUrl)}`,
+    );
+    const linksByPlatform = payload.linksByPlatform ?? {};
+    const entitiesByUniqueId = payload.entitiesByUniqueId ?? {};
+    const matches: Partial<Record<StreamingService, MatchCandidate>> = {};
+
+    for (const [platform, service] of Object.entries(SONG_LINK_PLATFORM_MAP)) {
+      const link = linksByPlatform[platform];
+
+      if (!link?.url) {
+        continue;
+      }
+
+      const entity = link.entityUniqueId
+        ? entitiesByUniqueId[link.entityUniqueId]
+        : undefined;
+
+      if (service !== "spotify" && !isResolverEntityCompatible(track, entity)) {
+        continue;
+      }
+
+      matches[service] = createMatchedMatch(
+        service,
+        link.url,
+        `songlink_${platform}`,
+        entity ? scoreCandidate(track, entity) : 0.96,
+      );
+    }
+
+    return matches;
+  } catch {
+    return {} as Partial<Record<StreamingService, MatchCandidate>>;
+  }
+}
+
+async function matchAppleMusic(
+  track: SpotifyTrackImport,
+  exactMatch?: MatchCandidate,
+) {
+  if (exactMatch?.url) {
+    return {
+      match: exactMatch,
+      previewUrl: null,
+    };
+  }
+
   const query = new URLSearchParams({
-    term: buildSearchQuery(track),
+    term: buildSearchQuery(track, { includeAlbum: true }),
     entity: "song",
-    limit: "5",
+    limit: "8",
   });
 
   try {
-    const response = await fetch(`https://itunes.apple.com/search?${query}`, {
-      cache: "no-store",
-    });
+    const payload = await fetchJsonWithTimeout<{
+      results?: AppleSearchItem[];
+    }>(`https://itunes.apple.com/search?${query}`);
 
-    if (!response.ok) {
+    const best = (payload.results ?? [])
+      .map((item) => ({
+        item,
+        score: scoreCandidate(track, {
+          title: item.trackName,
+          artistName: item.artistName,
+          albumName: item.collectionName,
+          releaseDate: item.releaseDate,
+        }),
+      }))
+      .sort((left, right) => right.score - left.score)[0];
+
+    if (!best?.item.trackViewUrl) {
       return {
         match: createFallbackMatch(
           "apple_music",
           track,
-          "Apple Music search is temporarily unavailable.",
+          "Apple Music could not be matched confidently.",
         ),
         previewUrl: null,
       };
     }
 
-    const payload = (await response.json()) as {
-      results?: AppleSearchItem[];
-    };
-
-    const best = (payload.results ?? [])
-      .map((item) => ({
-        item,
-        score: scoreCandidate(
-          track.title,
-          track.artistName,
-          item.trackName,
-          item.artistName,
-        ),
-      }))
-      .sort((left, right) => right.score - left.score)[0];
-
-    if (best?.item.trackViewUrl && best.score >= 0.74) {
+    if (best.score >= APPLE_MATCH_THRESHOLD) {
       return {
-        match: {
-          service: "apple_music" as const,
-          url: best.item.trackViewUrl,
-          matchStatus: "matched" as const,
-          matchSource: "itunes_search",
-          confidence: Number(best.score.toFixed(2)),
-          notes: null,
-        },
+        match: createMatchedMatch(
+          "apple_music",
+          best.item.trackViewUrl,
+          "itunes_search",
+          best.score,
+        ),
+        previewUrl: best.item.previewUrl ?? null,
+      };
+    }
+
+    if (best.score >= APPLE_REVIEW_THRESHOLD) {
+      return {
+        match: createReviewCandidate(
+          "apple_music",
+          best.item.trackViewUrl,
+          "itunes_search_review",
+          best.score,
+          "Review this Apple Music match before publishing.",
+        ),
         previewUrl: best.item.previewUrl ?? null,
       };
     }
@@ -116,7 +296,7 @@ async function matchAppleMusic(track: SpotifyTrackImport) {
       match: createFallbackMatch(
         "apple_music",
         track,
-        "Apple Music search failed; review suggested search results before publishing.",
+        "Apple Music search failed; review suggested results before publishing.",
       ),
       previewUrl: null,
     };
@@ -132,51 +312,64 @@ async function matchAppleMusic(track: SpotifyTrackImport) {
   };
 }
 
-async function matchDeezer(track: SpotifyTrackImport) {
-  const query = encodeURIComponent(`artist:"${track.artistName}" track:"${track.title}"`);
+async function matchDeezer(
+  track: SpotifyTrackImport,
+  exactMatch?: MatchCandidate,
+) {
+  if (exactMatch?.url) {
+    return {
+      match: exactMatch,
+      previewUrl: null,
+    };
+  }
+
+  const query = encodeURIComponent(
+    `artist:"${track.artistName}" track:"${track.title}"`,
+  );
 
   try {
-    const response = await fetch(`https://api.deezer.com/search/track?q=${query}`, {
-      cache: "no-store",
-    });
+    const payload = await fetchJsonWithTimeout<{
+      data?: DeezerSearchItem[];
+    }>(`https://api.deezer.com/search/track?q=${query}`);
 
-    if (!response.ok) {
+    const best = (payload.data ?? [])
+      .map((item) => ({
+        item,
+        score: scoreCandidate(track, {
+          title: item.title,
+          artistName: item.artist?.name,
+          albumName: item.album?.title,
+        }),
+      }))
+      .sort((left, right) => right.score - left.score)[0];
+
+    if (!best?.item.link) {
       return {
         match: createFallbackMatch(
           "deezer",
           track,
-          "Deezer search is temporarily unavailable.",
+          "Deezer could not be matched confidently.",
         ),
         previewUrl: null,
       };
     }
 
-    const payload = (await response.json()) as {
-      data?: DeezerSearchItem[];
-    };
-
-    const best = (payload.data ?? [])
-      .map((item) => ({
-        item,
-        score: scoreCandidate(
-          track.title,
-          track.artistName,
-          item.title,
-          item.artist?.name,
-        ),
-      }))
-      .sort((left, right) => right.score - left.score)[0];
-
-    if (best?.item.link && best.score >= 0.7) {
+    if (best.score >= DEEZER_MATCH_THRESHOLD) {
       return {
-        match: {
-          service: "deezer" as const,
-          url: best.item.link,
-          matchStatus: "matched" as const,
-          matchSource: "deezer_search",
-          confidence: Number(best.score.toFixed(2)),
-          notes: null,
-        },
+        match: createMatchedMatch("deezer", best.item.link, "deezer_search", best.score),
+        previewUrl: best.item.preview ?? null,
+      };
+    }
+
+    if (best.score >= DEEZER_REVIEW_THRESHOLD) {
+      return {
+        match: createReviewCandidate(
+          "deezer",
+          best.item.link,
+          "deezer_search_review",
+          best.score,
+          "Review this Deezer match before publishing.",
+        ),
         previewUrl: best.item.preview ?? null,
       };
     }
@@ -185,7 +378,7 @@ async function matchDeezer(track: SpotifyTrackImport) {
       match: createFallbackMatch(
         "deezer",
         track,
-        "Deezer search failed; review the suggested search result before publishing.",
+        "Deezer search failed; review the suggested result before publishing.",
       ),
       previewUrl: null,
     };
@@ -201,12 +394,46 @@ async function matchDeezer(track: SpotifyTrackImport) {
   };
 }
 
-async function matchYouTubeMusic(track: SpotifyTrackImport) {
+function scoreYouTubeCandidate(track: SpotifyTrackImport, item: {
+  channelTitle?: string;
+  title?: string;
+}) {
+  const normalizedTitle = normalizeMatchText(item.title ?? "");
+  const normalizedArtist = normalizeMatchText(item.channelTitle ?? "");
+  const baseScore = scoreCandidate(track, {
+    title: item.title,
+    artistName: item.channelTitle,
+    albumName: null,
+  });
+
+  const officialBoost =
+    /official|provided to youtube|topic|audio/.test(normalizedTitle) ||
+    normalizedArtist.endsWith(" topic")
+      ? 0.08
+      : 0;
+  const noisePenalty =
+    /cover|reaction|nightcore|sped up|slowed|karaoke|live|lyrics/.test(
+      normalizedTitle,
+    )
+      ? 0.18
+      : 0;
+
+  return clamp(baseScore + officialBoost - noisePenalty, 0, 1);
+}
+
+async function matchYouTubeMusic(
+  track: SpotifyTrackImport,
+  exactMatch?: MatchCandidate,
+) {
+  if (exactMatch?.url) {
+    return exactMatch;
+  }
+
   try {
     const response = await YouTubeSearchApi.GetListByKeyword(
-      `${track.artistName} ${track.title} audio`,
+      `${buildSearchQuery(track, { includeAlbum: true })} official audio`,
       false,
-      5,
+      6,
       [{ type: "video" }],
     );
 
@@ -222,23 +449,41 @@ async function matchYouTubeMusic(track: SpotifyTrackImport) {
 
         return {
           item,
-          score: scoreCandidate(track.title, track.artistName, title, channelTitle),
+          score: scoreYouTubeCandidate(track, {
+            title,
+            channelTitle,
+          }),
         };
       })
       .sort((left, right) => right.score - left.score)[0];
 
-    if (best?.item.id && best.score >= 0.66) {
-      return {
-        service: "youtube_music",
-        url: `https://music.youtube.com/watch?v=${best.item.id}`,
-        matchStatus: best.score >= 0.76 ? "matched" : "search_fallback",
-        matchSource: "youtube_search",
-        confidence: Number(best.score.toFixed(2)),
-        notes:
-          best.score >= 0.76
-            ? null
-            : "Review this YouTube Music match before publishing.",
-      } satisfies MatchCandidate;
+    if (!best?.item.id) {
+      return createFallbackMatch(
+        "youtube_music",
+        track,
+        "YouTube Music could not be matched confidently.",
+      );
+    }
+
+    const watchUrl = `https://music.youtube.com/watch?v=${best.item.id}`;
+
+    if (best.score >= YOUTUBE_MATCH_THRESHOLD) {
+      return createMatchedMatch(
+        "youtube_music",
+        watchUrl,
+        "youtube_search",
+        best.score,
+      );
+    }
+
+    if (best.score >= YOUTUBE_REVIEW_THRESHOLD) {
+      return createReviewCandidate(
+        "youtube_music",
+        watchUrl,
+        "youtube_search_review",
+        best.score,
+        "Review this YouTube Music match before publishing.",
+      );
     }
   } catch {
     return createFallbackMatch(
@@ -256,46 +501,85 @@ async function matchYouTubeMusic(track: SpotifyTrackImport) {
 }
 
 function matchSpotify(track: SpotifyTrackImport) {
-  return {
-    service: "spotify",
-    url: track.spotifyTrackUrl,
-    matchStatus: "matched",
-    matchSource: "spotify_track_url",
-    confidence: 1,
-    notes: null,
-  } satisfies MatchCandidate;
+  return createMatchedMatch("spotify", track.spotifyTrackUrl, "spotify_track_url", 1);
 }
 
-function buildStaticServiceMatches(track: SpotifyTrackImport) {
-  return [
+function matchAmazonMusic(
+  track: SpotifyTrackImport,
+  exactMatch?: MatchCandidate,
+) {
+  return (
+    exactMatch ??
     createFallbackMatch(
       "amazon_music",
       track,
-      "Amazon Music uses a search-result fallback in V1.",
-    ),
+      "Amazon Music could not be resolved exactly; review the search fallback before publishing.",
+    )
+  );
+}
+
+function matchTidal(track: SpotifyTrackImport, exactMatch?: MatchCandidate) {
+  return (
+    exactMatch ??
     createFallbackMatch(
       "tidal",
       track,
-      "TIDAL uses a search-result fallback in V1.",
-    ),
-  ];
+      "TIDAL could not be resolved exactly; review the search fallback before publishing.",
+    )
+  );
 }
 
 export async function buildImportBundle(
   track: SpotifyTrackImport,
 ): Promise<ImportBundle> {
-  const [apple, deezer, youtubeMusic] = await Promise.all([
-    matchAppleMusic(track),
-    matchDeezer(track),
-    matchYouTubeMusic(track),
+  const resolvedMatches = await resolveSonglinkMatches(track);
+
+  const [appleResult, deezerResult, youtubeMusicResult] = await Promise.allSettled([
+    matchAppleMusic(track, resolvedMatches.apple_music),
+    matchDeezer(track, resolvedMatches.deezer),
+    matchYouTubeMusic(track, resolvedMatches.youtube_music),
   ]);
+
+  const apple =
+    appleResult.status === "fulfilled"
+      ? appleResult.value
+      : {
+          match: createFallbackMatch(
+            "apple_music",
+            track,
+            "Apple Music search failed; review the fallback before publishing.",
+          ),
+          previewUrl: null,
+        };
+
+  const deezer =
+    deezerResult.status === "fulfilled"
+      ? deezerResult.value
+      : {
+          match: createFallbackMatch(
+            "deezer",
+            track,
+            "Deezer search failed; review the fallback before publishing.",
+          ),
+          previewUrl: null,
+        };
+
+  const youtubeMusic =
+    youtubeMusicResult.status === "fulfilled"
+      ? youtubeMusicResult.value
+      : createFallbackMatch(
+          "youtube_music",
+          track,
+          "YouTube Music search failed; the fallback opens search results instead.",
+        );
 
   const links = [
     matchSpotify(track),
     apple.match,
     youtubeMusic,
-    ...buildStaticServiceMatches(track),
+    matchAmazonMusic(track, resolvedMatches.amazon_music),
     deezer.match,
+    matchTidal(track, resolvedMatches.tidal),
   ]
     .sort(
       (left, right) =>

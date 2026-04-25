@@ -25,6 +25,7 @@ export function PublicLinkPanel({
   previewHref: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState<string | null>(null);
 
   useEffect(() => {
     if (!copied) {
@@ -35,12 +36,13 @@ export function PublicLinkPanel({
     return () => window.clearTimeout(timeout);
   }, [copied]);
 
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
   const isPublished = status === "published";
   const publicPath = buildPublicSongPath(username, slug);
-  const publicUrl =
-    typeof window === "undefined"
-      ? publicPath
-      : `${window.location.origin}${publicPath}`;
+  const publicUrl = origin ? `${origin}${publicPath}` : publicPath;
 
   return (
     <section className="app-card grid gap-4 rounded-[1.6rem] p-5">

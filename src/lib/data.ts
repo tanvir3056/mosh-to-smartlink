@@ -1,11 +1,17 @@
 import type { QueryResultRow } from "pg";
+import { unstable_cache } from "next/cache";
 
 import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
 import { dbQuery, dbTransaction } from "@/lib/db/driver";
+import { syncEmailLeadToConnector } from "@/lib/email-connectors";
+import { normalizeLeadEmail } from "@/lib/email-capture";
+import { encryptSecret } from "@/lib/secrets";
 import type {
   AppUserRecord,
   AnalyticsSnapshot,
   DashboardSnapshot,
+  EmailConnectorConfig,
+  EmailLeadRecord,
   ImportBundle,
   MatchCandidate,
   SongPageWithLinks,
@@ -43,6 +49,13 @@ type SongPageJoinRow = QueryResultRow & {
   status: "draft" | "published" | "unpublished";
   published_at: string | null;
   unpublished_at: string | null;
+  email_capture_enabled: boolean | null;
+  email_capture_title: string | null;
+  email_capture_description: string | null;
+  email_capture_button_label: string | null;
+  email_capture_download_url: string | null;
+  email_capture_download_label: string | null;
+  email_capture_tag: string | null;
   page_created_at: string;
   page_updated_at: string;
   link_id: string | null;
@@ -65,6 +78,49 @@ type AppUserRow = QueryResultRow & {
   username: string;
   login_email: string;
   password_hash: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type EmailConnectorRow = QueryResultRow & {
+  id: string;
+  owner_user_id: string;
+  provider: "mailchimp";
+  encrypted_api_key: string | null;
+  audience_id: string | null;
+  default_tags: string | null;
+  double_opt_in: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type EmailLeadRow = QueryResultRow & {
+  id: string;
+  owner_user_id: string;
+  song_id: string;
+  page_id: string;
+  visit_id: string | null;
+  visitor_id: string;
+  email: string;
+  normalized_email: string;
+  referrer: string | null;
+  referrer_host: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  user_agent: string | null;
+  browser_name: string | null;
+  os_name: string | null;
+  device_type: string | null;
+  country: string | null;
+  city: string | null;
+  ip_hash: string | null;
+  connector_provider: "mailchimp" | null;
+  connector_status: EmailLeadRecord["connectorStatus"];
+  connector_error: string | null;
+  connector_synced_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -92,6 +148,21 @@ function defaultTrackingConfig(): TrackingConfig {
     metaPixelEnabled: false,
     metaTestEventCode: null,
   };
+}
+
+function defaultEmailConnectorConfig(): EmailConnectorConfig {
+  return {
+    provider: "mailchimp",
+    audienceId: null,
+    defaultTags: null,
+    doubleOptIn: false,
+    hasApiKey: false,
+    updatedAt: null,
+  };
+}
+
+export function publishedSongPageTag(username: string, slug: string) {
+  return `public-song-page:${normalizeUsername(username)}:${slug}`;
 }
 
 function createSinceIso(rangeDays: number) {
@@ -172,6 +243,67 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
       metaPixelEnabled: Boolean(firstRow.meta_pixel_enabled),
       metaTestEventCode: firstRow.meta_test_event_code,
     },
+    emailCapture: {
+      enabled: Boolean(firstRow.email_capture_enabled),
+      title: firstRow.email_capture_title,
+      description: firstRow.email_capture_description,
+      buttonLabel: firstRow.email_capture_button_label,
+      downloadUrl: firstRow.email_capture_download_url,
+      downloadLabel: firstRow.email_capture_download_label,
+      tag: firstRow.email_capture_tag,
+    },
+  };
+}
+
+function mapEmailConnector(row: EmailConnectorRow | undefined): EmailConnectorConfig {
+  if (!row) {
+    return defaultEmailConnectorConfig();
+  }
+
+  return {
+    provider: row.provider,
+    audienceId: row.audience_id,
+    defaultTags: row.default_tags,
+    doubleOptIn: Boolean(row.double_opt_in),
+    hasApiKey: Boolean(row.encrypted_api_key),
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapEmailLead(row: EmailLeadRow | undefined): EmailLeadRecord | null {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    ownerUserId: row.owner_user_id,
+    songId: row.song_id,
+    pageId: row.page_id,
+    visitId: row.visit_id,
+    visitorId: row.visitor_id,
+    email: row.email,
+    normalizedEmail: row.normalized_email,
+    referrer: row.referrer,
+    referrerHost: row.referrer_host,
+    source: row.utm_source,
+    medium: row.utm_medium,
+    campaign: row.utm_campaign,
+    term: row.utm_term,
+    content: row.utm_content,
+    userAgent: row.user_agent,
+    browserName: row.browser_name,
+    osName: row.os_name,
+    deviceType: row.device_type,
+    country: row.country,
+    city: row.city,
+    ipHash: row.ip_hash,
+    connectorProvider: row.connector_provider,
+    connectorStatus: row.connector_status,
+    connectorError: row.connector_error,
+    connectorSyncedAt: row.connector_synced_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -510,6 +642,127 @@ export async function saveTrackingConfig(ownerUserId: string, input: TrackingCon
   );
 }
 
+export async function getEmailConnectorConfig(ownerUserId: string) {
+  const rows = await dbQuery<EmailConnectorRow>(
+    `
+      select
+        id,
+        owner_user_id,
+        provider,
+        encrypted_api_key,
+        audience_id,
+        default_tags,
+        double_opt_in,
+        created_at,
+        updated_at
+      from email_connectors
+      where owner_user_id = $1
+        and provider = 'mailchimp'
+      limit 1
+    `,
+    [ownerUserId],
+  );
+
+  return mapEmailConnector(rows[0]);
+}
+
+async function getEmailConnectorRecord(ownerUserId: string) {
+  const rows = await dbQuery<EmailConnectorRow>(
+    `
+      select
+        id,
+        owner_user_id,
+        provider,
+        encrypted_api_key,
+        audience_id,
+        default_tags,
+        double_opt_in,
+        created_at,
+        updated_at
+      from email_connectors
+      where owner_user_id = $1
+        and provider = 'mailchimp'
+      limit 1
+    `,
+    [ownerUserId],
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function saveEmailConnectorConfig(
+  ownerUserId: string,
+  input: {
+    provider: "mailchimp";
+    audienceId: string | null;
+    defaultTags: string | null;
+    doubleOptIn: boolean;
+    apiKey: string | null;
+    clearApiKey: boolean;
+  },
+) {
+  const existing = await getEmailConnectorRecord(ownerUserId);
+  const encryptedApiKey = input.clearApiKey
+    ? null
+    : input.apiKey
+      ? encryptSecret(input.apiKey)
+      : existing?.encrypted_api_key ?? null;
+
+  if (!input.audienceId && !encryptedApiKey && !existing) {
+    return;
+  }
+
+  const updated = await dbQuery<{ id: string }>(
+    `
+      update email_connectors
+      set encrypted_api_key = $3,
+          audience_id = $4,
+          default_tags = $5,
+          double_opt_in = $6,
+          updated_at = current_timestamp
+      where owner_user_id = $1
+        and provider = $2
+      returning id
+    `,
+    [
+      ownerUserId,
+      input.provider,
+      encryptedApiKey,
+      input.audienceId,
+      input.defaultTags,
+      input.doubleOptIn,
+    ],
+  );
+
+  if (updated.length > 0) {
+    return;
+  }
+
+  await dbQuery(
+    `
+      insert into email_connectors (
+        id,
+        owner_user_id,
+        provider,
+        encrypted_api_key,
+        audience_id,
+        default_tags,
+        double_opt_in
+      )
+      values ($1, $2, $3, $4, $5, $6, $7)
+    `,
+    [
+      createId("connector"),
+      ownerUserId,
+      input.provider,
+      encryptedApiKey,
+      input.audienceId,
+      input.defaultTags,
+      input.doubleOptIn,
+    ],
+  );
+}
+
 export async function listPublishedPages() {
   return dbQuery<{
     username: string;
@@ -529,7 +782,7 @@ export async function listPublishedPages() {
   );
 }
 
-export async function getPublishedSongPage(username: string, slug: string) {
+async function getPublishedSongPageUncached(username: string, slug: string) {
   const rows = await dbQuery<SongPageJoinRow>(
     `
       select
@@ -555,6 +808,13 @@ export async function getPublishedSongPage(username: string, slug: string) {
         p.status,
         p.published_at,
         p.unpublished_at,
+        p.email_capture_enabled,
+        p.email_capture_title,
+        p.email_capture_description,
+        p.email_capture_button_label,
+        p.email_capture_download_url,
+        p.email_capture_download_label,
+        p.email_capture_tag,
         p.created_at as page_created_at,
         p.updated_at as page_updated_at,
         l.id as link_id,
@@ -583,6 +843,34 @@ export async function getPublishedSongPage(username: string, slug: string) {
   );
 
   return mapSongPage(rows);
+}
+
+export async function getPublishedSongPage(username: string, slug: string) {
+  const normalizedUsername = normalizeUsername(username);
+  const fallbackRead = () => getPublishedSongPageUncached(normalizedUsername, slug);
+
+  if (process.env.NODE_ENV === "test" || process.env.VITEST === "true") {
+    return fallbackRead();
+  }
+
+  const readCachedPage = unstable_cache(
+    async () => fallbackRead(),
+    ["public-song-page", normalizedUsername, slug],
+    {
+      revalidate: 300,
+      tags: [publishedSongPageTag(normalizedUsername, slug)],
+    },
+  );
+
+  try {
+    return await readCachedPage();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("incrementalCache missing")) {
+      return fallbackRead();
+    }
+
+    throw error;
+  }
 }
 
 export async function getPublishedSongPageBySlug(slug: string) {
@@ -631,6 +919,13 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
         p.status,
         p.published_at,
         p.unpublished_at,
+        p.email_capture_enabled,
+        p.email_capture_title,
+        p.email_capture_description,
+        p.email_capture_button_label,
+        p.email_capture_download_url,
+        p.email_capture_download_label,
+        p.email_capture_tag,
         p.created_at as page_created_at,
         p.updated_at as page_updated_at,
         l.id as link_id,
@@ -840,6 +1135,7 @@ export async function updateSongDraft(input: {
   headline: string;
   slug: string;
   status: "draft" | "published" | "unpublished";
+  emailCapture: SongPageWithLinks["emailCapture"];
   links: MatchCandidate[];
 }) {
   return dbTransaction(async (query) => {
@@ -888,13 +1184,33 @@ export async function updateSongDraft(input: {
           slug = $2,
           headline = $3,
           status = $4,
+          email_capture_enabled = $5,
+          email_capture_title = $6,
+          email_capture_description = $7,
+          email_capture_button_label = $8,
+          email_capture_download_url = $9,
+          email_capture_download_label = $10,
+          email_capture_tag = $11,
           published_at = case when $4 = 'published' then coalesce(published_at, current_timestamp) else published_at end,
           unpublished_at = case when $4 = 'unpublished' then current_timestamp else null end,
           updated_at = current_timestamp
         where song_id = $1
-          and owner_user_id = $5
+          and owner_user_id = $12
       `,
-      [input.songId, finalSlug, input.headline, input.status, input.ownerUserId],
+      [
+        input.songId,
+        finalSlug,
+        input.headline,
+        input.status,
+        input.emailCapture.enabled,
+        input.emailCapture.title,
+        input.emailCapture.description,
+        input.emailCapture.buttonLabel,
+        input.emailCapture.downloadUrl,
+        input.emailCapture.downloadLabel,
+        input.emailCapture.tag,
+        input.ownerUserId,
+      ],
     );
 
     await upsertStreamingLinks(query, input.songId, input.links);
@@ -1479,6 +1795,237 @@ export async function getAnalyticsSnapshot(
           : 0,
     })),
     daily,
+  };
+}
+
+async function saveEmailLeadConnectorResult(
+  leadId: string,
+  input: {
+    provider: EmailLeadRecord["connectorProvider"];
+    status: EmailLeadRecord["connectorStatus"];
+    error: string | null;
+    syncedAt: string | null;
+  },
+) {
+  const rows = await dbQuery<EmailLeadRow>(
+    `
+      update email_capture_submissions
+      set connector_provider = $2,
+          connector_status = $3,
+          connector_error = $4,
+          connector_synced_at = $5,
+          updated_at = current_timestamp
+      where id = $1
+      returning
+        id,
+        owner_user_id,
+        song_id,
+        page_id,
+        visit_id,
+        visitor_id,
+        email,
+        normalized_email,
+        referrer,
+        referrer_host,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+        user_agent,
+        browser_name,
+        os_name,
+        device_type,
+        country,
+        city,
+        ip_hash,
+        connector_provider,
+        connector_status,
+        connector_error,
+        connector_synced_at,
+        created_at,
+        updated_at
+    `,
+    [leadId, input.provider, input.status, input.error, input.syncedAt],
+  );
+
+  return mapEmailLead(rows[0]);
+}
+
+export async function recordEmailCaptureSubmission(input: {
+  page: SongPageWithLinks;
+  email: string;
+  lastVisitId: string | null;
+  context: TrackingContext;
+}) {
+  const normalizedEmail = normalizeLeadEmail(input.email);
+  const rows = await dbQuery<EmailLeadRow>(
+    `
+      insert into email_capture_submissions (
+        id,
+        owner_user_id,
+        song_id,
+        page_id,
+        visit_id,
+        visitor_id,
+        email,
+        normalized_email,
+        referrer,
+        referrer_host,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+        user_agent,
+        browser_name,
+        os_name,
+        device_type,
+        country,
+        city,
+        ip_hash,
+        connector_provider,
+        connector_status,
+        connector_error,
+        connector_synced_at
+      )
+      values (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+        $18, $19, $20, $21, $22, $23, $24, $25, $26
+      )
+      on conflict (owner_user_id, page_id, normalized_email)
+      do update set
+        visit_id = excluded.visit_id,
+        visitor_id = excluded.visitor_id,
+        email = excluded.email,
+        referrer = excluded.referrer,
+        referrer_host = excluded.referrer_host,
+        utm_source = excluded.utm_source,
+        utm_medium = excluded.utm_medium,
+        utm_campaign = excluded.utm_campaign,
+        utm_term = excluded.utm_term,
+        utm_content = excluded.utm_content,
+        user_agent = excluded.user_agent,
+        browser_name = excluded.browser_name,
+        os_name = excluded.os_name,
+        device_type = excluded.device_type,
+        country = excluded.country,
+        city = excluded.city,
+        ip_hash = excluded.ip_hash,
+        connector_provider = excluded.connector_provider,
+        connector_status = excluded.connector_status,
+        connector_error = excluded.connector_error,
+        connector_synced_at = excluded.connector_synced_at,
+        updated_at = current_timestamp
+      returning
+        id,
+        owner_user_id,
+        song_id,
+        page_id,
+        visit_id,
+        visitor_id,
+        email,
+        normalized_email,
+        referrer,
+        referrer_host,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+        user_agent,
+        browser_name,
+        os_name,
+        device_type,
+        country,
+        city,
+        ip_hash,
+        connector_provider,
+        connector_status,
+        connector_error,
+        connector_synced_at,
+        created_at,
+        updated_at
+    `,
+    [
+      createId("lead"),
+      input.page.song.ownerUserId,
+      input.page.song.id,
+      input.page.page.id,
+      input.lastVisitId,
+      input.context.visitorId,
+      input.email,
+      normalizedEmail,
+      input.context.referrer,
+      input.context.referrerHost,
+      input.context.source,
+      input.context.medium,
+      input.context.campaign,
+      input.context.term,
+      input.context.content,
+      input.context.userAgent,
+      input.context.browserName,
+      input.context.osName,
+      input.context.deviceType,
+      input.context.country,
+      input.context.city,
+      input.context.ipHash,
+      null,
+      "not_configured",
+      null,
+      null,
+    ],
+  );
+
+  const lead = mapEmailLead(rows[0]);
+
+  if (!lead) {
+    throw new Error("The lead could not be saved.");
+  }
+
+  const connector = await getEmailConnectorRecord(input.page.song.ownerUserId);
+  let syncResult:
+    | Awaited<ReturnType<typeof syncEmailLeadToConnector>>
+    | {
+        provider: EmailLeadRecord["connectorProvider"];
+        status: EmailLeadRecord["connectorStatus"];
+        error: string | null;
+        syncedAt: string | null;
+      };
+
+  try {
+    syncResult = await syncEmailLeadToConnector({
+      connector:
+        connector && connector.audience_id && connector.encrypted_api_key
+          ? {
+              provider: connector.provider,
+              audienceId: connector.audience_id,
+              defaultTags: connector.default_tags,
+              doubleOptIn: Boolean(connector.double_opt_in),
+              encryptedApiKey: connector.encrypted_api_key,
+            }
+          : null,
+      email: input.email,
+      pageTag: input.page.emailCapture.tag,
+    });
+  } catch (error) {
+    syncResult = {
+      provider: connector?.provider ?? null,
+      status: "failed",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Lead sync failed after the email was captured.",
+      syncedAt: null,
+    };
+  }
+
+  const updatedLead =
+    (await saveEmailLeadConnectorResult(lead.id, syncResult)) ?? lead;
+
+  return {
+    lead: updatedLead,
+    syncStatus: syncResult.status,
   };
 }
 

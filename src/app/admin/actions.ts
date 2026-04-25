@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ActionState } from "@/app/admin/action-types";
@@ -9,11 +9,18 @@ import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/a
 import {
   createSongImportDraft,
   deleteSongById,
+  saveEmailConnectorConfig,
+  publishedSongPageTag,
   saveTrackingConfig,
   updateSongDraft,
 } from "@/lib/data";
 import { buildImportBundle } from "@/lib/matching";
-import type { MatchCandidate, MatchStatus, TrackingConfig } from "@/lib/types";
+import type {
+  MatchCandidate,
+  MatchStatus,
+  SongPageWithLinks,
+  TrackingConfig,
+} from "@/lib/types";
 import { fetchSpotifyTrackImport } from "@/lib/spotify";
 import { buildPublicSongPath } from "@/lib/utils";
 
@@ -56,6 +63,20 @@ function parseLinksFromFormData(formData: FormData): MatchCandidate[] {
       ? Number(link.confidence.toFixed(2))
       : null,
   }));
+}
+
+function parseEmailCaptureFromFormData(
+  formData: FormData,
+): SongPageWithLinks["emailCapture"] {
+  return {
+    enabled: getStringValue(formData, "email_capture_enabled") === "on",
+    title: getNullableStringValue(formData, "email_capture_title"),
+    description: getNullableStringValue(formData, "email_capture_description"),
+    buttonLabel: getNullableStringValue(formData, "email_capture_button_label"),
+    downloadUrl: getNullableStringValue(formData, "email_capture_download_url"),
+    downloadLabel: getNullableStringValue(formData, "email_capture_download_label"),
+    tag: getNullableStringValue(formData, "email_capture_tag"),
+  };
 }
 
 export async function signInAction(
@@ -160,6 +181,7 @@ export async function updateSongAction(
   const artistName = getStringValue(formData, "artist_name");
   const artworkUrl = getStringValue(formData, "artwork_url");
   const intent = getStringValue(formData, "intent");
+  const currentSlug = getStringValue(formData, "current_slug");
 
   if (!songId || !title || !artistName || !artworkUrl) {
     return {
@@ -189,6 +211,7 @@ export async function updateSongAction(
       headline: getStringValue(formData, "headline") || "Stream now",
       slug: getStringValue(formData, "slug") || `${artistName}-${title}`,
       status,
+      emailCapture: parseEmailCaptureFromFormData(formData),
       links: parseLinksFromFormData(formData),
     });
 
@@ -197,6 +220,12 @@ export async function updateSongAction(
     revalidatePath(`/admin/songs/${songId}`);
     const slug = getStringValue(formData, "slug") || `${artistName}-${title}`;
     revalidatePath(buildPublicSongPath(session.username, slug));
+    revalidateTag(publishedSongPageTag(session.username, slug), "max");
+
+    if (currentSlug && currentSlug !== slug) {
+      revalidatePath(buildPublicSongPath(session.username, currentSlug));
+      revalidateTag(publishedSongPageTag(session.username, currentSlug), "max");
+    }
 
     return {
       error: null,
@@ -231,13 +260,21 @@ export async function saveTrackingSettingsAction(
   };
 
   await saveTrackingConfig(session.userId, input);
+  await saveEmailConnectorConfig(session.userId, {
+    provider: "mailchimp",
+    audienceId: getNullableStringValue(formData, "mailchimp_audience_id"),
+    defaultTags: getNullableStringValue(formData, "mailchimp_default_tags"),
+    doubleOptIn: getStringValue(formData, "mailchimp_double_opt_in") === "on",
+    apiKey: getNullableStringValue(formData, "mailchimp_api_key"),
+    clearApiKey: getStringValue(formData, "mailchimp_clear_api_key") === "on",
+  });
 
   revalidatePath("/admin/settings");
   revalidatePath("/admin");
 
   return {
     error: null,
-    success: "Tracking settings saved.",
+    success: "Settings saved.",
   };
 }
 
@@ -257,6 +294,7 @@ export async function deleteSongAction(formData: FormData) {
 
   if (deleted.slug && deleted.username) {
     revalidatePath(buildPublicSongPath(deleted.username, deleted.slug));
+    revalidateTag(publishedSongPageTag(deleted.username, deleted.slug), "max");
   }
 
   redirect("/admin");

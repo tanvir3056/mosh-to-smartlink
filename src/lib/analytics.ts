@@ -35,29 +35,40 @@ export function summariseRequestContext(
     searchParams: URLSearchParams;
   },
 ): TrackingContext {
-  const parser = new UAParser(request.headers.get("user-agent") ?? "");
+  return summariseHeadersContext(request.headers, input);
+}
+
+export function summariseHeadersContext(
+  headers: Headers,
+  input: {
+    visitorId: string;
+    referrer: string | null;
+    searchParams: URLSearchParams;
+  },
+): TrackingContext {
+  const parser = new UAParser(headers.get("user-agent") ?? "");
   const deviceType =
     parser.getDevice().type ??
     (parser.getBrowser().name ? "desktop" : "unknown");
 
-  const forwardedFor = request.headers.get("x-forwarded-for");
+  const forwardedFor = headers.get("x-forwarded-for");
   const ipAddress = forwardedFor?.split(",")[0]?.trim() ?? null;
 
   return {
     visitorId: input.visitorId,
     referrer: input.referrer,
     referrerHost: extractReferrerHost(input.referrer),
-    userAgent: request.headers.get("user-agent"),
+    userAgent: headers.get("user-agent"),
     browserName: parser.getBrowser().name ?? null,
     osName: parser.getOS().name ?? null,
     deviceType,
     country:
-      request.headers.get("x-vercel-ip-country") ??
-      request.headers.get("cf-ipcountry") ??
+      headers.get("x-vercel-ip-country") ??
+      headers.get("cf-ipcountry") ??
       null,
     city:
-      request.headers.get("x-vercel-ip-city") ??
-      request.headers.get("cf-ipcity") ??
+      headers.get("x-vercel-ip-city") ??
+      headers.get("cf-ipcity") ??
       null,
     ipHash: createIpHash(ipAddress),
     ...parseUTMAttribution(input.searchParams),
