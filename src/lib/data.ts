@@ -857,7 +857,7 @@ export async function getPublishedSongPage(username: string, slug: string) {
     async () => fallbackRead(),
     ["public-song-page", normalizedUsername, slug],
     {
-      revalidate: 300,
+      revalidate: 3600,
       tags: [publishedSongPageTag(normalizedUsername, slug)],
     },
   );

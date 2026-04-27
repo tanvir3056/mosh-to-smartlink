@@ -8,19 +8,13 @@ function escapeForInlineScript(value: unknown) {
 export function VisitTracker({
   username,
   slug,
-  path,
-  searchString,
 }: {
   username: string;
   slug: string;
-  path: string;
-  searchString: string;
 }) {
   const payload = escapeForInlineScript({
     username,
     slug,
-    path,
-    searchString,
   });
 
   return (
@@ -29,7 +23,11 @@ export function VisitTracker({
         __html: `
           (() => {
             const payload = ${payload};
-            const cacheKey = [payload.username, payload.slug, payload.path, payload.searchString].join("::");
+            const path = window.location.pathname;
+            const searchString = window.location.search.startsWith("?")
+              ? window.location.search.slice(1)
+              : window.location.search;
+            const cacheKey = [payload.username, payload.slug, path, searchString].join("::");
 
             if (window.__ffmLastTrackedVisit === cacheKey) {
               return;
@@ -39,17 +37,28 @@ export function VisitTracker({
 
             const body = JSON.stringify({
               ...payload,
+              path,
+              searchString,
               referrer: document.referrer || null,
             });
 
-            fetch("/api/analytics/visit", {
-              method: "POST",
-              headers: {
-                "content-type": "application/json",
-              },
-              body,
-              keepalive: true,
-            }).catch(() => {});
+            const sendVisit = () => {
+              fetch("/api/analytics/visit", {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                },
+                body,
+                keepalive: true,
+              }).catch(() => {});
+            };
+
+            if ("requestIdleCallback" in window) {
+              window.requestIdleCallback(sendVisit, { timeout: 1200 });
+              return;
+            }
+
+            window.setTimeout(sendVisit, 0);
           })();
         `,
       }}

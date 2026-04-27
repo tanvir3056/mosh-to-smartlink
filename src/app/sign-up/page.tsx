@@ -1,20 +1,9 @@
-import { redirect } from "next/navigation";
-
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { SignUpForm } from "@/components/admin/sign-up-form";
-import { getUserSession } from "@/lib/auth";
 import { APP_NAME } from "@/lib/constants";
 import { appEnv } from "@/lib/env";
 
-export const dynamic = "force-dynamic";
-
 export default async function SignUpPage() {
-  const session = await getUserSession();
-
-  if (session) {
-    redirect("/admin");
-  }
-
   return (
     <main className="flex min-h-screen items-center justify-center px-5 py-8">
       <section className="app-shell-card w-full max-w-lg rounded-[2rem] p-3 sm:p-4">

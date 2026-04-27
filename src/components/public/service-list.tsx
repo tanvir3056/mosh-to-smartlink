@@ -1,5 +1,7 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { ServiceBranding } from "@/components/service-icon";
 import {
   SERVICE_CTAS,
@@ -17,13 +19,13 @@ declare global {
 
 export function ServiceList({
   page,
-  searchString,
   mode = "live",
 }: {
   page: SongPageWithLinks;
-  searchString: string;
   mode?: "live" | "preview";
 }) {
+  const searchParams = useSearchParams();
+  const searchString = searchParams?.toString() ?? "";
   const byService = new Map(page.links.map((link) => [link.service, link]));
   const isPreview = mode === "preview";
   const services = STREAMING_SERVICES.filter((service) =>

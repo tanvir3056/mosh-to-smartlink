@@ -4,11 +4,9 @@ import type { SongPageWithLinks } from "@/lib/types";
 
 export function EmailCaptureCard({
   page,
-  searchString,
   mode = "live",
 }: {
   page: SongPageWithLinks;
-  searchString: string;
   mode?: "live" | "preview";
 }) {
   const capture = resolveEmailCaptureConfig(page);
@@ -63,7 +61,6 @@ export function EmailCaptureCard({
           <EmailCaptureForm
             username={page.page.username}
             slug={page.page.slug}
-            searchString={searchString}
             buttonLabel={capture.buttonLabel}
           />
         )}

@@ -70,7 +70,7 @@ const PAGE: SongPageWithLinks = {
 
 describe("ServiceList", () => {
   test("renders only ready services on the live page", () => {
-    render(<ServiceList page={PAGE} searchString="" />);
+    render(<ServiceList page={PAGE} />);
 
     expect(screen.getByTestId("service-link-spotify")).toHaveAttribute(
       "href",
@@ -95,7 +95,6 @@ describe("ServiceList", () => {
             metaPixelId: "123456",
           },
         }}
-        searchString=""
       />,
     );
 

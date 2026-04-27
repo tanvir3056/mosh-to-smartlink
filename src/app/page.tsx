@@ -2,14 +2,9 @@ import Link from "next/link";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
-import { getUserSession } from "@/lib/auth";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 
-export const dynamic = "force-dynamic";
-
 export default async function HomePage() {
-  const session = await getUserSession();
-
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-5 py-8 sm:px-8 sm:py-12">
       <section className="app-shell-card rounded-[2rem] p-3 sm:p-4">
@@ -33,22 +28,19 @@ export default async function HomePage() {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {session ? (
-                <Link href="/admin">
-                  <Button>Open your dashboard</Button>
-                </Link>
-              ) : (
-                <>
-                  <Link href="/sign-up">
-                    <Button>Create account</Button>
-                  </Link>
-                  <Link href="/sign-in">
-                    <Button tone="secondary" className="border-white/10 bg-white/4 text-white hover:bg-white/8">
-                      Sign in
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <Link href="/sign-up">
+                <Button>Create account</Button>
+              </Link>
+              <Link href="/sign-in">
+                <Button tone="secondary" className="border-white/10 bg-white/4 text-white hover:bg-white/8">
+                  Sign in
+                </Button>
+              </Link>
+              <Link href="/admin">
+                <Button tone="secondary" className="border-white/10 bg-transparent text-white/78 hover:bg-white/6 hover:text-white">
+                  Open dashboard
+                </Button>
+              </Link>
             </div>
           </div>
 

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
 
 import {
   INITIAL_PUBLIC_LEAD_ACTION_STATE,
@@ -50,18 +51,17 @@ function Message({
 export function EmailCaptureForm({
   username,
   slug,
-  searchString,
   buttonLabel,
 }: {
   username: string;
   slug: string;
-  searchString: string;
   buttonLabel: string;
 }) {
+  const searchParams = useSearchParams();
   const action = captureEmailLeadAction.bind(null, {
     username,
     slug,
-    searchString,
+    searchString: searchParams?.toString() ?? "",
   });
   const [state, formAction] = useActionState(action, INITIAL_PUBLIC_LEAD_ACTION_STATE);
 

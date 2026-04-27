@@ -23,7 +23,6 @@ export default async function AdminPreviewPage({
   return (
     <PublicSongPage
       page={page}
-      searchString=""
       mode="preview"
       editorHref={`/admin/songs/${songId}`}
     />

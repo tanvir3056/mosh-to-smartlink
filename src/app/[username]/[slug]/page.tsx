@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { PublicSongPage } from "@/components/public/song-page";
 import { getPublishedSongPage } from "@/lib/data";
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {
@@ -35,30 +37,15 @@ export async function generateMetadata({
 
 export default async function PublicSongRoute({
   params,
-  searchParams,
 }: {
   params: Promise<{ username: string; slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ username, slug }, search] = await Promise.all([params, searchParams]);
+  const { username, slug } = await params;
   const page = await getPublishedSongPage(username, slug);
 
   if (!page) {
     notFound();
   }
 
-  const urlSearch = new URLSearchParams();
-
-  Object.entries(search).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      value.forEach((entry) => urlSearch.append(key, entry));
-      return;
-    }
-
-    if (typeof value === "string") {
-      urlSearch.set(key, value);
-    }
-  });
-
-  return <PublicSongPage page={page} searchString={urlSearch.toString()} />;
+  return <PublicSongPage page={page} />;
 }

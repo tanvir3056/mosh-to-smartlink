@@ -6,16 +6,13 @@ import { PreviewPlayer } from "@/components/public/preview-player";
 import { ServiceList } from "@/components/public/service-list";
 import { VisitTracker } from "@/components/public/visit-tracker";
 import type { SongPageWithLinks } from "@/lib/types";
-import { buildPublicSongPath } from "@/lib/utils";
 
 export function PublicSongPage({
   page,
-  searchString,
   mode = "live",
   editorHref,
 }: {
   page: SongPageWithLinks;
-  searchString: string;
   mode?: "live" | "preview";
   editorHref?: string;
 }) {
@@ -32,7 +29,7 @@ export function PublicSongPage({
         />
       ) : null}
       <div
-        className="absolute inset-0 scale-[1.18] bg-cover bg-center opacity-32 blur-[112px]"
+        className="absolute inset-0 scale-[1.08] bg-cover bg-center opacity-24 blur-[72px]"
         style={{ backgroundImage: `url(${page.song.artworkUrl})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,12,0.38),rgba(7,9,12,0.82)_32%,rgba(7,9,12,0.96)_100%)]" />
@@ -74,13 +71,11 @@ export function PublicSongPage({
 
           <EmailCaptureCard
             page={page}
-            searchString={searchString}
             mode={isPreview ? "preview" : "live"}
           />
 
           <ServiceList
             page={page}
-            searchString={searchString}
             mode={isPreview ? "preview" : "live"}
           />
         </section>
@@ -90,8 +85,6 @@ export function PublicSongPage({
         <VisitTracker
           username={page.page.username}
           slug={page.page.slug}
-          path={buildPublicSongPath(page.page.username, page.page.slug)}
-          searchString={searchString}
         />
       ) : null}
     </main>

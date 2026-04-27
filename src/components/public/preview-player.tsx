@@ -18,51 +18,68 @@ export function PreviewPlayer({
   artistName: string;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const teardownRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
+    return () => {
+      teardownRef.current?.();
+      teardownRef.current = null;
+      audioRef.current = null;
+    };
+  }, [previewUrl]);
+
+  const ensureAudio = () => {
     if (!previewUrl) {
-      return;
+      return null;
+    }
+
+    if (audioRef.current) {
+      return audioRef.current;
     }
 
     const audio = new Audio(previewUrl);
-    audioRef.current = audio;
+    audio.preload = "none";
 
     const handleEnded = () => setPlaying(false);
     const handlePause = () => setPlaying(false);
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("pause", handlePause);
 
-    return () => {
+    teardownRef.current = () => {
       audio.pause();
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("pause", handlePause);
-      audioRef.current = null;
     };
-  }, [previewUrl]);
+
+    audioRef.current = audio;
+    return audio;
+  };
 
   const togglePlayback = async () => {
-    if (!audioRef.current) {
+    const audio = ensureAudio();
+
+    if (!audio) {
       return;
     }
 
     if (playing) {
-      audioRef.current.pause();
+      audio.pause();
       setPlaying(false);
       return;
     }
 
-    await audioRef.current.play();
+    await audio.play();
     setPlaying(true);
   };
 
   return (
     <div className="relative overflow-hidden bg-[#0b0d11]">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.04)_38%,rgba(8,10,14,0.28)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.04)_38%,rgba(8,10,14,0.24)_100%)]" />
       <div className="relative aspect-square overflow-hidden rounded-t-[1.55rem]">
         <div
           aria-hidden="true"
-          className="absolute inset-0 scale-[1.08] bg-cover bg-center opacity-44 blur-[24px]"
+          className="absolute inset-0 scale-[1.05] bg-cover bg-center opacity-38 blur-[18px]"
           style={{ backgroundImage: `url(${artworkUrl})` }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_42%),linear-gradient(180deg,rgba(8,10,14,0.02),rgba(8,10,14,0.18)_45%,rgba(8,10,14,0.5)_100%)]" />
