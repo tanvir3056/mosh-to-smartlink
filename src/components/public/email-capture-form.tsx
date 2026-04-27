@@ -75,7 +75,7 @@ export function EmailCaptureForm({
             name="email"
             required
             autoComplete="email"
-            className="min-h-12 rounded-[0.95rem] border border-[#d7cdbd] bg-[#fffdf7] px-4 text-[15px] text-[#181b20] outline-none transition placeholder:text-[#827b70] focus:border-[#181b20]"
+            className="min-h-11 rounded-[0.9rem] border border-[#d7cdbd] bg-[#fffdf7] px-4 text-[15px] text-[#181b20] outline-none transition placeholder:text-[#827b70] focus:border-[#181b20]"
             placeholder="Enter your email"
           />
         </label>
@@ -83,8 +83,7 @@ export function EmailCaptureForm({
       </form>
 
       <p className="text-[11px] leading-5 text-[#6d6557]">
-        By submitting, fans can receive updates about future drops, releases, and
-        offers from this artist.
+        Submit once to unlock the extra and hear about future drops from this artist.
       </p>
 
       <Message state={state} />

@@ -54,6 +54,6 @@ export function resolveEmailCaptureConfig(
     downloadUrl,
     downloadLabel: downloadLabel ?? (hasDownload ? `Download ${page.song.title}` : "Open reward"),
     tag,
-    badgeLabel: hasDownload ? "Free download" : "Email capture",
+    badgeLabel: hasDownload ? "Free extra" : "Stay connected",
   };
 }

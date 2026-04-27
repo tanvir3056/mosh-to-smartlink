@@ -69,12 +69,12 @@ export function PublicSongPage({
             </p>
           </div>
 
-          <EmailCaptureCard
+          <ServiceList
             page={page}
             mode={isPreview ? "preview" : "live"}
           />
 
-          <ServiceList
+          <EmailCaptureCard
             page={page}
             mode={isPreview ? "preview" : "live"}
           />
