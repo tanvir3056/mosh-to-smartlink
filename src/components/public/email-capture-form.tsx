@@ -19,7 +19,7 @@ function SubmitButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-12 items-center justify-center rounded-[0.95rem] bg-[#101215] px-5 text-sm font-semibold text-white transition hover:bg-[#191d22] disabled:cursor-not-allowed disabled:opacity-65"
+      className="inline-flex min-h-11 items-center justify-center rounded-[0.9rem] bg-[#f4efe4] px-5 text-sm font-semibold text-[#171a1f] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-65"
     >
       {pending ? "Saving..." : label}
     </button>
@@ -39,8 +39,8 @@ function Message({
     <div
       className={`rounded-[1rem] border px-4 py-3 text-sm ${
         state.error
-          ? "border-red-200 bg-red-50 text-red-700"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          ? "border-red-400/30 bg-red-500/10 text-red-200"
+          : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
       }`}
     >
       {state.error ?? state.success}
@@ -75,14 +75,14 @@ export function EmailCaptureForm({
             name="email"
             required
             autoComplete="email"
-            className="min-h-11 rounded-[0.9rem] border border-[#d7cdbd] bg-[#fffdf7] px-4 text-[15px] text-[#181b20] outline-none transition placeholder:text-[#827b70] focus:border-[#181b20]"
+            className="min-h-11 rounded-[0.9rem] border border-white/10 bg-[#0d1015] px-4 text-[15px] text-white outline-none transition placeholder:text-white/34 focus:border-white/28"
             placeholder="Enter your email"
           />
         </label>
         <SubmitButton label={buttonLabel} />
       </form>
 
-      <p className="text-[11px] leading-5 text-[#6d6557]">
+      <p className="text-[11px] leading-5 text-white/42">
         Submit once to unlock the extra and hear about future drops from this artist.
       </p>
 
@@ -93,7 +93,7 @@ export function EmailCaptureForm({
           href={state.downloadUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex w-fit items-center justify-center rounded-[0.95rem] border border-[#d8cdbd] bg-[#fffdf7] px-4 py-3 text-sm font-semibold text-[#181b20] transition hover:border-[#c9bca9] hover:bg-white"
+          className="inline-flex w-fit items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/6 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/18 hover:bg-white/10"
         >
           {state.downloadLabel ?? "Open reward"}
         </a>
