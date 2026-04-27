@@ -25,7 +25,9 @@ export function PublicLinkPanel({
   previewHref: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const [origin, setOrigin] = useState<string | null>(null);
+  const [origin] = useState(() =>
+    typeof window === "undefined" ? null : window.location.origin,
+  );
 
   useEffect(() => {
     if (!copied) {
@@ -35,10 +37,6 @@ export function PublicLinkPanel({
     const timeout = window.setTimeout(() => setCopied(false), 1800);
     return () => window.clearTimeout(timeout);
   }, [copied]);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   const isPublished = status === "published";
   const publicPath = buildPublicSongPath(username, slug);
