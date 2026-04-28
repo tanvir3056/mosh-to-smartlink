@@ -727,11 +727,12 @@ async function getEmailLeadRows(ownerUserId: string, limit: number) {
         ecs.updated_at,
         s.title as song_title,
         s.artist_name,
-        p.username,
+        u.username,
         p.slug
       from email_capture_submissions ecs
       join songs s on s.id = ecs.song_id
       join song_pages p on p.id = ecs.page_id
+      join app_users u on u.id = ecs.owner_user_id
       where ecs.owner_user_id = $1
       order by ecs.created_at desc
       limit $2

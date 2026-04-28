@@ -133,3 +133,18 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
     </section>
   );
 }
+
+export function EmailLeadsPanelUnavailable() {
+  return (
+    <section className="app-card rounded-[1.75rem] p-5 sm:p-6">
+      <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
+      <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+        Email capture is still active
+      </h3>
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
+        Backstage could not load the lead summary right now. New leads can still be
+        collected on live pages, but the table and export are temporarily unavailable.
+      </p>
+    </section>
+  );
+}

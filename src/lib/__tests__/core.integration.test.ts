@@ -247,6 +247,7 @@ describe("core data flow", () => {
       createAccountOwner,
       createSongImportDraft,
       getAdminSongPageBySongId,
+      getEmailLeadSnapshot,
       getPublishedSongPage,
       recordEmailCaptureSubmission,
       saveEmailConnectorConfig,
@@ -329,6 +330,12 @@ describe("core data flow", () => {
     expect(result.lead.email).toBe("fan@example.com");
     expect(result.lead.normalizedEmail).toBe("fan@example.com");
     expect(result.syncStatus).toBe("synced");
+
+    const leadSnapshot = await getEmailLeadSnapshot(USER_ID);
+    expect(leadSnapshot.totalLeads).toBe(1);
+    expect(leadSnapshot.items[0]?.username).toBe(USERNAME);
+    expect(leadSnapshot.items[0]?.slug).toBe(adminPage!.page.slug);
+
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const calls = fetchMock.mock.calls as unknown as Array<
       [unknown, { body?: BodyInit | null }?]

@@ -1,4 +1,7 @@
-import { EmailLeadsPanel } from "@/components/admin/email-leads-panel";
+import {
+  EmailLeadsPanel,
+  EmailLeadsPanelUnavailable,
+} from "@/components/admin/email-leads-panel";
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
 import { requireUserSession } from "@/lib/auth";
 import {
@@ -9,11 +12,17 @@ import {
 
 export default async function AdminSettingsPage() {
   const session = await requireUserSession();
-  const [trackingConfig, emailConnector, leadSnapshot] = await Promise.all([
+  const [trackingConfig, emailConnector] = await Promise.all([
     getTrackingConfig(session.userId),
     getEmailConnectorConfig(session.userId),
-    getEmailLeadSnapshot(session.userId),
   ]);
+  let leadSnapshot = null;
+
+  try {
+    leadSnapshot = await getEmailLeadSnapshot(session.userId);
+  } catch (error) {
+    console.error("Failed to load email lead snapshot for settings page.", error);
+  }
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)] xl:items-start">
@@ -49,7 +58,11 @@ export default async function AdminSettingsPage() {
         <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
           <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
         </div>
-        <EmailLeadsPanel snapshot={leadSnapshot} />
+        {leadSnapshot ? (
+          <EmailLeadsPanel snapshot={leadSnapshot} />
+        ) : (
+          <EmailLeadsPanelUnavailable />
+        )}
       </div>
     </section>
   );
