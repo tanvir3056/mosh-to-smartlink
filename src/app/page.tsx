@@ -36,16 +36,11 @@ export default async function HomePage() {
                   Sign in
                 </Button>
               </Link>
-              <Link href="/admin">
-                <Button tone="secondary" className="border-white/10 bg-transparent text-white/78 hover:bg-white/6 hover:text-white">
-                  Open dashboard
-                </Button>
-              </Link>
             </div>
           </div>
 
-          <div className="app-card rounded-[1.8rem] p-5 sm:p-6">
-            <p className="app-kicker text-[var(--app-muted)]">How it works</p>
+          <div className="rounded-[1.8rem] border border-black/6 bg-[linear-gradient(180deg,#f6f3ed_0%,#efebe1_100%)] p-5 shadow-[0_20px_48px_rgba(8,12,18,0.12)] sm:p-6">
+            <p className="app-kicker text-[#727b88]">How it works</p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
               One app, many artists, clean release links
             </h2>
@@ -58,7 +53,7 @@ export default async function HomePage() {
               ].map((line) => (
                 <div
                   key={line}
-                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-4 text-sm leading-7 text-[var(--app-text)]"
+                  className="rounded-[1.2rem] border border-black/7 bg-[#fbfaf7] px-4 py-4 text-sm leading-7 text-[var(--app-text)] shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]"
                 >
                   {line}
                 </div>
