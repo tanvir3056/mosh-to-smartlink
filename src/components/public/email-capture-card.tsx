@@ -18,8 +18,8 @@ export function EmailCaptureCard({
   const isPreview = mode === "preview";
 
   return (
-    <section className="border-t border-white/6 bg-[#11141a] px-5 pb-5 pt-4 text-white sm:px-6 sm:pb-6">
-      <div className="grid gap-3.5 rounded-[1.3rem] border border-white/8 bg-[linear-gradient(180deg,#171b22_0%,#101319_100%)] px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] sm:px-5">
+    <section className="border-t border-white/6 bg-[#11141a] px-5 pb-5 pt-5 text-white sm:px-6 sm:pb-6">
+      <div className="grid gap-3.5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/42">
