@@ -11,7 +11,9 @@ import type {
   AnalyticsSnapshot,
   DashboardSnapshot,
   EmailConnectorConfig,
+  EmailLeadListItem,
   EmailLeadRecord,
+  EmailLeadSnapshot,
   ImportBundle,
   MatchCandidate,
   SongPageWithLinks,
@@ -123,6 +125,13 @@ type EmailLeadRow = QueryResultRow & {
   connector_synced_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type EmailLeadListRow = EmailLeadRow & {
+  song_title: string;
+  artist_name: string;
+  username: string;
+  slug: string;
 };
 
 function mapUser(row: AppUserRow | undefined): AppUserRecord | null {
@@ -304,6 +313,24 @@ function mapEmailLead(row: EmailLeadRow | undefined): EmailLeadRecord | null {
     connectorSyncedAt: row.connector_synced_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapEmailLeadListItem(
+  row: EmailLeadListRow | undefined,
+): EmailLeadListItem | null {
+  const lead = mapEmailLead(row);
+
+  if (!lead || !row) {
+    return null;
+  }
+
+  return {
+    ...lead,
+    songTitle: row.song_title,
+    artistName: row.artist_name,
+    username: row.username,
+    slug: row.slug,
   };
 }
 
@@ -664,6 +691,94 @@ export async function getEmailConnectorConfig(ownerUserId: string) {
   );
 
   return mapEmailConnector(rows[0]);
+}
+
+async function getEmailLeadRows(ownerUserId: string, limit: number) {
+  const rows = await dbQuery<EmailLeadListRow>(
+    `
+      select
+        ecs.id,
+        ecs.owner_user_id,
+        ecs.song_id,
+        ecs.page_id,
+        ecs.visit_id,
+        ecs.visitor_id,
+        ecs.email,
+        ecs.normalized_email,
+        ecs.referrer,
+        ecs.referrer_host,
+        ecs.utm_source,
+        ecs.utm_medium,
+        ecs.utm_campaign,
+        ecs.utm_term,
+        ecs.utm_content,
+        ecs.user_agent,
+        ecs.browser_name,
+        ecs.os_name,
+        ecs.device_type,
+        ecs.country,
+        ecs.city,
+        ecs.ip_hash,
+        ecs.connector_provider,
+        ecs.connector_status,
+        ecs.connector_error,
+        ecs.connector_synced_at,
+        ecs.created_at,
+        ecs.updated_at,
+        s.title as song_title,
+        s.artist_name,
+        p.username,
+        p.slug
+      from email_capture_submissions ecs
+      join songs s on s.id = ecs.song_id
+      join song_pages p on p.id = ecs.page_id
+      where ecs.owner_user_id = $1
+      order by ecs.created_at desc
+      limit $2
+    `,
+    [ownerUserId, limit],
+  );
+
+  return rows
+    .map((row) => mapEmailLeadListItem(row))
+    .filter((row): row is EmailLeadListItem => Boolean(row));
+}
+
+export async function getEmailLeadSnapshot(ownerUserId: string): Promise<EmailLeadSnapshot> {
+  const [summaryRows, items] = await Promise.all([
+    dbQuery<{
+      total_leads: string | number;
+      synced_leads: string | number;
+      failed_leads: string | number;
+      local_only_leads: string | number;
+    }>(
+      `
+        select
+          count(*) as total_leads,
+          count(*) filter (where connector_status = 'synced') as synced_leads,
+          count(*) filter (where connector_status = 'failed') as failed_leads,
+          count(*) filter (where connector_status = 'not_configured') as local_only_leads
+        from email_capture_submissions
+        where owner_user_id = $1
+      `,
+      [ownerUserId],
+    ),
+    getEmailLeadRows(ownerUserId, 50),
+  ]);
+
+  const summary = summaryRows[0];
+
+  return {
+    totalLeads: Number(summary?.total_leads ?? 0),
+    syncedLeads: Number(summary?.synced_leads ?? 0),
+    failedLeads: Number(summary?.failed_leads ?? 0),
+    localOnlyLeads: Number(summary?.local_only_leads ?? 0),
+    items,
+  };
+}
+
+export async function getEmailLeadExportRows(ownerUserId: string) {
+  return getEmailLeadRows(ownerUserId, 5000);
 }
 
 async function getEmailConnectorRecord(ownerUserId: string) {

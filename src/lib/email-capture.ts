@@ -9,6 +9,42 @@ function cleanValue(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+const URL_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
+
+export function normalizeRewardUrl(value: string | null | undefined) {
+  const trimmed = cleanValue(value);
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const candidate = URL_SCHEME_PATTERN.test(trimmed)
+    ? trimmed
+    : trimmed.includes(".")
+      ? `https://${trimmed.replace(/^\/+/, "")}`
+      : null;
+
+  if (!candidate) {
+    return null;
+  }
+
+  try {
+    const url = new URL(candidate);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return null;
+    }
+
+    if (!url.hostname || (!url.hostname.includes(".") && url.hostname !== "localhost")) {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function normalizeLeadEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -31,7 +67,7 @@ export function resolveEmailCaptureConfig(
   page: Pick<SongPageWithLinks, "song" | "emailCapture">,
 ): ResolvedEmailCaptureConfig {
   const capture: EmailCaptureConfig = page.emailCapture;
-  const downloadUrl = cleanValue(capture.downloadUrl);
+  const downloadUrl = normalizeRewardUrl(capture.downloadUrl);
   const hasDownload = Boolean(downloadUrl);
   const title = cleanValue(capture.title);
   const description = cleanValue(capture.description);

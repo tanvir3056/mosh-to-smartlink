@@ -150,6 +150,21 @@ export interface EmailLeadRecord {
   updatedAt: string;
 }
 
+export interface EmailLeadListItem extends EmailLeadRecord {
+  songTitle: string;
+  artistName: string;
+  username: string;
+  slug: string;
+}
+
+export interface EmailLeadSnapshot {
+  totalLeads: number;
+  syncedLeads: number;
+  failedLeads: number;
+  localOnlyLeads: number;
+  items: EmailLeadListItem[];
+}
+
 export interface DashboardSongRow {
   songId: string;
   ownerUserId: string;

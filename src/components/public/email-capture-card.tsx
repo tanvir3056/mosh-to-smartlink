@@ -18,11 +18,11 @@ export function EmailCaptureCard({
   const isPreview = mode === "preview";
 
   return (
-    <section className="border-t border-white/6 bg-[#11141a] px-5 pb-5 pt-5 text-white sm:px-6 sm:pb-6">
+    <section className="border-t border-white/6 bg-[#121318] px-5 pb-5 pt-5 text-white sm:px-6 sm:pb-6">
       <div className="grid gap-3.5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/42">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/38">
               {capture.badgeLabel}
             </p>
             <h2 className="mt-2 text-pretty font-[var(--font-display)] text-[1.2rem] font-semibold tracking-[-0.035em] text-white">
@@ -36,7 +36,7 @@ export function EmailCaptureCard({
           ) : null}
         </div>
 
-        <p className="max-w-xl text-[0.93rem] leading-6 text-white/64">
+        <p className="max-w-xl text-[0.93rem] leading-6 text-white/60">
           {capture.description}
         </p>
 

@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ActionState } from "@/app/admin/action-types";
+import { normalizeRewardUrl } from "@/lib/email-capture";
 import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
 import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/auth";
 import {
@@ -67,15 +68,19 @@ function parseLinksFromFormData(formData: FormData): MatchCandidate[] {
 
 function parseEmailCaptureFromFormData(
   formData: FormData,
-): SongPageWithLinks["emailCapture"] {
+): SongPageWithLinks["emailCapture"] & { invalidDownloadUrl: boolean } {
+  const rawDownloadUrl = getNullableStringValue(formData, "email_capture_download_url");
+  const normalizedDownloadUrl = normalizeRewardUrl(rawDownloadUrl);
+
   return {
     enabled: getStringValue(formData, "email_capture_enabled") === "on",
     title: getNullableStringValue(formData, "email_capture_title"),
     description: getNullableStringValue(formData, "email_capture_description"),
     buttonLabel: getNullableStringValue(formData, "email_capture_button_label"),
-    downloadUrl: getNullableStringValue(formData, "email_capture_download_url"),
+    downloadUrl: normalizedDownloadUrl,
     downloadLabel: getNullableStringValue(formData, "email_capture_download_label"),
     tag: getNullableStringValue(formData, "email_capture_tag"),
+    invalidDownloadUrl: Boolean(rawDownloadUrl && !normalizedDownloadUrl),
   };
 }
 
@@ -196,6 +201,14 @@ export async function updateSongAction(
       : intent === "unpublish"
         ? "unpublished"
       : "draft";
+  const emailCapture = parseEmailCaptureFromFormData(formData);
+
+  if (emailCapture.invalidDownloadUrl) {
+    return {
+      error: "Reward URL must be a valid web link like https://example.com/file.mp3.",
+      success: null,
+    };
+  }
 
   const session = await requireUserSession();
 
@@ -211,7 +224,7 @@ export async function updateSongAction(
       headline: getStringValue(formData, "headline") || "Stream now",
       slug: getStringValue(formData, "slug") || `${artistName}-${title}`,
       status,
-      emailCapture: parseEmailCaptureFromFormData(formData),
+      emailCapture,
       links: parseLinksFromFormData(formData),
     });
 

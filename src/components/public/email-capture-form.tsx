@@ -19,6 +19,7 @@ function SubmitButton({ label }: { label: string }) {
       type="submit"
       disabled={pending}
       className="inline-flex min-h-11 items-center justify-center rounded-[0.9rem] bg-[#f4efe4] px-5 text-sm font-semibold text-[#171a1f] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-65"
+      style={{ color: "#171a1f", WebkitTextFillColor: "#171a1f" }}
     >
       {pending ? "Saving..." : label}
     </button>
@@ -55,7 +56,8 @@ export function EmailCaptureForm({
             href={unlockedDownloadUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex min-h-11 w-fit items-center justify-center rounded-[0.9rem] border border-white/10 bg-[#f4efe4] px-4 text-sm font-semibold text-[#171a1f] transition hover:bg-white"
+            className="inline-flex min-h-11 w-fit items-center justify-center rounded-[0.9rem] border border-[#f4efe4]/16 bg-[#f4efe4] px-4 text-sm font-semibold text-[#171a1f] transition hover:bg-white"
+            style={{ color: "#171a1f", WebkitTextFillColor: "#171a1f" }}
           >
             {state.downloadLabel ?? "Open reward"}
           </a>
@@ -91,17 +93,6 @@ export function EmailCaptureForm({
           ) : null}
         </>
       )}
-
-      {!isUnlocked && state.downloadUrl ? (
-        <a
-          href={state.downloadUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex w-fit items-center justify-center rounded-[0.9rem] border border-white/10 bg-white/6 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/18 hover:bg-white/10"
-        >
-          {state.downloadLabel ?? "Open reward"}
-        </a>
-      ) : null}
     </div>
   );
 }

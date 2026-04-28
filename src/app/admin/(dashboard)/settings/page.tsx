@@ -1,12 +1,18 @@
+import { EmailLeadsPanel } from "@/components/admin/email-leads-panel";
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
 import { requireUserSession } from "@/lib/auth";
-import { getEmailConnectorConfig, getTrackingConfig } from "@/lib/data";
+import {
+  getEmailConnectorConfig,
+  getEmailLeadSnapshot,
+  getTrackingConfig,
+} from "@/lib/data";
 
 export default async function AdminSettingsPage() {
   const session = await requireUserSession();
-  const [trackingConfig, emailConnector] = await Promise.all([
+  const [trackingConfig, emailConnector, leadSnapshot] = await Promise.all([
     getTrackingConfig(session.userId),
     getEmailConnectorConfig(session.userId),
+    getEmailLeadSnapshot(session.userId),
   ]);
 
   return (
@@ -26,6 +32,7 @@ export default async function AdminSettingsPage() {
           {[
             "Site name appears across admin and public pages.",
             "Meta Pixel only fires on published public pages.",
+            "Mailchimp lives in the settings form on the right whenever you want auto-sync.",
             "Email leads always store locally first, then sync to Mailchimp when configured.",
           ].map((line) => (
             <div
@@ -38,8 +45,11 @@ export default async function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
-        <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
+      <div className="grid gap-5">
+        <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
+          <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
+        </div>
+        <EmailLeadsPanel snapshot={leadSnapshot} />
       </div>
     </section>
   );
