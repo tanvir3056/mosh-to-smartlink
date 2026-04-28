@@ -27,6 +27,19 @@ const TRACK = {
   },
 } as const;
 
+const ROT_TRACK = {
+  ...TRACK,
+  spotifyTrackId: "rot1234567890123456789",
+  spotifyTrackUrl: "https://open.spotify.com/track/rot1234567890123456789",
+  title: "R.O.T.",
+  artistName: "WARCRY!",
+  albumName: "R.O.T.",
+  rawSource: {
+    oembed: {},
+    ogDescription: "WARCRY! · R.O.T. · Song · 2025",
+  },
+} as const;
+
 function jsonResponse(payload: unknown) {
   return new Response(JSON.stringify(payload), {
     status: 200,
@@ -187,5 +200,220 @@ describe("buildImportBundle", () => {
     expect(byService.amazon_music?.matchStatus).toBe("search_fallback");
     expect(byService.deezer?.matchStatus).toBe("search_fallback");
     expect(byService.tidal?.matchStatus).toBe("search_fallback");
+  });
+
+  test("keeps songlink exact matches for punctuation-heavy titles", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+
+        if (url.startsWith("https://api.song.link/")) {
+          return jsonResponse({
+            entitiesByUniqueId: {
+              "AMAZON_SONG::ROT": {
+                title: "ROT",
+                artistName: "WARCRY",
+              },
+              "TIDAL_SONG::ROT": {
+                title: "ROT",
+                artistName: "WARCRY",
+              },
+            },
+            linksByPlatform: {
+              amazonMusic: {
+                entityUniqueId: "AMAZON_SONG::ROT",
+                url: "https://music.amazon.com/albums/rot?trackAsin=rot",
+              },
+              tidal: {
+                entityUniqueId: "TIDAL_SONG::ROT",
+                url: "https://listen.tidal.com/track/rot",
+              },
+              spotify: {
+                url: ROT_TRACK.spotifyTrackUrl,
+              },
+            },
+          });
+        }
+
+        if (url.startsWith("https://itunes.apple.com/search?")) {
+          return jsonResponse({
+            results: [],
+          });
+        }
+
+        if (url.startsWith("https://api.deezer.com/search/track")) {
+          return jsonResponse({
+            data: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch call: ${url}`);
+      }),
+    );
+
+    mockGetListByKeyword.mockResolvedValue({
+      items: [],
+    });
+
+    const { buildImportBundle } = await import("@/lib/matching");
+    const bundle = await buildImportBundle(ROT_TRACK);
+    const byService = Object.fromEntries(bundle.links.map((link) => [link.service, link]));
+
+    expect(byService.amazon_music?.matchStatus).toBe("matched");
+    expect(byService.amazon_music?.matchSource).toBe("songlink_amazonMusic");
+    expect(byService.tidal?.matchStatus).toBe("matched");
+    expect(byService.tidal?.matchSource).toBe("songlink_tidal");
+  });
+
+  test("broadens Apple and Deezer search before falling back", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+
+        if (url.startsWith("https://api.song.link/")) {
+          return jsonResponse({
+            entitiesByUniqueId: {},
+            linksByPlatform: {
+              spotify: {
+                url: TRACK.spotifyTrackUrl,
+              },
+            },
+          });
+        }
+
+        if (url.includes("https://itunes.apple.com/search?") && url.includes("Hot+Fuss")) {
+          return jsonResponse({
+            results: [],
+          });
+        }
+
+        if (
+          url.includes("https://itunes.apple.com/search?") &&
+          url.includes("The+Killers+Mr.+Brightside")
+        ) {
+          return jsonResponse({
+            results: [
+              {
+                artistName: "The Killers",
+                collectionName: "Hot Fuss",
+                previewUrl: "https://audio.example.com/apple-preview.m4a",
+                releaseDate: "2004-06-07T07:00:00Z",
+                trackName: "Mr. Brightside",
+                trackViewUrl: "https://music.apple.com/us/album/hot-fuss/1?i=2",
+              },
+            ],
+          });
+        }
+
+        if (url.includes('https://api.deezer.com/search/track?q=artist%3A%22The%20Killers%22')) {
+          return jsonResponse({
+            data: [],
+          });
+        }
+
+        if (
+          url.includes("https://api.deezer.com/search/track?q=The%20Killers%20Mr.%20Brightside")
+        ) {
+          return jsonResponse({
+            data: [
+              {
+                album: {
+                  title: "Hot Fuss",
+                },
+                artist: {
+                  name: "The Killers",
+                },
+                link: "https://www.deezer.com/track/953097",
+                preview: "https://audio.example.com/deezer-preview.mp3",
+                title: "Mr. Brightside",
+              },
+            ],
+          });
+        }
+
+        throw new Error(`Unexpected fetch call: ${url}`);
+      }),
+    );
+
+    mockGetListByKeyword.mockResolvedValue({
+      items: [],
+    });
+
+    const { buildImportBundle } = await import("@/lib/matching");
+    const bundle = await buildImportBundle(TRACK);
+    const byService = Object.fromEntries(bundle.links.map((link) => [link.service, link]));
+
+    expect(byService.apple_music?.matchStatus).toBe("matched");
+    expect(byService.apple_music?.url).toContain("music.apple.com");
+    expect(byService.deezer?.matchStatus).toBe("matched");
+    expect(byService.deezer?.url).toContain("deezer.com/track");
+  });
+
+  test("broadens YouTube Music search before using fallback", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+
+        if (url.startsWith("https://api.song.link/")) {
+          return jsonResponse({
+            entitiesByUniqueId: {},
+            linksByPlatform: {
+              spotify: {
+                url: TRACK.spotifyTrackUrl,
+              },
+            },
+          });
+        }
+
+        if (url.startsWith("https://itunes.apple.com/search?")) {
+          return jsonResponse({
+            results: [],
+          });
+        }
+
+        if (url.startsWith("https://api.deezer.com/search/track")) {
+          return jsonResponse({
+            data: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch call: ${url}`);
+      }),
+    );
+
+    mockGetListByKeyword.mockImplementation(async (query: string) => {
+      if (query.includes("official audio") && query.includes("Hot Fuss")) {
+        return {
+          items: [
+            {
+              id: "yt-live-id",
+              title: "The Killers - Mr. Brightside (Live)",
+              channelTitle: "The Killers Live",
+            },
+          ],
+        };
+      }
+
+      return {
+        items: [
+          {
+            id: "yt-topic-id",
+            title: "Mr. Brightside",
+            channelTitle: "The Killers - Topic",
+          },
+        ],
+      };
+    });
+
+    const { buildImportBundle } = await import("@/lib/matching");
+    const bundle = await buildImportBundle(TRACK);
+    const byService = Object.fromEntries(bundle.links.map((link) => [link.service, link]));
+
+    expect(byService.youtube_music?.matchStatus).toBe("matched");
+    expect(byService.youtube_music?.url).toContain("yt-topic-id");
+    expect(mockGetListByKeyword).toHaveBeenCalledTimes(4);
   });
 });

@@ -44,6 +44,13 @@ type SonglinkPlatformLink = {
   url?: string;
 };
 
+type YouTubeSearchItem = {
+  channelTitle?: string;
+  id?: string;
+  shortBylineText?: string;
+  title?: string;
+};
+
 type SonglinkResponse = {
   entitiesByUniqueId?: Record<string, SonglinkEntity | undefined>;
   linksByPlatform?: Record<string, SonglinkPlatformLink | undefined>;
@@ -83,6 +90,20 @@ function buildSearchQuery(
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+function uniqueQueries(queries: Array<string | null | undefined>) {
+  return [
+    ...new Set(
+      queries
+        .map((query) => query?.trim())
+        .filter((query): query is string => Boolean(query)),
+    ),
+  ];
+}
+
+function getYouTubeItems(value: unknown) {
+  return Array.isArray(value) ? (value as YouTubeSearchItem[]) : [];
 }
 
 function createMatchedMatch(
@@ -160,12 +181,48 @@ function scoreCandidate(
   return Math.min(1, baseScore + yearBonus);
 }
 
-function isResolverEntityCompatible(track: SpotifyTrackImport, entity: SonglinkEntity | undefined) {
+function scoreResolverEntity(
+  track: SpotifyTrackImport,
+  entity: SonglinkEntity | undefined,
+) {
+  const titleScore = scoreTextSimilarity(track.title, entity?.title ?? "");
+  const artistScore = scoreTextSimilarity(track.artistName, entity?.artistName ?? "");
+
+  return {
+    titleScore,
+    artistScore,
+    weightedScore: titleScore * 0.72 + artistScore * 0.28,
+  };
+}
+
+function isResolverEntityCompatible(
+  track: SpotifyTrackImport,
+  entity: SonglinkEntity | undefined,
+  service: StreamingService,
+) {
   if (!entity?.title || !entity.artistName) {
     return true;
   }
 
-  return scoreCandidate(track, entity) >= 0.7;
+  const { titleScore, artistScore, weightedScore } = scoreResolverEntity(track, entity);
+
+  if (titleScore >= 0.98 && artistScore >= 0.68) {
+    return true;
+  }
+
+  if (titleScore >= 0.92 && artistScore >= 0.82) {
+    return true;
+  }
+
+  if (
+    (service === "amazon_music" || service === "tidal") &&
+    titleScore >= 0.86 &&
+    artistScore >= 0.72
+  ) {
+    return true;
+  }
+
+  return weightedScore >= 0.72;
 }
 
 async function fetchJsonWithTimeout<T>(url: string) {
@@ -204,7 +261,10 @@ async function resolveSonglinkMatches(track: SpotifyTrackImport) {
         ? entitiesByUniqueId[link.entityUniqueId]
         : undefined;
 
-      if (service !== "spotify" && !isResolverEntityCompatible(track, entity)) {
+      if (
+        service !== "spotify" &&
+        !isResolverEntityCompatible(track, entity, service)
+      ) {
         continue;
       }
 
@@ -212,7 +272,7 @@ async function resolveSonglinkMatches(track: SpotifyTrackImport) {
         service,
         link.url,
         `songlink_${platform}`,
-        entity ? scoreCandidate(track, entity) : 0.96,
+        entity ? Math.max(scoreResolverEntity(track, entity).weightedScore, 0.82) : 0.96,
       );
     }
 
@@ -233,28 +293,71 @@ async function matchAppleMusic(
     };
   }
 
-  const query = new URLSearchParams({
-    term: buildSearchQuery(track, { includeAlbum: true }),
-    entity: "song",
-    limit: "8",
-  });
-
   try {
-    const payload = await fetchJsonWithTimeout<{
-      results?: AppleSearchItem[];
-    }>(`https://itunes.apple.com/search?${query}`);
+    const evaluateBest = (items: AppleSearchItem[]) =>
+      items
+        .map((item) => ({
+          item,
+          score: scoreCandidate(track, {
+            title: item.trackName,
+            artistName: item.artistName,
+            albumName: item.collectionName,
+            releaseDate: item.releaseDate,
+          }),
+        }))
+        .sort((left, right) => right.score - left.score)[0];
 
-    const best = (payload.results ?? [])
-      .map((item) => ({
-        item,
-        score: scoreCandidate(track, {
-          title: item.trackName,
-          artistName: item.artistName,
-          albumName: item.collectionName,
-          releaseDate: item.releaseDate,
-        }),
-      }))
-      .sort((left, right) => right.score - left.score)[0];
+    const primaryQuery = new URLSearchParams({
+      term: buildSearchQuery(track, { includeAlbum: true }),
+      entity: "song",
+      limit: "8",
+    });
+    const primaryPayload = await fetchJsonWithTimeout<{
+      results?: AppleSearchItem[];
+    }>(`https://itunes.apple.com/search?${primaryQuery}`);
+
+    let best = evaluateBest(primaryPayload.results ?? []);
+
+    if (!best?.item.trackViewUrl || best.score < APPLE_MATCH_THRESHOLD) {
+      const secondaryQueries = uniqueQueries([
+        buildSearchQuery(track),
+        `${track.title} ${track.artistName}`,
+      ]);
+      const secondaryPayloads = await Promise.allSettled(
+        secondaryQueries.map((term) =>
+          fetchJsonWithTimeout<{
+            results?: AppleSearchItem[];
+          }>(
+            `https://itunes.apple.com/search?${new URLSearchParams({
+              term: term ?? "",
+              entity: "song",
+              limit: "8",
+            })}`,
+          ),
+        ),
+      );
+      const dedupedItems = new Map<string, AppleSearchItem>();
+
+      for (const item of primaryPayload.results ?? []) {
+        if (item.trackViewUrl) {
+          dedupedItems.set(item.trackViewUrl, item);
+        }
+      }
+
+      for (const payload of secondaryPayloads) {
+        if (payload.status !== "fulfilled") {
+          continue;
+        }
+
+        for (const item of payload.value.results ?? []) {
+          if (item.trackViewUrl) {
+            dedupedItems.set(item.trackViewUrl, item);
+          }
+        }
+      }
+
+      best = evaluateBest([...dedupedItems.values()]);
+    }
 
     if (!best?.item.trackViewUrl) {
       return {
@@ -323,25 +426,65 @@ async function matchDeezer(
     };
   }
 
-  const query = encodeURIComponent(
-    `artist:"${track.artistName}" track:"${track.title}"`,
-  );
-
   try {
-    const payload = await fetchJsonWithTimeout<{
-      data?: DeezerSearchItem[];
-    }>(`https://api.deezer.com/search/track?q=${query}`);
+    const evaluateBest = (items: DeezerSearchItem[]) =>
+      items
+        .map((item) => ({
+          item,
+          score: scoreCandidate(track, {
+            title: item.title,
+            artistName: item.artist?.name,
+            albumName: item.album?.title,
+          }),
+        }))
+        .sort((left, right) => right.score - left.score)[0];
 
-    const best = (payload.data ?? [])
-      .map((item) => ({
-        item,
-        score: scoreCandidate(track, {
-          title: item.title,
-          artistName: item.artist?.name,
-          albumName: item.album?.title,
-        }),
-      }))
-      .sort((left, right) => right.score - left.score)[0];
+    const primaryPayload = await fetchJsonWithTimeout<{
+      data?: DeezerSearchItem[];
+    }>(
+      `https://api.deezer.com/search/track?q=${encodeURIComponent(
+        `artist:"${track.artistName}" track:"${track.title}"`,
+      )}`,
+    );
+
+    let best = evaluateBest(primaryPayload.data ?? []);
+
+    if (!best?.item.link || best.score < DEEZER_MATCH_THRESHOLD) {
+      const secondaryQueries = uniqueQueries([
+        buildSearchQuery(track, { includeAlbum: true }),
+        buildSearchQuery(track),
+      ]);
+      const secondaryPayloads = await Promise.allSettled(
+        secondaryQueries.map((query) =>
+          fetchJsonWithTimeout<{
+            data?: DeezerSearchItem[];
+          }>(
+            `https://api.deezer.com/search/track?q=${encodeURIComponent(query ?? "")}`,
+          ),
+        ),
+      );
+      const dedupedItems = new Map<string, DeezerSearchItem>();
+
+      for (const item of primaryPayload.data ?? []) {
+        if (item.link) {
+          dedupedItems.set(item.link, item);
+        }
+      }
+
+      for (const payload of secondaryPayloads) {
+        if (payload.status !== "fulfilled") {
+          continue;
+        }
+
+        for (const item of payload.value.data ?? []) {
+          if (item.link) {
+            dedupedItems.set(item.link, item);
+          }
+        }
+      }
+
+      best = evaluateBest([...dedupedItems.values()]);
+    }
 
     if (!best?.item.link) {
       return {
@@ -400,6 +543,7 @@ function scoreYouTubeCandidate(track: SpotifyTrackImport, item: {
 }) {
   const normalizedTitle = normalizeMatchText(item.title ?? "");
   const normalizedArtist = normalizeMatchText(item.channelTitle ?? "");
+  const normalizedSource = `${normalizedTitle} ${normalizedArtist}`.trim();
   const baseScore = scoreCandidate(track, {
     title: item.title,
     artistName: item.channelTitle,
@@ -413,9 +557,9 @@ function scoreYouTubeCandidate(track: SpotifyTrackImport, item: {
       : 0;
   const noisePenalty =
     /cover|reaction|nightcore|sped up|slowed|karaoke|live|lyrics/.test(
-      normalizedTitle,
+      normalizedSource,
     )
-      ? 0.18
+      ? 0.24
       : 0;
 
   return clamp(baseScore + officialBoost - noisePenalty, 0, 1);
@@ -430,34 +574,73 @@ async function matchYouTubeMusic(
   }
 
   try {
-    const response = await YouTubeSearchApi.GetListByKeyword(
+    const scoreItems = (items: YouTubeSearchItem[]) =>
+      items
+        .map((item) => {
+          const title = typeof item.title === "string" ? item.title : "";
+          const channelTitle =
+            typeof item.channelTitle === "string"
+              ? item.channelTitle
+              : typeof item.shortBylineText === "string"
+                ? item.shortBylineText
+                : "";
+
+          return {
+            item,
+            score: scoreYouTubeCandidate(track, {
+              title,
+              channelTitle,
+            }),
+          };
+        })
+        .sort((left, right) => right.score - left.score)[0];
+
+    const primaryResponse = await YouTubeSearchApi.GetListByKeyword(
       `${buildSearchQuery(track, { includeAlbum: true })} official audio`,
       false,
       6,
       [{ type: "video" }],
     );
 
-    const best = (response.items ?? [])
-      .map((item) => {
-        const title = typeof item.title === "string" ? item.title : "";
-        const channelTitle =
-          typeof item.channelTitle === "string"
-            ? item.channelTitle
-            : typeof item.shortBylineText === "string"
-              ? item.shortBylineText
-              : "";
+    let best = scoreItems(getYouTubeItems(primaryResponse.items));
 
-        return {
-          item,
-          score: scoreYouTubeCandidate(track, {
-            title,
-            channelTitle,
-          }),
-        };
-      })
-      .sort((left, right) => right.score - left.score)[0];
+    if (!best?.item.id || best.score < YOUTUBE_MATCH_THRESHOLD) {
+      const secondaryQueries = uniqueQueries([
+        `${buildSearchQuery(track)} official audio`,
+        `${buildSearchQuery(track)} topic`,
+        buildSearchQuery(track),
+      ]);
+      const secondaryResponses = await Promise.allSettled(
+        secondaryQueries.map((query) =>
+          YouTubeSearchApi.GetListByKeyword(query, false, 8, [{ type: "video" }]),
+        ),
+      );
+      const dedupedItems = new Map<string, YouTubeSearchItem>();
 
-    if (!best?.item.id) {
+      for (const item of getYouTubeItems(primaryResponse.items)) {
+        if (typeof item.id === "string") {
+          dedupedItems.set(item.id, item);
+        }
+      }
+
+      for (const response of secondaryResponses) {
+        if (response.status !== "fulfilled") {
+          continue;
+        }
+
+        for (const item of getYouTubeItems(response.value.items)) {
+          if (typeof item.id === "string") {
+            dedupedItems.set(item.id, item);
+          }
+        }
+      }
+
+      best = scoreItems([...dedupedItems.values()]);
+    }
+
+    const bestId = typeof best?.item.id === "string" ? best.item.id : null;
+
+    if (!bestId) {
       return createFallbackMatch(
         "youtube_music",
         track,
@@ -465,7 +648,7 @@ async function matchYouTubeMusic(
       );
     }
 
-    const watchUrl = `https://music.youtube.com/watch?v=${best.item.id}`;
+    const watchUrl = `https://music.youtube.com/watch?v=${bestId}`;
 
     if (best.score >= YOUTUBE_MATCH_THRESHOLD) {
       return createMatchedMatch(

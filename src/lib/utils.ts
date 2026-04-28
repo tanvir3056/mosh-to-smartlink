@@ -119,6 +119,17 @@ export function scoreTextSimilarity(left: string, right: string) {
     return 1;
   }
 
+  const aCompact = a.replaceAll(" ", "");
+  const bCompact = b.replaceAll(" ", "");
+
+  if (aCompact === bCompact) {
+    return 0.98;
+  }
+
+  if (aCompact.includes(bCompact) || bCompact.includes(aCompact)) {
+    return 0.94;
+  }
+
   if (a.includes(b) || b.includes(a)) {
     return 0.92;
   }
@@ -136,7 +147,10 @@ export function normalizeMatchText(value: string | null | undefined) {
     .toLowerCase()
     .replace(/\(.*?\)|\[.*?\]/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\b(feat|ft|official|video|audio|lyrics|remastered)\b/g, " ")
+    .replace(
+      /\b(feat|ft|official|video|audio|lyrics|remastered|remaster|mix|version|edit|mono|stereo|deluxe|expanded|anniversary|clean|explicit|bonus|track)\b/g,
+      " ",
+    )
     .replace(/\s+/g, " ")
     .trim();
 }
