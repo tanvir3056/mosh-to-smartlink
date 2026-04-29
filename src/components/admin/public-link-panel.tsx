@@ -9,8 +9,8 @@ import { buildPublicSongPath } from "@/lib/utils";
 
 function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
   return tone === "primary"
-    ? "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--app-accent)] px-4 text-sm font-semibold text-[#062c28] shadow-[0_16px_36px_rgba(63,212,196,0.24)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-[#062c28] active:shadow-[0_8px_18px_rgba(63,212,196,0.2)]"
-    : "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]";
+    ? "app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--app-accent)] px-4 text-sm font-semibold text-[#062c28] shadow-[0_16px_36px_rgba(63,212,196,0.24)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-[#062c28] active:shadow-[0_8px_18px_rgba(63,212,196,0.2)]"
+    : "app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]";
 }
 
 export function PublicLinkPanel({
@@ -67,7 +67,7 @@ export function PublicLinkPanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="grid gap-3 sm:flex sm:flex-wrap">
         <Link href={previewHref} className={actionLinkClass()}>
           <Eye className="h-4 w-4" />
           Open admin preview

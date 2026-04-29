@@ -33,26 +33,25 @@ export function TrackingSettingsForm({
 
   return (
     <form action={formAction} className="grid gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           <p className="app-kicker text-[var(--app-muted)]">Configuration</p>
           <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-            Public page defaults and Mailchimp sync
+            Public defaults and one lead connector
           </h3>
           <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-            This is your one connector setup page. Keep the branding clean, decide
-            if Meta Pixel can run, and optionally route captured leads into one
-            Mailchimp audience.
+            Keep this page operational: define the account-wide public defaults,
+            then decide whether leads should also sync into one Mailchimp audience.
           </p>
         </div>
 
-        <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
+        <div className="w-fit rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
           {isMailchimpConnected ? "Mailchimp connected" : "Mailchimp only"}
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(380px,1.08fr)]">
-        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-white px-5 py-5 sm:px-6">
+      <div className="grid gap-5 2xl:grid-cols-2">
+        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
           <p className="app-kicker text-[var(--app-muted)]">Public defaults</p>
           <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
             What every live page inherits
@@ -90,7 +89,7 @@ export function TrackingSettingsForm({
           </div>
         </section>
 
-        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-5 py-5 sm:px-6">
+        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="max-w-2xl">
               <p className="app-kicker text-[var(--app-muted)]">Mailchimp sync</p>
@@ -103,9 +102,14 @@ export function TrackingSettingsForm({
               </p>
             </div>
 
-            <div className="rounded-full border border-[var(--app-line)] bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-text)]">
+            <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-text)]">
               {isMailchimpConnected ? "Connected" : "Local only"}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/42 px-4 py-3 text-sm leading-6 text-[var(--app-muted)]">
+            Backstage stores every lead locally first. Mailchimp is optional sync,
+            not the primary inbox.
           </div>
 
           <div className="mt-5 grid gap-4">
@@ -170,7 +174,7 @@ export function TrackingSettingsForm({
 
       <FormStateMessage error={state.error} success={state.success} />
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--app-line)] pt-4">
+      <div className="flex flex-col gap-4 border-t border-[var(--app-line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xl text-sm leading-7 text-[var(--app-muted)]">
           Save here to update account-wide defaults. Song-specific lead offers and
           downloads still live inside each release editor.

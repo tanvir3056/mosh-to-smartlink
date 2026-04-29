@@ -7,7 +7,7 @@ import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 export default async function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-5 py-8 sm:px-8 sm:py-12">
-      <section className="app-shell-card rounded-[2rem] p-3 sm:p-4">
+      <section className="app-shell-card app-enter rounded-[2rem] p-3 sm:p-4">
         <div className="grid gap-8 rounded-[1.7rem] bg-[linear-gradient(180deg,#10141b,#0b0f15)] p-6 sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:p-10">
           <div className="flex flex-col justify-between">
             <div>
@@ -39,7 +39,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-[1.8rem] border border-black/6 bg-[linear-gradient(180deg,#f6f3ed_0%,#efebe1_100%)] p-5 shadow-[0_20px_48px_rgba(8,12,18,0.12)] sm:p-6">
+          <div className="app-enter app-enter-delay-1 rounded-[1.8rem] border border-black/6 bg-[linear-gradient(180deg,#f6f3ed_0%,#efebe1_100%)] p-5 shadow-[0_20px_48px_rgba(8,12,18,0.12)] sm:p-6">
             <p className="app-kicker text-[#727b88]">How it works</p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
               One app, many artists, clean release links

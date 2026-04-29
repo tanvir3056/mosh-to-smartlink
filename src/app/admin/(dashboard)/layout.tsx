@@ -64,12 +64,18 @@ export default async function AdminDashboardLayout({
         </aside>
 
         <div className="min-w-0">
-          <header className="border-b border-[var(--app-line)] bg-[rgba(252,251,248,0.88)] px-4 py-4 backdrop-blur-xl sm:px-6 lg:hidden">
-            <div className="flex items-start justify-between gap-4">
-              <BrandLockup includeDomain tagline={null} tone="light" compact />
-              <div className="flex items-center gap-2">
+          <header className="sticky top-0 z-30 border-b border-[var(--app-line)] bg-[rgba(252,251,248,0.92)] px-4 py-4 backdrop-blur-xl sm:px-6 lg:hidden">
+            <div className="grid gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <BrandLockup includeDomain tagline={null} tone="light" compact />
+                <div className="rounded-full border border-[var(--app-line)] bg-white/82 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-text)]">
+                  @{session.username}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <Link href="/admin/songs/new">
-                  <Button className="shadow-none">Import</Button>
+                  <Button className="w-full justify-center shadow-none">Import song</Button>
                 </Link>
                 <form action={signOutAction}>
                   <Button type="submit" tone="secondary" className="shadow-none">
@@ -77,10 +83,10 @@ export default async function AdminDashboardLayout({
                   </Button>
                 </form>
               </div>
-            </div>
 
-            <div className="mt-4 overflow-x-auto">
-              <AdminNavLinks orientation="horizontal" />
+              <div>
+                <AdminNavLinks orientation="horizontal" />
+              </div>
             </div>
           </header>
 

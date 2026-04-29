@@ -33,7 +33,9 @@ export function AdminNavLinks({
     <nav
       className={cn(
         "gap-1.5",
-        orientation === "vertical" ? "flex flex-col" : "flex min-w-max flex-row",
+        orientation === "vertical"
+          ? "flex flex-col"
+          : "grid min-w-full grid-cols-2 gap-2 sm:flex sm:min-w-max sm:flex-row",
       )}
     >
       {navItems.map((item) => {
@@ -49,7 +51,8 @@ export function AdminNavLinks({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow] duration-200 ease-out",
+              "app-interactive inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
+              orientation === "horizontal" && "min-w-0 justify-start px-3 py-2.5 sm:px-3.5 sm:py-3",
               active
                 ? "border-[var(--app-line)] bg-white text-[var(--app-text)] shadow-[0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.05)]"
                 : "border-transparent text-[var(--app-muted)] hover:border-[var(--app-line)] hover:bg-white/70 hover:text-[var(--app-text)]",
@@ -58,6 +61,7 @@ export function AdminNavLinks({
             <span
               className={cn(
                 "inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+                orientation === "horizontal" && "h-8 w-8 shrink-0",
                 active
                   ? "border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]"
                   : "border-transparent bg-transparent text-[var(--app-muted)]",
@@ -65,7 +69,7 @@ export function AdminNavLinks({
             >
               <Icon className="h-4 w-4" />
             </span>
-            <span className="font-medium">{item.label}</span>
+            <span className="min-w-0 truncate font-medium">{item.label}</span>
           </Link>
         );
       })}

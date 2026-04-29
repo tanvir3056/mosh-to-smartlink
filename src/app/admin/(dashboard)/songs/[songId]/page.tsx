@@ -25,7 +25,7 @@ export default async function EditSongPage({
 
   return (
     <section className="grid gap-5">
-      <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
+      <div className="app-card app-enter rounded-[1.75rem] p-5 sm:p-6">
         <p className="app-kicker text-[var(--app-muted)]">
           Review and publish
         </p>

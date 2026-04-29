@@ -6,7 +6,7 @@ export default async function NewSongPage() {
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(420px,0.85fr)] xl:items-start">
-      <div className="app-card rounded-[1.75rem] p-5 sm:p-6 xl:sticky xl:top-6">
+      <div className="order-2 app-card app-enter rounded-[1.75rem] p-5 sm:p-6 xl:order-1 xl:sticky xl:top-6">
         <p className="app-kicker text-[var(--app-muted)]">Import</p>
         <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
           Start a new song page
@@ -51,7 +51,7 @@ export default async function NewSongPage() {
         </div>
       </div>
 
-      <div className="app-card rounded-[1.75rem] p-5 sm:p-6">
+      <div className="order-1 app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6 xl:order-2">
         <ImportSongForm requestedBy={`@${session.username}`} />
       </div>
     </section>

@@ -192,7 +192,7 @@ export function ServiceBranding({
   const config = BRAND_CONFIG[service];
 
   return (
-    <div className="w-[11.25rem] shrink-0">
+    <div className="w-[11.25rem] shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-[1px]">
       <div className="flex h-[1.9rem] items-center">
         {config.kind === "asset" ? (
           <AssetLockup config={config} />

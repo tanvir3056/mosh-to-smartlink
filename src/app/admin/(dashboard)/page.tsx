@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="app-enter flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <p className="app-kicker text-[var(--app-muted)]">Overview</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-[var(--app-text)] sm:text-5xl">
@@ -63,7 +63,7 @@ export default async function AdminOverviewPage() {
         </div>
       </section>
 
-      <section className="app-card overflow-hidden rounded-[1.6rem]">
+      <section className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[1.6rem]">
         <div className="grid gap-px bg-[var(--app-line)] sm:grid-cols-2 xl:grid-cols-5">
           {[
             {
@@ -124,7 +124,7 @@ export default async function AdminOverviewPage() {
         </div>
       </section>
 
-      <section className="app-card rounded-[1.6rem] p-5 sm:p-6">
+      <section className="app-card app-enter app-enter-delay-2 rounded-[1.6rem] p-5 sm:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="app-kicker text-[var(--app-muted)]">Library</p>

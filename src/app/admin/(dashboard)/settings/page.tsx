@@ -25,27 +25,23 @@ export default async function AdminSettingsPage() {
   }
 
   return (
-    <section className="mx-auto grid w-full max-w-[1320px] gap-6">
-      <div className="app-card rounded-[1.9rem] p-5 sm:p-6 lg:p-7">
-        <p className="app-kicker text-[var(--app-muted)]">Settings</p>
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-5">
+    <section className="mx-auto grid w-full max-w-[1440px] gap-6">
+      <div className="app-card app-enter rounded-[1.9rem] p-5 sm:p-6 lg:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-              One place for public defaults, Mailchimp sync, and lead delivery
+            <p className="app-kicker text-[var(--app-muted)]">Settings</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)] sm:text-4xl">
+              Tracking, leads, and delivery
             </h2>
             <p className="mt-4 text-sm leading-7 text-[var(--app-muted)]">
-              Keep this page operational, not decorative: set your public page
-              defaults, connect the only live sync target you support today, and
-              review every captured lead without leaving the admin.
+              Keep the product defaults clean, connect the one live lead sync you
+              support today, and manage every captured contact from one stable
+              control panel.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2.5">
-            {[
-              "Mailchimp only",
-              "Local-first lead storage",
-              "Excel export built in",
-            ].map((item) => (
+            {["Mailchimp only", "Local lead inbox", "Excel export"].map((item) => (
               <span
                 key={item}
                 className="rounded-full border border-[var(--app-line)] bg-white/88 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]"
@@ -57,12 +53,12 @@ export default async function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="app-card rounded-[1.9rem] p-5 sm:p-6 lg:p-7">
-        <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
-      </div>
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:items-start">
+        <div className="grid gap-6">
+          <div className="app-card app-enter app-enter-delay-1 rounded-[1.9rem] p-5 sm:p-6 lg:p-7">
+            <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
+          </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)] xl:items-start">
-        <div>
           {leadSnapshot ? (
             <EmailLeadsPanel snapshot={leadSnapshot} />
           ) : (
@@ -70,21 +66,21 @@ export default async function AdminSettingsPage() {
           )}
         </div>
 
-        <aside className="app-card rounded-[1.75rem] p-5 sm:p-6">
+        <aside className="app-card app-enter app-enter-delay-2 rounded-[1.75rem] p-5 sm:p-6 2xl:sticky 2xl:top-6">
           <p className="app-kicker text-[var(--app-muted)]">Operating notes</p>
           <div className="mt-4 grid gap-3">
             {[
               {
                 title: "Public defaults",
-                body: "Site name and Meta Pixel rules apply across every published page in this account.",
+                body: "Site name and Meta Pixel rules apply account-wide to every published page.",
               },
               {
                 title: "Lead routing",
-                body: "Every lead stores in Backstage first. Mailchimp is optional outbound sync, not the source of truth.",
+                body: "Every lead stores here first. Mailchimp is an optional outbound sync, not your source of truth.",
               },
               {
-                title: "Tags and cleanup",
-                body: "Default tags stamp every synced contact. You can export the full inbox even if Mailchimp is turned off.",
+                title: "Exports",
+                body: "You can export the inbox for Excel even when Mailchimp is disconnected or paused.",
               },
             ].map((item) => (
               <div

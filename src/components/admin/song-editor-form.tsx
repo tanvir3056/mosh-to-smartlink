@@ -87,7 +87,7 @@ export function SongEditorForm({
         <input type="hidden" name="song_id" value={page.song.id} />
         <input type="hidden" name="current_slug" value={page.page.slug} />
 
-        <aside className="grid gap-5 xl:sticky xl:top-6">
+        <aside className="order-2 grid gap-5 xl:order-1 xl:sticky xl:top-6">
           <div className="app-card rounded-[1.75rem] p-5">
             <Image
               src={artworkUrl}
@@ -113,7 +113,7 @@ export function SongEditorForm({
               publish when the page is ready for fan traffic.
             </p>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-1">
               {[
                 {
                   title: "Metadata imported",
@@ -155,7 +155,7 @@ export function SongEditorForm({
           />
         </aside>
 
-        <div className="grid gap-5">
+        <div className="order-1 grid gap-5 xl:order-2">
           <div className="app-card grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Release details</p>

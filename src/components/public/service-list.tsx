@@ -79,7 +79,7 @@ export function ServiceList({
                 target={isPreview ? "_blank" : undefined}
                 rel={isPreview ? "noreferrer" : undefined}
                 className={cn(
-                  "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5",
+                  "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5 transition-[background-color] duration-200 ease-out hover:bg-white/42 active:bg-[#ede6d8]",
                   isPreview && helperText ? "py-3" : "py-0",
                 )}
                 onClick={() => {

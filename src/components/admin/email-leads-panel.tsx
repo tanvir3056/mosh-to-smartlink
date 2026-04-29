@@ -29,7 +29,7 @@ function StatusBadge({
 
 export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
   return (
-    <section className="app-card rounded-[1.75rem] p-5 sm:p-6 lg:p-7">
+    <section className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6 lg:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
           <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
@@ -45,7 +45,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
         <Link
           href="/api/admin/email-leads/export"
           prefetch={false}
-          className="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
+          className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
         >
           Export for Excel
         </Link>
@@ -68,56 +68,102 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
       </div>
 
       {snapshot.items.length > 0 ? (
-        <div className="mt-6 overflow-hidden rounded-[1.35rem] border border-[var(--app-line)] bg-white">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm text-[var(--app-text)]">
-              <thead className="border-b border-[var(--app-line)] bg-[var(--app-panel-muted)]/55 text-[11px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Captured</th>
-                  <th className="px-4 py-3 font-semibold">Email</th>
-                  <th className="px-4 py-3 font-semibold">Release</th>
-                  <th className="px-4 py-3 font-semibold">Source</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {snapshot.items.map((lead) => (
-                  <tr key={lead.id} className="border-b border-[var(--app-line)] last:border-b-0">
-                    <td className="px-4 py-4 align-top text-[13px] text-[var(--app-muted)]">
+        <div className="mt-6">
+          <div className="grid gap-3 lg:hidden">
+            {snapshot.items.map((lead) => (
+              <article
+                key={lead.id}
+                className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--app-text)]">{lead.email}</p>
+                    <p className="mt-1 text-[13px] text-[var(--app-muted)]">
                       {formatDateTime(lead.createdAt)}
-                    </td>
-                    <td className="px-4 py-4 align-top font-medium text-[var(--app-text)]">
-                      {lead.email}
-                    </td>
-                    <td className="px-4 py-4 align-top">
-                      <div className="font-medium text-[var(--app-text)]">{lead.songTitle}</div>
-                      <div className="mt-1 text-[13px] text-[var(--app-muted)]">
-                        {lead.artistName}
-                      </div>
-                      <div className="mt-1 text-[12px] text-[var(--app-muted)]">
-                        {buildPublicSongPath(lead.username, lead.slug)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 align-top">
-                      <div className="font-medium text-[var(--app-text)]">
-                        {lead.source ?? lead.referrerHost ?? "Direct"}
-                      </div>
-                      <div className="mt-1 text-[13px] text-[var(--app-muted)]">
-                        {lead.campaign ?? lead.medium ?? lead.country ?? "No campaign data"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 align-top">
-                      <StatusBadge status={lead.connectorStatus} />
-                      {lead.connectorError ? (
-                        <p className="mt-2 max-w-xs text-[12px] leading-5 text-red-600">
-                          {lead.connectorError}
-                        </p>
-                      ) : null}
-                    </td>
+                    </p>
+                  </div>
+                  <StatusBadge status={lead.connectorStatus} />
+                </div>
+
+                <div className="mt-4 grid gap-3 text-sm">
+                  <div>
+                    <p className="app-kicker text-[var(--app-muted)]">Release</p>
+                    <p className="mt-1 font-medium text-[var(--app-text)]">{lead.songTitle}</p>
+                    <p className="text-[13px] text-[var(--app-muted)]">{lead.artistName}</p>
+                  </div>
+                  <div>
+                    <p className="app-kicker text-[var(--app-muted)]">Source</p>
+                    <p className="mt-1 font-medium text-[var(--app-text)]">
+                      {lead.source ?? lead.referrerHost ?? "Direct"}
+                    </p>
+                    <p className="text-[13px] text-[var(--app-muted)]">
+                      {lead.campaign ?? lead.medium ?? lead.country ?? "No campaign data"}
+                    </p>
+                  </div>
+                  <div className="text-[12px] text-[var(--app-muted)]">
+                    {buildPublicSongPath(lead.username, lead.slug)}
+                  </div>
+                  {lead.connectorError ? (
+                    <p className="text-[12px] leading-5 text-red-600">
+                      {lead.connectorError}
+                    </p>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-hidden rounded-[1.35rem] border border-[var(--app-line)] bg-white lg:block">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm text-[var(--app-text)]">
+                <thead className="border-b border-[var(--app-line)] bg-[var(--app-panel-muted)]/55 text-[11px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Captured</th>
+                    <th className="px-4 py-3 font-semibold">Email</th>
+                    <th className="px-4 py-3 font-semibold">Release</th>
+                    <th className="px-4 py-3 font-semibold">Source</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {snapshot.items.map((lead) => (
+                    <tr key={lead.id} className="border-b border-[var(--app-line)] last:border-b-0">
+                      <td className="px-4 py-4 align-top text-[13px] text-[var(--app-muted)]">
+                        {formatDateTime(lead.createdAt)}
+                      </td>
+                      <td className="px-4 py-4 align-top font-medium text-[var(--app-text)]">
+                        {lead.email}
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <div className="font-medium text-[var(--app-text)]">{lead.songTitle}</div>
+                        <div className="mt-1 text-[13px] text-[var(--app-muted)]">
+                          {lead.artistName}
+                        </div>
+                        <div className="mt-1 text-[12px] text-[var(--app-muted)]">
+                          {buildPublicSongPath(lead.username, lead.slug)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <div className="font-medium text-[var(--app-text)]">
+                          {lead.source ?? lead.referrerHost ?? "Direct"}
+                        </div>
+                        <div className="mt-1 text-[13px] text-[var(--app-muted)]">
+                          {lead.campaign ?? lead.medium ?? lead.country ?? "No campaign data"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <StatusBadge status={lead.connectorStatus} />
+                        {lead.connectorError ? (
+                          <p className="mt-2 max-w-xs text-[12px] leading-5 text-red-600">
+                            {lead.connectorError}
+                          </p>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : (
@@ -132,7 +178,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
 
 export function EmailLeadsPanelUnavailable() {
   return (
-    <section className="app-card rounded-[1.75rem] p-5 sm:p-6">
+    <section className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6">
       <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
         Email capture is still active

@@ -29,7 +29,7 @@ export function PublicSongPage({
         />
       ) : null}
       <div
-        className="absolute inset-0 scale-[1.08] bg-cover bg-center opacity-24 blur-[72px]"
+        className="absolute inset-0 scale-[1.03] bg-cover bg-center opacity-16 blur-[42px]"
         style={{ backgroundImage: `url(${page.song.artworkUrl})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,12,0.38),rgba(7,9,12,0.82)_32%,rgba(7,9,12,0.96)_100%)]" />
@@ -49,7 +49,7 @@ export function PublicSongPage({
           </div>
         ) : null}
 
-        <section className="w-full max-w-[27.25rem] overflow-hidden rounded-[1.55rem]">
+        <section className="app-enter w-full max-w-[27.25rem] overflow-hidden rounded-[1.55rem]">
           <PreviewPlayer
             previewUrl={page.song.previewUrl}
             artworkUrl={page.song.artworkUrl}
