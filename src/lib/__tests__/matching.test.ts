@@ -416,4 +416,98 @@ describe("buildImportBundle", () => {
     expect(byService.youtube_music?.url).toContain("yt-topic-id");
     expect(mockGetListByKeyword).toHaveBeenCalledTimes(4);
   });
+
+  test("enriches missing services from exact Apple or Deezer matches before generic fallback", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+
+        if (url.startsWith("https://api.song.link/")) {
+          if (url.includes(encodeURIComponent(TRACK.spotifyTrackUrl))) {
+            return jsonResponse({
+              entitiesByUniqueId: {},
+              linksByPlatform: {
+                spotify: {
+                  url: TRACK.spotifyTrackUrl,
+                },
+              },
+            });
+          }
+
+          if (url.includes(encodeURIComponent("https://music.apple.com/us/album/hot-fuss/1?i=2"))) {
+            return jsonResponse({
+              entitiesByUniqueId: {
+                "AMAZON_SONG::1": {
+                  title: "Mr. Brightside",
+                  artistName: "The Killers",
+                },
+                "TIDAL_SONG::1": {
+                  title: "Mr. Brightside",
+                  artistName: "The Killers",
+                },
+                "YTM_SONG::1": {
+                  title: "Mr. Brightside",
+                  artistName: "The Killers",
+                },
+              },
+              linksByPlatform: {
+                amazonMusic: {
+                  entityUniqueId: "AMAZON_SONG::1",
+                  url: "https://music.amazon.com/albums/1?trackAsin=1",
+                },
+                tidal: {
+                  entityUniqueId: "TIDAL_SONG::1",
+                  url: "https://listen.tidal.com/track/23273347",
+                },
+                youtubeMusic: {
+                  entityUniqueId: "YTM_SONG::1",
+                  url: "https://music.youtube.com/watch?v=yt-enriched-id",
+                },
+              },
+            });
+          }
+        }
+
+        if (url.startsWith("https://itunes.apple.com/search?")) {
+          return jsonResponse({
+            results: [
+              {
+                artistName: "The Killers",
+                collectionName: "Hot Fuss",
+                previewUrl: "https://audio.example.com/apple-preview.m4a",
+                releaseDate: "2004-06-07T07:00:00Z",
+                trackName: "Mr. Brightside",
+                trackViewUrl: "https://music.apple.com/us/album/hot-fuss/1?i=2",
+              },
+            ],
+          });
+        }
+
+        if (url.startsWith("https://api.deezer.com/search/track")) {
+          return jsonResponse({
+            data: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch call: ${url}`);
+      }),
+    );
+
+    mockGetListByKeyword.mockResolvedValue({
+      items: [],
+    });
+
+    const { buildImportBundle } = await import("@/lib/matching");
+    const bundle = await buildImportBundle(TRACK);
+    const byService = Object.fromEntries(bundle.links.map((link) => [link.service, link]));
+
+    expect(byService.apple_music?.matchStatus).toBe("matched");
+    expect(byService.amazon_music?.matchStatus).toBe("matched");
+    expect(byService.amazon_music?.matchSource).toBe("songlink_amazonMusic_via_apple_music");
+    expect(byService.tidal?.matchStatus).toBe("matched");
+    expect(byService.tidal?.matchSource).toBe("songlink_tidal_via_apple_music");
+    expect(byService.youtube_music?.matchStatus).toBe("matched");
+    expect(byService.youtube_music?.url).toContain("yt-enriched-id");
+  });
 });

@@ -241,10 +241,25 @@ async function fetchJsonWithTimeout<T>(url: string) {
   return (await response.json()) as T;
 }
 
-async function resolveSonglinkMatches(track: SpotifyTrackImport) {
+function scoreSonglinkEntityForMatch(
+  track: SpotifyTrackImport,
+  entity: SonglinkEntity | undefined,
+) {
+  if (!entity) {
+    return 0.96;
+  }
+
+  return Math.max(scoreResolverEntity(track, entity).weightedScore, 0.82);
+}
+
+async function resolveSonglinkMatchesFromUrl(
+  track: SpotifyTrackImport,
+  sourceUrl: string,
+  sourceLabel: string,
+) {
   try {
     const payload = await fetchJsonWithTimeout<SonglinkResponse>(
-      `https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(track.spotifyTrackUrl)}`,
+      `https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(sourceUrl)}`,
     );
     const linksByPlatform = payload.linksByPlatform ?? {};
     const entitiesByUniqueId = payload.entitiesByUniqueId ?? {};
@@ -271,8 +286,10 @@ async function resolveSonglinkMatches(track: SpotifyTrackImport) {
       matches[service] = createMatchedMatch(
         service,
         link.url,
-        `songlink_${platform}`,
-        entity ? Math.max(scoreResolverEntity(track, entity).weightedScore, 0.82) : 0.96,
+        sourceLabel === "spotify"
+          ? `songlink_${platform}`
+          : `songlink_${platform}_via_${sourceLabel}`,
+        scoreSonglinkEntityForMatch(track, entity),
       );
     }
 
@@ -280,6 +297,60 @@ async function resolveSonglinkMatches(track: SpotifyTrackImport) {
   } catch {
     return {} as Partial<Record<StreamingService, MatchCandidate>>;
   }
+}
+
+async function resolveSonglinkMatches(track: SpotifyTrackImport) {
+  return resolveSonglinkMatchesFromUrl(track, track.spotifyTrackUrl, "spotify");
+}
+
+async function enrichResolvedMatches(
+  track: SpotifyTrackImport,
+  baseMatches: Partial<Record<StreamingService, MatchCandidate>>,
+  seedMatches: MatchCandidate[],
+) {
+  const enrichmentSeeds = seedMatches.filter(
+    (
+      candidate,
+    ): candidate is MatchCandidate & {
+      url: string;
+    } =>
+      candidate.matchStatus === "matched" &&
+      typeof candidate.url === "string" &&
+      candidate.service !== "spotify",
+  );
+
+  if (enrichmentSeeds.length === 0) {
+    return baseMatches;
+  }
+
+  const enrichmentPayloads = await Promise.allSettled(
+    enrichmentSeeds.map((candidate) =>
+      resolveSonglinkMatchesFromUrl(track, candidate.url, candidate.service),
+    ),
+  );
+  const mergedMatches = { ...baseMatches };
+
+  for (const payload of enrichmentPayloads) {
+    if (payload.status !== "fulfilled") {
+      continue;
+    }
+
+    for (const [service, match] of Object.entries(payload.value) as Array<
+      [StreamingService, MatchCandidate | undefined]
+    >) {
+      if (!match?.url) {
+        continue;
+      }
+
+      const existing = mergedMatches[service];
+
+      if (!existing || existing.matchStatus !== "matched") {
+        mergedMatches[service] = match;
+      }
+    }
+  }
+
+  return mergedMatches;
 }
 
 async function matchAppleMusic(
@@ -715,12 +786,12 @@ function matchTidal(track: SpotifyTrackImport, exactMatch?: MatchCandidate) {
 export async function buildImportBundle(
   track: SpotifyTrackImport,
 ): Promise<ImportBundle> {
-  const resolvedMatches = await resolveSonglinkMatches(track);
+  const initialResolvedMatches = await resolveSonglinkMatches(track);
 
   const [appleResult, deezerResult, youtubeMusicResult] = await Promise.allSettled([
-    matchAppleMusic(track, resolvedMatches.apple_music),
-    matchDeezer(track, resolvedMatches.deezer),
-    matchYouTubeMusic(track, resolvedMatches.youtube_music),
+    matchAppleMusic(track, initialResolvedMatches.apple_music),
+    matchDeezer(track, initialResolvedMatches.deezer),
+    matchYouTubeMusic(track, initialResolvedMatches.youtube_music),
   ]);
 
   const apple =
@@ -756,12 +827,18 @@ export async function buildImportBundle(
           "YouTube Music search failed; the fallback opens search results instead.",
         );
 
+  const resolvedMatches = await enrichResolvedMatches(track, initialResolvedMatches, [
+    apple.match,
+    deezer.match,
+    youtubeMusic,
+  ]);
+
   const links = [
     matchSpotify(track),
-    apple.match,
-    youtubeMusic,
+    resolvedMatches.apple_music ?? apple.match,
+    resolvedMatches.youtube_music ?? youtubeMusic,
     matchAmazonMusic(track, resolvedMatches.amazon_music),
-    deezer.match,
+    resolvedMatches.deezer ?? deezer.match,
     matchTidal(track, resolvedMatches.tidal),
   ]
     .sort(
