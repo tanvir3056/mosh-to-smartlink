@@ -34,11 +34,10 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
         <div className="max-w-3xl">
           <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
           <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-            Lead inbox for live song pages
+            Lead inbox
           </h3>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
-            Every submission lands here first. Export for Excel anytime, and use
-            Mailchimp above only if you want a second synced destination.
+            Every submission lands here first. Export anytime, or let Mailchimp sync in the background.
           </p>
         </div>
 
@@ -47,7 +46,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
           prefetch={false}
           className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
         >
-          Export for Excel
+          Export CSV
         </Link>
       </div>
 
@@ -168,8 +167,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
         </div>
       ) : (
         <div className="mt-6 rounded-[1.25rem] border border-dashed border-[var(--app-line)] bg-white px-4 py-5 text-sm leading-7 text-[var(--app-muted)]">
-          No leads captured yet. As soon as fans submit the form on a live page, they
-          will appear here and be available for export.
+          No leads yet.
         </div>
       )}
     </section>
@@ -181,11 +179,10 @@ export function EmailLeadsPanelUnavailable() {
     <section className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6">
       <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-        Email capture is still active
+        Lead inbox unavailable
       </h3>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
-        Backstage could not load the lead summary right now. New leads can still be
-        collected on live pages, but the table and export are temporarily unavailable.
+        New leads can still be captured on live pages, but the table could not load right now.
       </p>
     </section>
   );
