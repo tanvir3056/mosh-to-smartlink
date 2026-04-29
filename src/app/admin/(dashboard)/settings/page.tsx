@@ -12,16 +12,39 @@ import {
 
 export default async function AdminSettingsPage() {
   const session = await requireUserSession();
-  const [trackingConfig, emailConnector] = await Promise.all([
+  const [trackingResult, connectorResult, leadSnapshotResult] = await Promise.allSettled([
     getTrackingConfig(session.userId),
     getEmailConnectorConfig(session.userId),
+    getEmailLeadSnapshot(session.userId),
   ]);
-  let leadSnapshot = null;
+  const settingsReady =
+    trackingResult.status === "fulfilled" && connectorResult.status === "fulfilled";
+  const trackingConfig =
+    trackingResult.status === "fulfilled" ? trackingResult.value : null;
+  const emailConnector =
+    connectorResult.status === "fulfilled" ? connectorResult.value : null;
+  const leadSnapshot =
+    leadSnapshotResult.status === "fulfilled" ? leadSnapshotResult.value : null;
 
-  try {
-    leadSnapshot = await getEmailLeadSnapshot(session.userId);
-  } catch (error) {
-    console.error("Failed to load email lead snapshot for settings page.", error);
+  if (trackingResult.status === "rejected") {
+    console.error(
+      "Failed to load tracking config for settings page.",
+      trackingResult.reason,
+    );
+  }
+
+  if (connectorResult.status === "rejected") {
+    console.error(
+      "Failed to load email connector config for settings page.",
+      connectorResult.reason,
+    );
+  }
+
+  if (leadSnapshotResult.status === "rejected") {
+    console.error(
+      "Failed to load email lead snapshot for settings page.",
+      leadSnapshotResult.reason,
+    );
   }
 
   return (
@@ -52,7 +75,22 @@ export default async function AdminSettingsPage() {
       </div>
 
       <div className="app-card app-enter app-enter-delay-1 rounded-[1.9rem] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
-        <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
+        {settingsReady && trackingConfig && emailConnector ? (
+          <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
+        ) : (
+          <div className="grid gap-4">
+            <div>
+              <p className="app-kicker text-[var(--app-muted)]">Configuration</p>
+              <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+                Settings unavailable
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
+                The page loaded, but the saved settings could not be read right now.
+                Reload and try again.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {leadSnapshot ? (
