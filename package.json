@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "review:product": "node scripts/release-review.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

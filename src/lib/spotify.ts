@@ -1,9 +1,64 @@
 import type { SpotifyTrackImport } from "@/lib/types";
-import { extractMetaTag, normalizeSpotifyTrackUrl } from "@/lib/utils";
+import {
+  extractMetaTag,
+  normalizeDateOnly,
+  normalizeIsrc,
+  normalizeSpotifyTrackUrl,
+} from "@/lib/utils";
 
 function extractDocumentTitle(html: string) {
   const match = html.match(/<title>([^<]+)<\/title>/i);
   return match?.[1]?.trim() ?? null;
+}
+
+function extractJsonLdValue(html: string, field: string) {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = html.match(
+    new RegExp(`"${escapedField}"\\s*:\\s*"([^"]+)"`, "i"),
+  );
+
+  return match?.[1]?.trim() ?? null;
+}
+
+function extractSpotifyIsrc(html: string) {
+  const directMatch =
+    html.match(/"isrc"\s*:\s*"([A-Za-z0-9-]{10,20})"/i)?.[1] ??
+    html.match(/"external_ids"\s*:\s*\{[^}]*"isrc"\s*:\s*"([A-Za-z0-9-]{10,20})"/i)?.[1] ??
+    null;
+
+  return normalizeIsrc(directMatch);
+}
+
+function extractSpotifyDurationMs(html: string) {
+  const metaDuration = extractMetaTag(html, "music:duration");
+
+  if (metaDuration) {
+    const seconds = Number.parseFloat(metaDuration);
+
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return Math.round(seconds * 1_000);
+    }
+  }
+
+  const millisMatch =
+    html.match(/"duration"\s*:\s*\{\s*"totalMilliseconds"\s*:\s*(\d+)/i)?.[1] ??
+    html.match(/"duration_ms"\s*:\s*(\d+)/i)?.[1] ??
+    null;
+
+  if (!millisMatch) {
+    return null;
+  }
+
+  const milliseconds = Number.parseInt(millisMatch, 10);
+  return Number.isFinite(milliseconds) && milliseconds > 0 ? milliseconds : null;
+}
+
+function extractSpotifyReleaseDate(html: string) {
+  return normalizeDateOnly(
+    extractMetaTag(html, "music:release_date") ??
+      extractMetaTag(html, "music:album_release_date") ??
+      extractJsonLdValue(html, "datePublished"),
+  );
 }
 
 async function fetchSpotifyOEmbed(trackUrl: string) {
@@ -69,9 +124,14 @@ export async function fetchSpotifyTrackImport(
   const artistName =
     descriptionParts?.[0] ?? titleArtistMatch?.[2]?.trim() ?? "Unknown Artist";
   const albumName = descriptionParts?.[1] ?? null;
-  const releaseYear = Number.parseInt(descriptionParts?.[3] ?? "", 10);
+  const releaseDate = extractSpotifyReleaseDate(html);
+  const releaseYearCandidate =
+    releaseDate?.slice(0, 4) ?? descriptionParts?.[3] ?? null;
+  const releaseYear = Number.parseInt(releaseYearCandidate ?? "", 10);
   const previewUrl =
     html.match(/https:\/\/p\.scdn\.co\/mp3-preview\/[^"\\\s<]+/)?.[0] ?? null;
+  const durationMs = extractSpotifyDurationMs(html);
+  const isrc = extractSpotifyIsrc(html);
 
   return {
     spotifyTrackId: normalized.trackId,
@@ -82,11 +142,17 @@ export async function fetchSpotifyTrackImport(
     artworkUrl: oembed.thumbnail_url ?? "",
     previewUrl,
     releaseYear: Number.isFinite(releaseYear) ? releaseYear : null,
+    releaseDate,
+    isrc,
     explicit: false,
-    durationMs: null,
+    durationMs,
     rawSource: {
       oembed,
       ogDescription,
+      documentTitle,
+      isrc,
+      releaseDate,
+      durationMs,
     },
   };
 }

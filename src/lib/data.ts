@@ -41,6 +41,8 @@ type SongPageJoinRow = QueryResultRow & {
   preview_url: string | null;
   preview_source: string | null;
   release_year: number | null;
+  release_date: string | null;
+  isrc: string | null;
   explicit: boolean;
   duration_ms: number | null;
   song_created_at: string;
@@ -64,9 +66,17 @@ type SongPageJoinRow = QueryResultRow & {
   service: StreamingLinkRecord["service"] | null;
   url: string | null;
   match_status: StreamingLinkRecord["matchStatus"] | null;
+  review_status: StreamingLinkRecord["reviewStatus"] | null;
   match_source: string | null;
   confidence: string | number | null;
   notes: string | null;
+  confidence_reason: string | null;
+  matched_title: string | null;
+  matched_artist: string | null;
+  matched_album: string | null;
+  matched_duration_ms: number | null;
+  matched_release_date: string | null;
+  matched_isrc: string | null;
   position: number | null;
   meta_pixel_id: string | null;
   meta_pixel_enabled: boolean | null;
@@ -211,6 +221,8 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
       previewUrl: firstRow.preview_url,
       previewSource: firstRow.preview_source,
       releaseYear: firstRow.release_year,
+      releaseDate: firstRow.release_date,
+      isrc: firstRow.isrc,
       explicit: Boolean(firstRow.explicit),
       durationMs: firstRow.duration_ms,
       createdAt: firstRow.song_created_at,
@@ -237,10 +249,18 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
         service: row.service as StreamingLinkRecord["service"],
         url: row.url,
         matchStatus: row.match_status as StreamingLinkRecord["matchStatus"],
+        reviewStatus: row.review_status as StreamingLinkRecord["reviewStatus"],
         matchSource: row.match_source as string,
         confidence:
           row.confidence === null ? null : Number.parseFloat(String(row.confidence)),
         notes: row.notes,
+        confidenceReason: row.confidence_reason,
+        matchedTitle: row.matched_title,
+        matchedArtist: row.matched_artist,
+        matchedAlbum: row.matched_album,
+        matchedDurationMs: row.matched_duration_ms,
+        matchedReleaseDate: row.matched_release_date,
+        matchedIsrc: row.matched_isrc,
         position: row.position ?? 0,
         createdAt: row.page_created_at,
         updatedAt: row.page_updated_at,
@@ -383,9 +403,17 @@ async function upsertStreamingLinks(
       service,
       url: null,
       matchStatus: "unresolved" as const,
+      reviewStatus: "unresolved" as const,
       matchSource: "manual_review_required",
       confidence: null,
       notes: "Add a service URL before publishing.",
+      confidenceReason: "No destination set yet.",
+      matchedTitle: null,
+      matchedArtist: null,
+      matchedAlbum: null,
+      matchedDurationMs: null,
+      matchedReleaseDate: null,
+      matchedIsrc: null,
     };
 
     const updated = await query(
@@ -393,10 +421,18 @@ async function upsertStreamingLinks(
         update streaming_links
         set url = $3,
           match_status = $4,
-          match_source = $5,
-          confidence = $6,
-          notes = $7,
-          position = $8,
+          review_status = $5,
+          match_source = $6,
+          confidence = $7,
+          notes = $8,
+          confidence_reason = $9,
+          matched_title = $10,
+          matched_artist = $11,
+          matched_album = $12,
+          matched_duration_ms = $13,
+          matched_release_date = $14,
+          matched_isrc = $15,
+          position = $16,
           updated_at = current_timestamp
         where song_id = $1
           and service = $2
@@ -407,9 +443,17 @@ async function upsertStreamingLinks(
         service,
         link.url,
         link.matchStatus,
+        link.reviewStatus ?? (link.matchStatus === "matched" ? "approved" : link.url ? "needs_review" : "unresolved"),
         link.matchSource,
         link.confidence,
         link.notes,
+        link.confidenceReason ?? null,
+        link.matchedTitle ?? null,
+        link.matchedArtist ?? null,
+        link.matchedAlbum ?? null,
+        link.matchedDurationMs ?? null,
+        link.matchedReleaseDate ?? null,
+        link.matchedIsrc ?? null,
         index,
       ],
     );
@@ -426,12 +470,20 @@ async function upsertStreamingLinks(
           service,
           url,
           match_status,
+          review_status,
           match_source,
           confidence,
           notes,
+          confidence_reason,
+          matched_title,
+          matched_artist,
+          matched_album,
+          matched_duration_ms,
+          matched_release_date,
+          matched_isrc,
           position
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       `,
       [
         createId("link"),
@@ -439,9 +491,17 @@ async function upsertStreamingLinks(
         service,
         link.url,
         link.matchStatus,
+        link.reviewStatus ?? (link.matchStatus === "matched" ? "approved" : link.url ? "needs_review" : "unresolved"),
         link.matchSource,
         link.confidence,
         link.notes,
+        link.confidenceReason ?? null,
+        link.matchedTitle ?? null,
+        link.matchedArtist ?? null,
+        link.matchedAlbum ?? null,
+        link.matchedDurationMs ?? null,
+        link.matchedReleaseDate ?? null,
+        link.matchedIsrc ?? null,
         index,
       ],
     );
@@ -914,6 +974,8 @@ async function getPublishedSongPageUncached(username: string, slug: string) {
         s.preview_url,
         s.preview_source,
         s.release_year,
+        s.release_date,
+        s.isrc,
         s.explicit,
         s.duration_ms,
         s.created_at as song_created_at,
@@ -937,9 +999,17 @@ async function getPublishedSongPageUncached(username: string, slug: string) {
         l.service,
         l.url,
         l.match_status,
+        l.review_status,
         l.match_source,
         l.confidence,
         l.notes,
+        l.confidence_reason,
+        l.matched_title,
+        l.matched_artist,
+        l.matched_album,
+        l.matched_duration_ms,
+        l.matched_release_date,
+        l.matched_isrc,
         l.position,
         tc.site_name,
         tc.meta_pixel_id,
@@ -1025,6 +1095,8 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
         s.preview_url,
         s.preview_source,
         s.release_year,
+        s.release_date,
+        s.isrc,
         s.explicit,
         s.duration_ms,
         s.created_at as song_created_at,
@@ -1048,9 +1120,17 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
         l.service,
         l.url,
         l.match_status,
+        l.review_status,
         l.match_source,
         l.confidence,
         l.notes,
+        l.confidence_reason,
+        l.matched_title,
+        l.matched_artist,
+        l.matched_album,
+        l.matched_duration_ms,
+        l.matched_release_date,
+        l.matched_isrc,
         l.position,
         tc.site_name,
         tc.meta_pixel_id,
@@ -1113,8 +1193,10 @@ export async function createSongImportDraft(
             preview_url = $7,
             preview_source = $8,
             release_year = $9,
-            explicit = $10,
-            duration_ms = $11,
+            release_date = $10,
+            isrc = $11,
+            explicit = $12,
+            duration_ms = $13,
             updated_at = current_timestamp
           where id = $1
         `,
@@ -1128,6 +1210,8 @@ export async function createSongImportDraft(
           bundle.song.previewUrl,
           bundle.song.previewUrl ? "import_match" : null,
           bundle.song.releaseYear,
+          bundle.song.releaseDate ?? null,
+          bundle.song.isrc ?? null,
           bundle.song.explicit,
           bundle.song.durationMs,
         ],
@@ -1147,10 +1231,12 @@ export async function createSongImportDraft(
             preview_url,
             preview_source,
             release_year,
+            release_date,
+            isrc,
             explicit,
             duration_ms
           )
-          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         `,
         [
           songId,
@@ -1164,6 +1250,8 @@ export async function createSongImportDraft(
           bundle.song.previewUrl,
           bundle.song.previewUrl ? "import_match" : null,
           bundle.song.releaseYear,
+          bundle.song.releaseDate ?? null,
+          bundle.song.isrc ?? null,
           bundle.song.explicit,
           bundle.song.durationMs,
         ],

@@ -193,6 +193,10 @@ function prepareMigrationSqlForLocalRuntime(entry: string, sql: string) {
       /alter table(?:\s+if exists)?\s+song_pages\s+drop constraint(?:\s+if exists)?\s+song_pages_slug_key\s*;/gi,
       "",
     )
+    .replace(
+      /alter table(?:\s+if exists)?\s+streaming_links\s+drop constraint(?:\s+if exists)?\s+streaming_links_review_status_check\s*;/gi,
+      "",
+    )
     .replace(/\bif not exists\b/gi, "")
     .replace(/\bif exists\b/gi, "");
 

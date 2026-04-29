@@ -13,7 +13,52 @@ import { PublicLinkPanel } from "@/components/admin/public-link-panel";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Button } from "@/components/ui/button";
 import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
-import type { DashboardSongRow, SongPageWithLinks } from "@/lib/types";
+import type { DashboardSongRow, ReviewStatus, SongPageWithLinks } from "@/lib/types";
+
+function deriveReviewStatus(
+  matchStatus: SongPageWithLinks["links"][number]["matchStatus"],
+  url: string | null,
+): ReviewStatus {
+  if (!url || matchStatus === "unresolved") {
+    return "unresolved";
+  }
+
+  if (matchStatus === "matched") {
+    return "approved";
+  }
+
+  return "needs_review";
+}
+
+function formatConfidence(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return "No score";
+  }
+
+  return `${Math.round(value * 100)}% confidence`;
+}
+
+function formatDuration(value: number | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const totalSeconds = Math.max(0, Math.round(value / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function reviewStatusLabel(value: ReviewStatus) {
+  switch (value) {
+    case "approved":
+      return "Approved";
+    case "needs_review":
+      return "Needs review";
+    case "unresolved":
+      return "Unresolved";
+  }
+}
 
 function SaveButtons() {
   const { pending } = useFormStatus();
@@ -74,7 +119,10 @@ export function SongEditorForm({
   const [artworkUrl, setArtworkUrl] = useState(page.song.artworkUrl);
   const linkedServices = page.links.filter((entry) => Boolean(entry.url)).length;
   const manualReviewCount = page.links.filter(
-    (entry) => !entry.url || entry.matchStatus !== "matched",
+    (entry) =>
+      !entry.url ||
+      (entry.reviewStatus ?? deriveReviewStatus(entry.matchStatus, entry.url)) !==
+        "approved",
   ).length;
   const visitCount = performance?.visitCount ?? 0;
   const clickCount = performance?.clickCount ?? 0;
@@ -305,6 +353,9 @@ export function SongEditorForm({
             <div className="grid gap-4">
               {STREAMING_SERVICES.map((service) => {
                 const link = page.links.find((entry) => entry.service === service);
+                const reviewStatus = link
+                  ? link.reviewStatus ?? deriveReviewStatus(link.matchStatus, link.url)
+                  : ("unresolved" as const);
                 return (
                   <div
                     key={service}
@@ -319,13 +370,66 @@ export function SongEditorForm({
                           ? "Check the destination and adjust anything that looks wrong."
                           : "No destination yet. Add a URL or leave it unresolved."}
                       </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-text)]">
+                          {reviewStatusLabel(reviewStatus)}
+                        </span>
+                        <span className="rounded-full border border-[var(--app-line)] bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-muted)]">
+                          {formatConfidence(link?.confidence ?? null)}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="grid gap-3">
                       <input
                         type="hidden"
+                        name={`${service}_original_url`}
+                        defaultValue={link?.url ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_review_status`}
+                        defaultValue={reviewStatus}
+                      />
+                      <input
+                        type="hidden"
                         name={`${service}_match_source`}
                         defaultValue={link?.matchSource ?? "manual_review"}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_confidence_reason`}
+                        defaultValue={link?.confidenceReason ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_title`}
+                        defaultValue={link?.matchedTitle ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_artist`}
+                        defaultValue={link?.matchedArtist ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_album`}
+                        defaultValue={link?.matchedAlbum ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_duration_ms`}
+                        defaultValue={link?.matchedDurationMs ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_release_date`}
+                        defaultValue={link?.matchedReleaseDate ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_matched_isrc`}
+                        defaultValue={link?.matchedIsrc ?? ""}
                       />
 
                       <label className="grid gap-2">
@@ -339,17 +443,76 @@ export function SongEditorForm({
                         />
                       </label>
 
+                      {(link?.confidenceReason ||
+                        link?.matchedTitle ||
+                        link?.matchedArtist ||
+                        link?.matchedAlbum ||
+                        link?.matchedDurationMs ||
+                        link?.matchedReleaseDate ||
+                        link?.matchedIsrc) && (
+                        <div className="grid gap-2 rounded-2xl border border-[var(--app-line)] bg-[var(--app-soft)]/70 p-3">
+                          {link?.confidenceReason && (
+                            <div className="text-sm text-[var(--app-text)]">
+                              {link.confidenceReason}
+                            </div>
+                          )}
+
+                          <div className="grid gap-2 text-xs text-[var(--app-muted)] sm:grid-cols-2 xl:grid-cols-3">
+                            {link?.matchedTitle && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">Matched title</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">{link.matchedTitle}</div>
+                              </div>
+                            )}
+                            {link?.matchedArtist && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">Matched artist</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">{link.matchedArtist}</div>
+                              </div>
+                            )}
+                            {link?.matchedAlbum && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">Matched album</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">{link.matchedAlbum}</div>
+                              </div>
+                            )}
+                            {link?.matchedDurationMs && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">Duration</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">
+                                  {formatDuration(link.matchedDurationMs)}
+                                </div>
+                              </div>
+                            )}
+                            {link?.matchedReleaseDate && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">Release date</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">
+                                  {link.matchedReleaseDate}
+                                </div>
+                              </div>
+                            )}
+                            {link?.matchedIsrc && (
+                              <div>
+                                <div className="app-kicker text-[var(--app-muted)]">ISRC</div>
+                                <div className="mt-1 text-sm text-[var(--app-text)]">{link.matchedIsrc}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="grid gap-3 lg:grid-cols-[200px_minmax(0,1fr)]">
                         <label className="grid gap-2">
                           <span className="app-kicker text-[var(--app-muted)]">
-                            Link state
+                            Approval state
                           </span>
                           <select
                             name={`${service}_match_status`}
                             defaultValue={link?.matchStatus ?? "manual"}
                             className="app-input"
                           >
-                            <option value="matched">Matched</option>
+                            <option value="matched">Approved</option>
                             <option value="manual">Needs review</option>
                             <option value="search_fallback">Search fallback</option>
                             <option value="unresolved">Unresolved</option>

@@ -145,14 +145,106 @@ export function scoreTextSimilarity(left: string, right: string) {
 export function normalizeMatchText(value: string | null | undefined) {
   return (value ?? "")
     .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/\(.*?\)|\[.*?\]/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(
-      /\b(feat|ft|official|video|audio|lyrics|remastered|remaster|mix|version|edit|mono|stereo|deluxe|expanded|anniversary|clean|explicit|bonus|track)\b/g,
+      /\b(feat|ft|featuring|official|video|audio|lyrics|remastered|remaster|mix|version|edit|mono|stereo|deluxe|expanded|anniversary|clean|explicit|bonus|track|album|single|ep|live at|radio edit|original mix)\b/g,
       " ",
     )
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function normalizeIsrc(value: string | null | undefined) {
+  const normalized = (value ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .trim();
+
+  return normalized.length >= 10 ? normalized : null;
+}
+
+export function normalizeDateOnly(value: string | null | undefined) {
+  const normalized = (value ?? "").trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const dateMatch = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+
+  if (dateMatch) {
+    return dateMatch[1];
+  }
+
+  const parsed = new Date(normalized);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+export function scoreDurationSimilarity(
+  expectedMs: number | null | undefined,
+  actualMs: number | null | undefined,
+) {
+  if (!expectedMs || !actualMs) {
+    return null;
+  }
+
+  const delta = Math.abs(expectedMs - actualMs);
+
+  if (delta <= 2_000) {
+    return 1;
+  }
+
+  if (delta <= 5_000) {
+    return 0.9;
+  }
+
+  if (delta <= 10_000) {
+    return 0.72;
+  }
+
+  if (delta <= 15_000) {
+    return 0.52;
+  }
+
+  return 0;
+}
+
+export function scoreReleaseDateSimilarity(
+  expectedDate: string | null | undefined,
+  actualDate: string | null | undefined,
+) {
+  const left = normalizeDateOnly(expectedDate);
+  const right = normalizeDateOnly(actualDate);
+
+  if (!left || !right) {
+    return null;
+  }
+
+  if (left === right) {
+    return 1;
+  }
+
+  if (left.slice(0, 7) === right.slice(0, 7)) {
+    return 0.9;
+  }
+
+  if (left.slice(0, 4) === right.slice(0, 4)) {
+    return 0.76;
+  }
+
+  const yearDelta = Math.abs(
+    Number.parseInt(left.slice(0, 4), 10) - Number.parseInt(right.slice(0, 4), 10),
+  );
+
+  return yearDelta === 1 ? 0.42 : 0;
 }
 
 export function buildServiceSearchUrl(

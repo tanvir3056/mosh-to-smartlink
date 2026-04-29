@@ -19,6 +19,7 @@ import { buildImportBundle } from "@/lib/matching";
 import type {
   MatchCandidate,
   MatchStatus,
+  ReviewStatus,
   SongPageWithLinks,
   TrackingConfig,
 } from "@/lib/types";
@@ -44,26 +45,98 @@ function isMatchStatus(value: string): value is MatchStatus {
   );
 }
 
+function isReviewStatus(value: string): value is ReviewStatus {
+  return value === "approved" || value === "needs_review" || value === "unresolved";
+}
+
+function getNullableNumberValue(formData: FormData, key: string) {
+  const raw = getStringValue(formData, key);
+
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function deriveReviewStatus(matchStatus: MatchStatus, url: string | null): ReviewStatus {
+  if (!url || matchStatus === "unresolved") {
+    return "unresolved";
+  }
+
+  if (matchStatus === "matched") {
+    return "approved";
+  }
+
+  return "needs_review";
+}
+
 function parseLinksFromFormData(formData: FormData): MatchCandidate[] {
   return STREAMING_SERVICES.map((service) => {
-    const matchStatus = getStringValue(formData, `${service}_match_status`);
+    const requestedMatchStatus = getStringValue(formData, `${service}_match_status`);
+    const url = getNullableStringValue(formData, `${service}_url`);
+    const originalUrl = getNullableStringValue(formData, `${service}_original_url`);
+    const isManualOverride = url !== originalUrl && Boolean(url);
+    const parsedMatchStatus = isMatchStatus(requestedMatchStatus)
+      ? requestedMatchStatus
+      : "manual";
+    const matchStatus = !url
+      ? "unresolved"
+      : isManualOverride && parsedMatchStatus === "matched"
+        ? "manual"
+        : parsedMatchStatus;
+    const requestedReviewStatus = getStringValue(formData, `${service}_review_status`);
+    const reviewStatus = isReviewStatus(requestedReviewStatus)
+      ? requestedReviewStatus
+      : deriveReviewStatus(matchStatus, url);
+    const confidence = Number.parseFloat(
+      getStringValue(formData, `${service}_confidence`) || "0",
+    );
 
     return {
       service,
-      url: getNullableStringValue(formData, `${service}_url`),
-      matchStatus: isMatchStatus(matchStatus) ? matchStatus : "manual",
-      matchSource: getStringValue(formData, `${service}_match_source`) || "manual_review",
-      confidence: Number.parseFloat(
-        getStringValue(formData, `${service}_confidence`) || "0",
-      ),
-      notes: getNullableStringValue(formData, `${service}_notes`),
+      url,
+      matchStatus,
+      reviewStatus,
+      matchSource:
+        isManualOverride
+          ? "manual_review"
+          : getStringValue(formData, `${service}_match_source`) || "manual_review",
+      confidence:
+        isManualOverride
+          ? null
+          : Number.isFinite(confidence) && confidence > 0
+            ? Number(confidence.toFixed(2))
+            : null,
+      notes:
+        isManualOverride
+          ? "Edited manually in admin."
+          : getNullableStringValue(formData, `${service}_notes`),
+      confidenceReason:
+        isManualOverride
+          ? "URL edited manually in admin."
+          : getNullableStringValue(formData, `${service}_confidence_reason`),
+      matchedTitle: isManualOverride
+        ? null
+        : getNullableStringValue(formData, `${service}_matched_title`),
+      matchedArtist: isManualOverride
+        ? null
+        : getNullableStringValue(formData, `${service}_matched_artist`),
+      matchedAlbum: isManualOverride
+        ? null
+        : getNullableStringValue(formData, `${service}_matched_album`),
+      matchedDurationMs: isManualOverride
+        ? null
+        : getNullableNumberValue(formData, `${service}_matched_duration_ms`),
+      matchedReleaseDate: isManualOverride
+        ? null
+        : getNullableStringValue(formData, `${service}_matched_release_date`),
+      matchedIsrc: isManualOverride
+        ? null
+        : getNullableStringValue(formData, `${service}_matched_isrc`),
     };
-  }).map((link) => ({
-    ...link,
-    confidence: Number.isFinite(link.confidence) && link.confidence > 0
-      ? Number(link.confidence.toFixed(2))
-      : null,
-  }));
+  });
 }
 
 function parseEmailCaptureFromFormData(

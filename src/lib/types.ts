@@ -14,6 +14,8 @@ export type MatchStatus =
   | "search_fallback"
   | "unresolved";
 
+export type ReviewStatus = "approved" | "needs_review" | "unresolved";
+
 export interface TrackingConfig {
   siteName: string;
   metaPixelId: string | null;
@@ -71,9 +73,17 @@ export interface StreamingLinkRecord {
   service: StreamingService;
   url: string | null;
   matchStatus: MatchStatus;
+  reviewStatus?: ReviewStatus;
   matchSource: string;
   confidence: number | null;
   notes: string | null;
+  confidenceReason?: string | null;
+  matchedTitle?: string | null;
+  matchedArtist?: string | null;
+  matchedAlbum?: string | null;
+  matchedDurationMs?: number | null;
+  matchedReleaseDate?: string | null;
+  matchedIsrc?: string | null;
   position: number;
   createdAt: string;
   updatedAt: string;
@@ -91,6 +101,8 @@ export interface SongRecord {
   previewUrl: string | null;
   previewSource: string | null;
   releaseYear: number | null;
+  releaseDate?: string | null;
+  isrc?: string | null;
   explicit: boolean;
   durationMs: number | null;
   createdAt: string;
@@ -267,11 +279,17 @@ export interface SpotifyTrackImport {
   artworkUrl: string;
   previewUrl: string | null;
   releaseYear: number | null;
+  releaseDate?: string | null;
+  isrc?: string | null;
   explicit: boolean;
   durationMs: number | null;
   rawSource: {
     oembed: unknown;
     ogDescription: string | null;
+    documentTitle?: string | null;
+    isrc?: string | null;
+    releaseDate?: string | null;
+    durationMs?: number | null;
   };
 }
 
@@ -279,9 +297,17 @@ export interface MatchCandidate {
   service: StreamingService;
   url: string | null;
   matchStatus: MatchStatus;
+  reviewStatus?: ReviewStatus;
   matchSource: string;
   confidence: number | null;
   notes: string | null;
+  confidenceReason?: string | null;
+  matchedTitle?: string | null;
+  matchedArtist?: string | null;
+  matchedAlbum?: string | null;
+  matchedDurationMs?: number | null;
+  matchedReleaseDate?: string | null;
+  matchedIsrc?: string | null;
 }
 
 export interface ImportBundle {

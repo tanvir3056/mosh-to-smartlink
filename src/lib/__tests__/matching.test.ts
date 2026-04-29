@@ -19,8 +19,9 @@ const TRACK = {
   artworkUrl: "https://i.scdn.co/image/demo",
   previewUrl: "https://audio.example.com/mr-brightside-preview.mp3",
   releaseYear: 2004,
+  releaseDate: "2004-06-07",
   explicit: false,
-  durationMs: null,
+  durationMs: 222000,
   rawSource: {
     oembed: {},
     ogDescription: "The Killers · Hot Fuss · Song · 2004",
@@ -349,6 +350,62 @@ describe("buildImportBundle", () => {
     expect(byService.apple_music?.url).toContain("music.apple.com");
     expect(byService.deezer?.matchStatus).toBe("matched");
     expect(byService.deezer?.url).toContain("deezer.com/track");
+  });
+
+  test("flags medium-confidence exact matches for review instead of auto-approving them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+
+        if (url.startsWith("https://api.song.link/")) {
+          return jsonResponse({
+            entitiesByUniqueId: {},
+            linksByPlatform: {
+              spotify: {
+                url: TRACK.spotifyTrackUrl,
+              },
+            },
+          });
+        }
+
+        if (url.startsWith("https://itunes.apple.com/search?")) {
+          return jsonResponse({
+            results: [
+              {
+                artistName: "The Killers",
+                collectionName: "Direct Hits",
+                releaseDate: "2013-11-08T08:00:00Z",
+                trackName: "Mr Brightside",
+                trackViewUrl:
+                  "https://music.apple.com/us/album/direct-hits/3?i=4",
+              },
+            ],
+          });
+        }
+
+        if (url.startsWith("https://api.deezer.com/search/track")) {
+          return jsonResponse({
+            data: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch call: ${url}`);
+      }),
+    );
+
+    mockGetListByKeyword.mockResolvedValue({
+      items: [],
+    });
+
+    const { buildImportBundle } = await import("@/lib/matching");
+    const bundle = await buildImportBundle(TRACK);
+    const apple = bundle.links.find((link) => link.service === "apple_music");
+
+    expect(apple?.matchStatus).toBe("manual");
+    expect(apple?.reviewStatus).toBe("needs_review");
+    expect(apple?.confidenceReason?.toLowerCase()).toContain("review");
+    expect(apple?.matchedAlbum).toBe("Direct Hits");
   });
 
   test("broadens YouTube Music search before using fallback", async () => {
