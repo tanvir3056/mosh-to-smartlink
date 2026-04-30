@@ -6,17 +6,14 @@ export default async function NewSongPage() {
 
   const checkpoints = [
     {
-      step: "01",
       title: "Paste Spotify link",
       body: "One released track URL creates the draft.",
     },
     {
-      step: "02",
       title: "Review links",
       body: "Fix missing services or hide anything you do not need.",
     },
     {
-      step: "03",
       title: "Publish when ready",
       body: "Nothing goes live until you press Publish.",
     },
@@ -33,55 +30,55 @@ export default async function NewSongPage() {
           </div>
 
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.05em] text-[var(--app-text)] sm:text-[3.35rem] sm:leading-[0.98]">
-            Start a new song page
+            Import released track
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--app-muted)] sm:text-[15px]">
-            Paste one released Spotify track URL. Backstage pulls the metadata,
-            artwork, preview, and available service links, then drops you into review.
+            Paste one Spotify track URL. Backstage pulls metadata, artwork, preview,
+            and available service links, then sends you straight into review.
           </p>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {checkpoints.map((item) => (
-              <div
-                key={item.step}
-                className="app-card-soft rounded-[1.35rem] px-4 py-4 sm:min-h-[152px]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-white px-2 text-xs font-semibold text-[var(--app-text)]">
-                    {item.step}
-                  </span>
-                  <div className="text-sm font-semibold text-[var(--app-text)]">
-                    {item.title}
+          <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div className="app-card-soft rounded-[1.5rem] px-4 py-4 sm:px-5 sm:py-5">
+              <p className="app-kicker text-[var(--app-muted)]">What happens next</p>
+              <div className="mt-4 grid gap-3">
+                {checkpoints.map((item, index) => (
+                  <div
+                    key={item.title}
+                    className="grid gap-1 rounded-[1.15rem] border border-[var(--app-line)] bg-white/80 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2 text-[11px] font-semibold text-[var(--app-text)]">
+                        0{index + 1}
+                      </span>
+                      <p className="text-sm font-semibold text-[var(--app-text)]">
+                        {item.title}
+                      </p>
+                    </div>
+                    <p className="pl-10 text-sm leading-6 text-[var(--app-muted)]">
+                      {item.body}
+                    </p>
                   </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[var(--app-muted)]">
-                  {item.body}
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <div
+                className="app-card-soft rounded-[1.35rem] px-4 py-4 sm:px-5"
+              >
+                <p className="app-kicker text-[var(--app-muted)]">Requested by</p>
+                <p className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+                  @{session.username}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
+                  Drafts stay inside your workspace until you publish.
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] px-5 py-5 sm:px-6 sm:py-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Review flow</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-                Import first. Decide what goes live after.
-              </h2>
-            </div>
-            <div className="app-card-soft rounded-[1.25rem] px-4 py-3 text-sm text-[var(--app-text)]">
-              Requested by <span className="font-semibold">@{session.username}</span>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="app-note rounded-[1.25rem] px-4 py-4 text-sm leading-6">
-              Missing services can stay on search fallback or be replaced with manual links
-              before publish.
-            </div>
-            <div className="app-note rounded-[1.25rem] px-4 py-4 text-sm leading-6">
-              You can also hide any service that should not appear on the public page.
+              <div className="app-note rounded-[1.35rem] px-4 py-4 text-sm leading-6 sm:px-5">
+                Missing services can stay on search fallback, be replaced with manual
+                links, or be hidden before publish.
+              </div>
             </div>
           </div>
         </div>
@@ -98,7 +95,7 @@ export default async function NewSongPage() {
           </p>
         </div>
 
-        <div className="app-card-soft rounded-[1.4rem] p-4">
+        <div className="app-card-soft rounded-[1.4rem] p-4 sm:p-5">
           <ImportSongForm requestedBy={`@${session.username}`} />
         </div>
       </div>

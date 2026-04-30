@@ -1571,7 +1571,7 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
       slug: song.slug,
       status: song.status,
       previewUrl: song.preview_url,
-      updatedAt: song.updated_at,
+      updatedAt: normalizeTimestamp(song.updated_at),
       visitCount: Number(song.visit_count),
       clickCount: Number(song.click_count),
     })),

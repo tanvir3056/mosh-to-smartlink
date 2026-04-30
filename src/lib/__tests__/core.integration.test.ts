@@ -100,6 +100,7 @@ describe("core data flow", () => {
       createSongImportDraft,
       deleteSongById,
       getAdminSongPageBySongId,
+      getDashboardSnapshot,
       getPublishedSongPage,
       updateSongDraft,
       recordVisit,
@@ -122,6 +123,8 @@ describe("core data flow", () => {
     expect(
       adminPage!.links.find((link) => link.service === "spotify")?.matchedReleaseDate,
     ).toBe("2026-03-14");
+    const dashboard = await getDashboardSnapshot(USER_ID);
+    expect(typeof dashboard.songs[0]?.updatedAt).toBe("string");
     expect(await getPublishedSongPage(USERNAME, adminPage!.page.slug)).toBeNull();
 
     await updateSongDraft({

@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" busy={pending} className="w-full sm:w-auto">
-      Import track
+    <Button type="submit" busy={pending} disabled={pending} className="w-full sm:w-auto">
+      {pending ? "Importing" : "Import track"}
     </Button>
   );
 }
@@ -24,21 +24,31 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
   );
 
   return (
-    <form action={formAction} className="grid gap-4">
+    <form action={formAction} className="grid gap-5">
       <input type="hidden" name="requested_by" value={requestedBy} />
+      <div className="grid gap-1.5">
+        <p className="text-sm font-medium text-[var(--app-text)]">Spotify track URL</p>
+        <p className="text-sm leading-6 text-[var(--app-muted)]">
+          Use the released track link from Spotify. Draft first, publish later.
+        </p>
+      </div>
       <label className="grid gap-2">
-        <span className="text-sm font-medium text-[var(--app-text)]">Spotify track URL</span>
         <input
           name="spotify_url"
           placeholder="https://open.spotify.com/track/..."
           className="app-input"
+          required
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
         />
       </label>
-      <div className="grid gap-2 text-sm leading-6 text-[var(--app-muted)]">
-        <div>
+      <div className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-white/70 px-4 py-4 text-sm leading-6 text-[var(--app-muted)]">
+        <p>
           After import, you land on review. Nothing goes live until you press{" "}
           <span className="font-semibold text-[var(--app-text)]">Publish</span>.
-        </div>
+        </p>
         <div className="flex flex-wrap gap-2">
           <span className="app-chip">Metadata</span>
           <span className="app-chip">Artwork</span>
