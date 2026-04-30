@@ -42,6 +42,7 @@ const PAGE: SongPageWithLinks = {
       songId: "song_1",
       service: "spotify",
       url: "https://open.spotify.com/track/track_1",
+      isVisible: true,
       matchStatus: "matched",
       matchSource: "spotify_track_url",
       confidence: 1,
@@ -78,6 +79,35 @@ describe("ServiceList", () => {
     );
     expect(screen.queryByTestId("service-link-apple_music")).toBeNull();
     expect(screen.queryByTestId("service-link-youtube_music")).toBeNull();
+  });
+
+  test("hides deselected services on the live page", () => {
+    render(
+      <ServiceList
+        page={{
+          ...PAGE,
+          links: [
+            ...PAGE.links,
+            {
+              id: "link_2",
+              songId: "song_1",
+              service: "apple_music",
+              url: "https://music.apple.com/us/album/demo/1?i=1",
+              isVisible: false,
+              matchStatus: "matched",
+              matchSource: "itunes_search",
+              confidence: 0.95,
+              notes: null,
+              position: 1,
+              createdAt: "",
+              updatedAt: "",
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.queryByTestId("service-link-apple_music")).toBeNull();
   });
 
   test("fires a Meta Pixel custom event on live outbound clicks when enabled", async () => {

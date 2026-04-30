@@ -141,12 +141,18 @@ describe("core data flow", () => {
       links: adminPage!.links.map((link) => ({
         service: link.service,
         url: link.url,
+        isVisible: link.service === "tidal" ? false : link.isVisible,
         matchStatus: link.matchStatus,
         matchSource: link.matchSource,
         confidence: link.confidence,
         notes: link.notes,
       })),
     });
+
+    const adminPageAfterSave = await getAdminSongPageBySongId(songId, USER_ID);
+    expect(
+      adminPageAfterSave?.links.find((link) => link.service === "tidal")?.isVisible,
+    ).toBe(false);
 
     const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
 

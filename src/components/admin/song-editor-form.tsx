@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
@@ -13,7 +13,24 @@ import { PublicLinkPanel } from "@/components/admin/public-link-panel";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Button } from "@/components/ui/button";
 import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
-import type { DashboardSongRow, ReviewStatus, SongPageWithLinks } from "@/lib/types";
+import type {
+  DashboardSongRow,
+  MatchStatus,
+  ReviewStatus,
+  SongPageWithLinks,
+  StreamingService,
+} from "@/lib/types";
+import { buildServiceSearchUrl } from "@/lib/utils";
+
+type ResolutionMode = "search_fallback" | "manual";
+
+type ServiceDraft = {
+  url: string;
+  originalUrl: string;
+  isVisible: boolean;
+  matchStatus: MatchStatus;
+  resolutionMode: ResolutionMode;
+};
 
 function deriveReviewStatus(
   matchStatus: SongPageWithLinks["links"][number]["matchStatus"],
@@ -58,6 +75,13 @@ function reviewStatusLabel(value: ReviewStatus) {
     case "unresolved":
       return "Unresolved";
   }
+}
+
+function needsResolutionControl(
+  matchStatus: SongPageWithLinks["links"][number]["matchStatus"] | MatchStatus,
+  url: string | null,
+) {
+  return !url || matchStatus !== "matched";
 }
 
 function SaveButtons() {
@@ -108,29 +132,236 @@ function MetaField({
 export function SongEditorForm({
   page,
   performance,
+  showMissingLinksReview = false,
 }: {
   page: SongPageWithLinks;
   performance?: DashboardSongRow | null;
+  showMissingLinksReview?: boolean;
 }) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     updateSongAction,
     INITIAL_ACTION_STATE,
   );
   const [artworkUrl, setArtworkUrl] = useState(page.song.artworkUrl);
-  const linkedServices = page.links.filter((entry) => Boolean(entry.url)).length;
-  const manualReviewCount = page.links.filter(
-    (entry) =>
-      !entry.url ||
-      (entry.reviewStatus ?? deriveReviewStatus(entry.matchStatus, entry.url)) !==
-        "approved",
-  ).length;
+  const serviceLookup = useMemo(
+    () => new Map(page.links.map((entry) => [entry.service, entry])),
+    [page.links],
+  );
+  const fallbackQuery = useMemo(
+    () => [page.song.artistName, page.song.title].filter(Boolean).join(" "),
+    [page.song.artistName, page.song.title],
+  );
+  const [serviceDrafts, setServiceDrafts] = useState<
+    Record<StreamingService, ServiceDraft>
+  >(() =>
+    Object.fromEntries(
+      STREAMING_SERVICES.map((service) => {
+        const link = page.links.find((entry) => entry.service === service);
+        return [
+          service,
+          {
+            url: link?.url ?? "",
+            originalUrl: link?.url ?? "",
+            isVisible: link?.isVisible ?? true,
+            matchStatus: link?.matchStatus ?? "unresolved",
+            resolutionMode:
+              !link?.url || link?.matchStatus === "search_fallback" || link?.matchStatus === "unresolved"
+                ? "search_fallback"
+                : "manual",
+          } satisfies ServiceDraft,
+        ];
+      }),
+    ) as Record<StreamingService, ServiceDraft>,
+  );
+  const importedMissingServices = useMemo(
+    () =>
+      STREAMING_SERVICES.filter((service) => {
+        const link = serviceLookup.get(service);
+        return !link?.url || link.matchStatus === "search_fallback" || link.matchStatus === "unresolved";
+      }),
+    [serviceLookup],
+  );
+  const [showMissingLinksDialog, setShowMissingLinksDialog] = useState(
+    () => showMissingLinksReview && importedMissingServices.length > 0,
+  );
+  const linkedServices = STREAMING_SERVICES.filter((service) => {
+    const draft = serviceDrafts[service];
+    const effectiveUrl =
+      draft.resolutionMode === "search_fallback"
+        ? buildServiceSearchUrl(service, fallbackQuery)
+        : draft.url;
+
+    return draft.isVisible && Boolean(effectiveUrl);
+  }).length;
+  const manualReviewCount = STREAMING_SERVICES.filter((service) => {
+    const draft = serviceDrafts[service];
+    if (!draft.isVisible) {
+      return false;
+    }
+
+    const effectiveStatus =
+      needsResolutionControl(draft.matchStatus, draft.url) &&
+      draft.resolutionMode === "search_fallback"
+        ? "search_fallback"
+        : draft.matchStatus;
+    const effectiveUrl =
+      draft.resolutionMode === "search_fallback"
+        ? buildServiceSearchUrl(service, fallbackQuery)
+        : draft.url || null;
+
+    return (
+      !effectiveUrl ||
+      (deriveReviewStatus(effectiveStatus, effectiveUrl) !== "approved" &&
+        effectiveStatus !== "search_fallback")
+    );
+  }).length;
   const visitCount = performance?.visitCount ?? 0;
   const clickCount = performance?.clickCount ?? 0;
   const clickRate =
     visitCount > 0 ? `${Math.round((clickCount / visitCount) * 100)}% CTR` : "No clicks yet";
 
+  function updateServiceDraft(
+    service: StreamingService,
+    updater: (draft: ServiceDraft) => ServiceDraft,
+  ) {
+    setServiceDrafts((current) => ({
+      ...current,
+      [service]: updater(current[service]),
+    }));
+  }
+
+  function closeMissingLinksDialog() {
+    setShowMissingLinksDialog(false);
+  }
+
   return (
     <>
+      {showMissingLinksDialog && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[rgba(9,11,15,0.68)] px-4 py-8 backdrop-blur-sm sm:items-center">
+          <div className="app-shell-card w-full max-w-3xl rounded-[1.75rem] p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="app-kicker text-[var(--app-dark-muted)]">
+                  Link review
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--app-dark-text)]">
+                  Some music service links were not found.
+                </h3>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-dark-muted)]">
+                  Choose search fallback or add a link manually before you save or publish.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeMissingLinksDialog}
+                className="app-chip-dark shrink-0"
+              >
+                Continue
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              {importedMissingServices.map((service) => {
+                const draft = serviceDrafts[service];
+                const fallbackUrl = buildServiceSearchUrl(service, fallbackQuery);
+
+                return (
+                  <div
+                    key={`review-${service}`}
+                    className="rounded-[1.4rem] border border-[var(--app-dark-line)] bg-[rgba(255,255,255,0.03)] p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-base font-semibold text-[var(--app-dark-text)]">
+                        {SERVICE_LABELS[service]}
+                      </div>
+                      <label className="inline-flex items-center gap-2 text-sm text-[var(--app-dark-muted)]">
+                        <input
+                          type="checkbox"
+                          checked={draft.isVisible}
+                          onChange={(event) =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              isVisible: event.currentTarget.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-white/20 bg-transparent"
+                        />
+                        Show on page
+                      </label>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <label className="app-chip-dark flex cursor-pointer items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm">
+                        <input
+                          type="radio"
+                          name={`review-${service}`}
+                          checked={draft.resolutionMode === "search_fallback"}
+                          onChange={() =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              resolutionMode: "search_fallback",
+                              matchStatus: "search_fallback",
+                              url: fallbackUrl,
+                            }))
+                          }
+                          className="h-4 w-4"
+                        />
+                        Use search fallback
+                      </label>
+                      <label className="app-chip-dark flex cursor-pointer items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm">
+                        <input
+                          type="radio"
+                          name={`review-${service}`}
+                          checked={draft.resolutionMode === "manual"}
+                          onChange={() =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              resolutionMode: "manual",
+                              matchStatus: current.url ? "manual" : "unresolved",
+                              url:
+                                current.matchStatus === "search_fallback" ||
+                                current.url === fallbackUrl
+                                  ? ""
+                                  : current.url,
+                            }))
+                          }
+                          className="h-4 w-4"
+                        />
+                        Manually add link
+                      </label>
+                    </div>
+
+                    {draft.resolutionMode === "manual" ? (
+                      <div className="mt-4 grid gap-2">
+                        <label className="app-kicker text-[var(--app-dark-muted)]">
+                          Manual URL
+                        </label>
+                        <input
+                          value={draft.url}
+                          onChange={(event) =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              url: event.currentTarget.value,
+                              matchStatus: event.currentTarget.value ? "manual" : "unresolved",
+                            }))
+                          }
+                          className="app-input"
+                          placeholder="https://..."
+                        />
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm leading-7 text-[var(--app-dark-muted)]">
+                        The public page will keep the Search button for {SERVICE_LABELS[service]}.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <form action={formAction} className="grid gap-5 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
         <input type="hidden" name="song_id" value={page.song.id} />
         <input type="hidden" name="current_slug" value={page.page.slug} />
@@ -351,10 +582,30 @@ export function SongEditorForm({
 
             <div className="grid gap-4">
               {STREAMING_SERVICES.map((service) => {
-                const link = page.links.find((entry) => entry.service === service);
-                const reviewStatus = link
-                  ? link.reviewStatus ?? deriveReviewStatus(link.matchStatus, link.url)
-                  : ("unresolved" as const);
+                const link = serviceLookup.get(service);
+                const draft = serviceDrafts[service];
+                const fallbackUrl = buildServiceSearchUrl(service, fallbackQuery);
+                const needsResolution = needsResolutionControl(
+                  draft.matchStatus,
+                  draft.url || null,
+                );
+                const effectiveMatchStatus = needsResolution
+                  ? draft.resolutionMode === "search_fallback"
+                    ? "search_fallback"
+                    : draft.url
+                      ? "manual"
+                      : "unresolved"
+                  : draft.matchStatus;
+                const reviewStatus = needsResolution
+                  ? draft.resolutionMode === "search_fallback"
+                    ? "approved"
+                    : draft.url
+                      ? "approved"
+                      : "unresolved"
+                  : link
+                    ? link.reviewStatus ?? deriveReviewStatus(effectiveMatchStatus, draft.url || null)
+                    : deriveReviewStatus(effectiveMatchStatus, draft.url || null);
+
                 return (
                   <div
                     key={service}
@@ -365,13 +616,19 @@ export function SongEditorForm({
                         {SERVICE_LABELS[service]}
                       </div>
                       <div className="text-xs leading-6 text-[var(--app-muted)]">
-                        {link?.url
-                          ? "Check the destination and adjust anything that looks wrong."
-                          : "No destination yet. Add a URL or leave it unresolved."}
+                        {needsResolution
+                          ? "Choose search fallback or add a manual destination."
+                          : "Check the destination and adjust anything that looks wrong."}
                       </div>
                       <div className="flex flex-wrap gap-2 pt-1">
                         <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-text)]">
-                          {reviewStatusLabel(reviewStatus)}
+                          {needsResolution
+                            ? draft.resolutionMode === "search_fallback"
+                              ? "Search fallback"
+                              : draft.url
+                                ? "Manual link"
+                                : "Unresolved"
+                            : reviewStatusLabel(reviewStatus)}
                         </span>
                         <span className="rounded-full border border-[var(--app-line)] bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-muted)]">
                           {formatConfidence(link?.confidence ?? null)}
@@ -388,7 +645,7 @@ export function SongEditorForm({
                       <input
                         type="hidden"
                         name={`${service}_review_status`}
-                        defaultValue={reviewStatus}
+                        value={reviewStatus}
                       />
                       <input
                         type="hidden"
@@ -430,17 +687,163 @@ export function SongEditorForm({
                         name={`${service}_matched_isrc`}
                         defaultValue={link?.matchedIsrc ?? ""}
                       />
+                      <input
+                        type="hidden"
+                        name={`${service}_confidence`}
+                        defaultValue={link?.confidence ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_notes`}
+                        defaultValue={link?.notes ?? ""}
+                      />
+                      <input
+                        type="hidden"
+                        name={`${service}_resolution_mode`}
+                        value={needsResolution ? draft.resolutionMode : ""}
+                      />
 
-                      <label className="grid gap-2">
-                        <span className="app-kicker text-[var(--app-muted)]">
-                          Destination URL
-                        </span>
+                      <label className="inline-flex items-center gap-3 text-sm text-[var(--app-text)]">
                         <input
-                          name={`${service}_url`}
-                          defaultValue={link?.url ?? ""}
-                          className="app-input"
+                          name={`${service}_is_visible`}
+                          type="checkbox"
+                          checked={draft.isVisible}
+                          onChange={(event) =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              isVisible: event.currentTarget.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-slate-300 bg-transparent"
                         />
+                        Show on public page
                       </label>
+
+                      {needsResolution ? (
+                        <div className="grid gap-3 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
+                              <input
+                                type="radio"
+                                name={`inline-${service}-resolution`}
+                                checked={draft.resolutionMode === "search_fallback"}
+                                onChange={() =>
+                                  updateServiceDraft(service, (current) => ({
+                                    ...current,
+                                    resolutionMode: "search_fallback",
+                                    matchStatus: "search_fallback",
+                                    url: fallbackUrl,
+                                  }))
+                                }
+                                className="h-4 w-4"
+                              />
+                              Use search fallback
+                            </label>
+                            <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
+                              <input
+                                type="radio"
+                                name={`inline-${service}-resolution`}
+                                checked={draft.resolutionMode === "manual"}
+                                onChange={() =>
+                                  updateServiceDraft(service, (current) => ({
+                                    ...current,
+                                    resolutionMode: "manual",
+                                    matchStatus: current.url ? "manual" : "unresolved",
+                                    url:
+                                      current.matchStatus === "search_fallback" ||
+                                      current.url === fallbackUrl
+                                        ? ""
+                                        : current.url,
+                                  }))
+                                }
+                                className="h-4 w-4"
+                              />
+                              Manually add link
+                            </label>
+                          </div>
+
+                          {draft.resolutionMode === "manual" ? (
+                            <label className="grid gap-2">
+                              <span className="app-kicker text-[var(--app-muted)]">
+                                Manual link
+                              </span>
+                              <input
+                                name={`${service}_url`}
+                                value={draft.url}
+                                onChange={(event) =>
+                                  updateServiceDraft(service, (current) => ({
+                                    ...current,
+                                    url: event.currentTarget.value,
+                                    matchStatus: event.currentTarget.value
+                                      ? "manual"
+                                      : "unresolved",
+                                  }))
+                                }
+                                className="app-input"
+                                placeholder="https://..."
+                              />
+                            </label>
+                          ) : (
+                            <>
+                              <input
+                                type="hidden"
+                                name={`${service}_url`}
+                                value={draft.url || fallbackUrl}
+                              />
+                              <p className="text-sm leading-7 text-[var(--app-muted)]">
+                                The public page will show a Search button for {SERVICE_LABELS[service]}.
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <label className="grid gap-2">
+                            <span className="app-kicker text-[var(--app-muted)]">
+                              Destination URL
+                            </span>
+                            <input
+                              name={`${service}_url`}
+                              value={draft.url}
+                              onChange={(event) =>
+                                updateServiceDraft(service, (current) => ({
+                                  ...current,
+                                  url: event.currentTarget.value,
+                                }))
+                              }
+                              className="app-input"
+                            />
+                          </label>
+
+                          <div className="grid gap-3 lg:grid-cols-[200px_minmax(0,1fr)]">
+                            <label className="grid gap-2">
+                              <span className="app-kicker text-[var(--app-muted)]">
+                                Link state
+                              </span>
+                              <select
+                                name={`${service}_match_status`}
+                                value={draft.matchStatus}
+                                onChange={(event) =>
+                                  updateServiceDraft(service, (current) => ({
+                                    ...current,
+                                    matchStatus: event.currentTarget.value as MatchStatus,
+                                    resolutionMode:
+                                      event.currentTarget.value === "search_fallback"
+                                        ? "search_fallback"
+                                        : "manual",
+                                  }))
+                                }
+                                className="app-input"
+                              >
+                                <option value="matched">Matched</option>
+                                <option value="manual">Manual link</option>
+                                <option value="search_fallback">Search fallback</option>
+                                <option value="unresolved">Unresolved</option>
+                              </select>
+                            </label>
+                          </div>
+                        </>
+                      )}
 
                       {(link?.confidenceReason ||
                         link?.matchedTitle ||
@@ -500,24 +903,13 @@ export function SongEditorForm({
                           </div>
                         </div>
                       )}
-
-                      <div className="grid gap-3 lg:grid-cols-[200px_minmax(0,1fr)]">
-                        <label className="grid gap-2">
-                          <span className="app-kicker text-[var(--app-muted)]">
-                            Approval state
-                          </span>
-                          <select
-                            name={`${service}_match_status`}
-                            defaultValue={link?.matchStatus ?? "manual"}
-                            className="app-input"
-                          >
-                            <option value="matched">Approved</option>
-                            <option value="manual">Needs review</option>
-                            <option value="search_fallback">Search fallback</option>
-                            <option value="unresolved">Unresolved</option>
-                          </select>
-                        </label>
-                      </div>
+                      {needsResolution && (
+                        <input
+                          type="hidden"
+                          name={`${service}_match_status`}
+                          value={effectiveMatchStatus}
+                        />
+                      )}
                     </div>
                   </div>
                 );

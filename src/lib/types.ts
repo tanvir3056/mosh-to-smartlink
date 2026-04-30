@@ -72,6 +72,7 @@ export interface StreamingLinkRecord {
   songId: string;
   service: StreamingService;
   url: string | null;
+  isVisible: boolean;
   matchStatus: MatchStatus;
   reviewStatus?: ReviewStatus;
   matchSource: string;
@@ -296,6 +297,7 @@ export interface SpotifyTrackImport {
 export interface MatchCandidate {
   service: StreamingService;
   url: string | null;
+  isVisible?: boolean;
   matchStatus: MatchStatus;
   reviewStatus?: ReviewStatus;
   matchSource: string;

@@ -65,6 +65,7 @@ type SongPageJoinRow = QueryResultRow & {
   link_id: string | null;
   service: StreamingLinkRecord["service"] | null;
   url: string | null;
+  is_visible: boolean | null;
   match_status: StreamingLinkRecord["matchStatus"] | null;
   review_status: StreamingLinkRecord["reviewStatus"] | null;
   match_source: string | null;
@@ -248,6 +249,7 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
         songId: row.song_id,
         service: row.service as StreamingLinkRecord["service"],
         url: row.url,
+        isVisible: row.is_visible !== false,
         matchStatus: row.match_status as StreamingLinkRecord["matchStatus"],
         reviewStatus: row.review_status as StreamingLinkRecord["reviewStatus"],
         matchSource: row.match_source as string,
@@ -433,6 +435,7 @@ async function upsertStreamingLinks(
           matched_release_date = $14,
           matched_isrc = $15,
           position = $16,
+          is_visible = coalesce($17, is_visible),
           updated_at = current_timestamp
         where song_id = $1
           and service = $2
@@ -455,6 +458,7 @@ async function upsertStreamingLinks(
         link.matchedReleaseDate ?? null,
         link.matchedIsrc ?? null,
         index,
+        link.isVisible ?? null,
       ],
     );
 
@@ -481,9 +485,10 @@ async function upsertStreamingLinks(
           matched_duration_ms,
           matched_release_date,
           matched_isrc,
-          position
+          position,
+          is_visible
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       `,
       [
         createId("link"),
@@ -503,6 +508,7 @@ async function upsertStreamingLinks(
         link.matchedReleaseDate ?? null,
         link.matchedIsrc ?? null,
         index,
+        link.isVisible ?? true,
       ],
     );
   }
@@ -998,6 +1004,7 @@ async function getPublishedSongPageUncached(username: string, slug: string) {
         l.id as link_id,
         l.service,
         l.url,
+        l.is_visible,
         l.match_status,
         l.review_status,
         l.match_source,
@@ -1119,6 +1126,7 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
         l.id as link_id,
         l.service,
         l.url,
+        l.is_visible,
         l.match_status,
         l.review_status,
         l.match_source,

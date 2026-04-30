@@ -28,9 +28,15 @@ export function ServiceList({
   const searchString = searchParams?.toString() ?? "";
   const byService = new Map(page.links.map((link) => [link.service, link]));
   const isPreview = mode === "preview";
-  const services = STREAMING_SERVICES.filter((service) =>
-    isPreview ? true : Boolean(byService.get(service)?.url),
-  );
+  const services = STREAMING_SERVICES.filter((service) => {
+    const link = byService.get(service);
+
+    if (link?.isVisible === false) {
+      return false;
+    }
+
+    return isPreview ? true : Boolean(link?.url);
+  });
 
   return (
     <div className="bg-[#f3efe7] text-[#13151c]">

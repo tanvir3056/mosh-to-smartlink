@@ -6,11 +6,14 @@ import { getAdminSongPageBySongId, getDashboardSnapshot } from "@/lib/data";
 
 export default async function EditSongPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ songId: string }>;
+  searchParams: Promise<{ review?: string }>;
 }) {
   const session = await requireUserSession();
   const { songId } = await params;
+  const resolvedSearchParams = await searchParams;
   const [page, dashboard] = await Promise.all([
     getAdminSongPageBySongId(songId, session.userId),
     getDashboardSnapshot(session.userId),
@@ -38,7 +41,11 @@ export default async function EditSongPage({
         </p>
       </div>
 
-      <SongEditorForm page={page} performance={performance} />
+      <SongEditorForm
+        page={page}
+        performance={performance}
+        showMissingLinksReview={resolvedSearchParams.review === "missing-links"}
+      />
     </section>
   );
 }

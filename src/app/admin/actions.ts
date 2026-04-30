@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import type { ActionState } from "@/app/admin/action-types";
 import { normalizeRewardUrl } from "@/lib/email-capture";
-import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
+import { APP_NAME, SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
 import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/auth";
 import {
   createSongImportDraft,
@@ -24,7 +24,7 @@ import type {
   TrackingConfig,
 } from "@/lib/types";
 import { fetchSpotifyTrackImport } from "@/lib/spotify";
-import { buildPublicSongPath } from "@/lib/utils";
+import { buildPublicSongPath, buildServiceSearchUrl } from "@/lib/utils";
 
 function getStringValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -72,24 +72,47 @@ function deriveReviewStatus(matchStatus: MatchStatus, url: string | null): Revie
   return "needs_review";
 }
 
-function parseLinksFromFormData(formData: FormData): MatchCandidate[] {
+function parseLinksFromFormData(
+  formData: FormData,
+  context: { artistName: string; title: string },
+): MatchCandidate[] {
+  const searchQuery = [context.artistName, context.title].filter(Boolean).join(" ");
+
   return STREAMING_SERVICES.map((service) => {
     const requestedMatchStatus = getStringValue(formData, `${service}_match_status`);
-    const url = getNullableStringValue(formData, `${service}_url`);
+    const requestedUrl = getNullableStringValue(formData, `${service}_url`);
     const originalUrl = getNullableStringValue(formData, `${service}_original_url`);
-    const isManualOverride = url !== originalUrl && Boolean(url);
-    const parsedMatchStatus = isMatchStatus(requestedMatchStatus)
+    const resolutionMode = getStringValue(formData, `${service}_resolution_mode`);
+    const isVisible = getStringValue(formData, `${service}_is_visible`) === "on";
+    let url = requestedUrl;
+    let isManualOverride = url !== originalUrl && Boolean(url);
+    let parsedMatchStatus = isMatchStatus(requestedMatchStatus)
       ? requestedMatchStatus
       : "manual";
+
+    if (resolutionMode === "search_fallback") {
+      url = buildServiceSearchUrl(service, searchQuery);
+      parsedMatchStatus = "search_fallback";
+      isManualOverride = false;
+    } else if (resolutionMode === "manual") {
+      parsedMatchStatus = url ? "manual" : "unresolved";
+      isManualOverride = Boolean(url);
+    }
+
     const matchStatus = !url
       ? "unresolved"
       : isManualOverride && parsedMatchStatus === "matched"
         ? "manual"
         : parsedMatchStatus;
     const requestedReviewStatus = getStringValue(formData, `${service}_review_status`);
-    const reviewStatus = isReviewStatus(requestedReviewStatus)
-      ? requestedReviewStatus
-      : deriveReviewStatus(matchStatus, url);
+    const reviewStatus =
+      resolutionMode === "search_fallback"
+        ? "approved"
+        : resolutionMode === "manual" && url
+          ? "approved"
+          : isReviewStatus(requestedReviewStatus)
+            ? requestedReviewStatus
+            : deriveReviewStatus(matchStatus, url);
     const confidence = Number.parseFloat(
       getStringValue(formData, `${service}_confidence`) || "0",
     );
@@ -97,6 +120,7 @@ function parseLinksFromFormData(formData: FormData): MatchCandidate[] {
     return {
       service,
       url,
+      isVisible,
       matchStatus,
       reviewStatus,
       matchSource:
@@ -247,7 +271,7 @@ export async function importSpotifyTrackAction(
 
   revalidatePath("/admin");
   revalidatePath("/admin/analytics");
-  redirect(`/admin/songs/${songId}`);
+  redirect(`/admin/songs/${songId}?review=missing-links`);
 }
 
 export async function updateSongAction(
@@ -284,6 +308,26 @@ export async function updateSongAction(
   }
 
   const session = await requireUserSession();
+  const links = parseLinksFromFormData(formData, {
+    artistName,
+    title,
+  });
+
+  const manualLinkErrors = links
+    .filter(
+      (link) =>
+        link.isVisible &&
+        getStringValue(formData, `${link.service}_resolution_mode`) === "manual" &&
+        !link.url,
+    )
+    .map((link) => SERVICE_LABELS[link.service]);
+
+  if (manualLinkErrors.length > 0) {
+    return {
+      error: `Add a link or choose search fallback for: ${manualLinkErrors.join(", ")}.`,
+      success: null,
+    };
+  }
 
   try {
     await updateSongDraft({
@@ -298,7 +342,7 @@ export async function updateSongAction(
       slug: getStringValue(formData, "slug") || `${artistName}-${title}`,
       status,
       emailCapture,
-      links: parseLinksFromFormData(formData),
+      links,
     });
 
     revalidatePath("/admin");
