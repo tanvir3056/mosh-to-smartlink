@@ -196,44 +196,49 @@ async function getLocalSession() {
 }
 
 export async function getUserSession(): Promise<AppSession | null> {
-  if (appEnv.hasSupabaseAuth) {
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  try {
+    if (appEnv.hasSupabaseAuth) {
+      const supabase = await createServerSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user?.id) {
-      return null;
-    }
-
-    let appUser = await getUserByAuthUserId(user.id);
-
-    if (!appUser && user.email) {
-      const loginEmail = user.email;
-      appUser = await getUserByLoginEmail(loginEmail);
-
-      if (appUser && !appUser.authUserId) {
-        await linkUserAuthIdentity(appUser.id, user.id);
-        appUser = {
-          ...appUser,
-          authUserId: user.id,
-        };
+      if (!user?.id) {
+        return null;
       }
+
+      let appUser = await getUserByAuthUserId(user.id);
+
+      if (!appUser && user.email) {
+        const loginEmail = user.email;
+        appUser = await getUserByLoginEmail(loginEmail);
+
+        if (appUser && !appUser.authUserId) {
+          await linkUserAuthIdentity(appUser.id, user.id);
+          appUser = {
+            ...appUser,
+            authUserId: user.id,
+          };
+        }
+      }
+
+      if (!appUser) {
+        return null;
+      }
+
+      return {
+        userId: appUser.id,
+        username: appUser.username,
+        loginEmail: appUser.loginEmail,
+        mode: "supabase",
+      };
     }
 
-    if (!appUser) {
-      return null;
-    }
-
-    return {
-      userId: appUser.id,
-      username: appUser.username,
-      loginEmail: appUser.loginEmail,
-      mode: "supabase",
-    };
+    return await getLocalSession();
+  } catch (error) {
+    console.error("Failed to resolve user session.", error);
+    return null;
   }
-
-  return getLocalSession();
 }
 
 export async function requireUserSession() {
