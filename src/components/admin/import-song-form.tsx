@@ -34,9 +34,17 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           className="app-input"
         />
       </label>
-      <div className="app-note rounded-2xl px-4 py-3 text-sm">
-        After import, you land on the review screen. The fan-facing page only goes
-        live after you press <span className="font-semibold text-[var(--app-text)]">Publish</span>.
+      <div className="grid gap-2 text-sm leading-6 text-[var(--app-muted)]">
+        <div>
+          After import, you land on review. Nothing goes live until you press{" "}
+          <span className="font-semibold text-[var(--app-text)]">Publish</span>.
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="app-chip">Metadata</span>
+          <span className="app-chip">Artwork</span>
+          <span className="app-chip">Preview</span>
+          <span className="app-chip">Service links</span>
+        </div>
       </div>
       <FormStateMessage error={state.error} success={state.success} />
       <SubmitButton />

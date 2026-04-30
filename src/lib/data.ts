@@ -41,18 +41,18 @@ type SongPageJoinRow = QueryResultRow & {
   preview_url: string | null;
   preview_source: string | null;
   release_year: number | null;
-  release_date: string | null;
+  release_date: string | Date | null;
   isrc: string | null;
   explicit: boolean;
   duration_ms: number | null;
-  song_created_at: string;
-  song_updated_at: string;
+  song_created_at: string | Date;
+  song_updated_at: string | Date;
   page_id: string;
   slug: string;
   headline: string;
   status: "draft" | "published" | "unpublished";
-  published_at: string | null;
-  unpublished_at: string | null;
+  published_at: string | Date | null;
+  unpublished_at: string | Date | null;
   email_capture_enabled: boolean | null;
   email_capture_title: string | null;
   email_capture_description: string | null;
@@ -60,8 +60,8 @@ type SongPageJoinRow = QueryResultRow & {
   email_capture_download_url: string | null;
   email_capture_download_label: string | null;
   email_capture_tag: string | null;
-  page_created_at: string;
-  page_updated_at: string;
+  page_created_at: string | Date;
+  page_updated_at: string | Date;
   link_id: string | null;
   service: StreamingLinkRecord["service"] | null;
   url: string | null;
@@ -76,7 +76,7 @@ type SongPageJoinRow = QueryResultRow & {
   matched_artist: string | null;
   matched_album: string | null;
   matched_duration_ms: number | null;
-  matched_release_date: string | null;
+  matched_release_date: string | Date | null;
   matched_isrc: string | null;
   position: number | null;
   meta_pixel_id: string | null;
@@ -202,6 +202,18 @@ function normalizeDateKey(value: string | Date) {
   return new Date(raw).toISOString().slice(0, 10);
 }
 
+function normalizeOptionalDate(value: string | Date | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return normalizeDateKey(value);
+}
+
+function normalizeTimestamp(value: string | Date) {
+  return value instanceof Date ? value.toISOString() : value;
+}
+
 function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
   const firstRow = rows[0];
 
@@ -222,12 +234,12 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
       previewUrl: firstRow.preview_url,
       previewSource: firstRow.preview_source,
       releaseYear: firstRow.release_year,
-      releaseDate: firstRow.release_date,
+      releaseDate: normalizeOptionalDate(firstRow.release_date),
       isrc: firstRow.isrc,
       explicit: Boolean(firstRow.explicit),
       durationMs: firstRow.duration_ms,
-      createdAt: firstRow.song_created_at,
-      updatedAt: firstRow.song_updated_at,
+      createdAt: normalizeTimestamp(firstRow.song_created_at),
+      updatedAt: normalizeTimestamp(firstRow.song_updated_at),
     },
     page: {
       id: firstRow.page_id,
@@ -237,10 +249,14 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
       slug: firstRow.slug,
       headline: firstRow.headline,
       status: firstRow.status,
-      publishedAt: firstRow.published_at,
-      unpublishedAt: firstRow.unpublished_at,
-      createdAt: firstRow.page_created_at,
-      updatedAt: firstRow.page_updated_at,
+      publishedAt: firstRow.published_at
+        ? normalizeTimestamp(firstRow.published_at)
+        : null,
+      unpublishedAt: firstRow.unpublished_at
+        ? normalizeTimestamp(firstRow.unpublished_at)
+        : null,
+      createdAt: normalizeTimestamp(firstRow.page_created_at),
+      updatedAt: normalizeTimestamp(firstRow.page_updated_at),
     },
     links: rows
       .filter((row) => row.link_id && row.service && row.match_status && row.match_source)
@@ -261,11 +277,11 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
         matchedArtist: row.matched_artist,
         matchedAlbum: row.matched_album,
         matchedDurationMs: row.matched_duration_ms,
-        matchedReleaseDate: row.matched_release_date,
+        matchedReleaseDate: normalizeOptionalDate(row.matched_release_date),
         matchedIsrc: row.matched_isrc,
         position: row.position ?? 0,
-        createdAt: row.page_created_at,
-        updatedAt: row.page_updated_at,
+        createdAt: normalizeTimestamp(row.page_created_at),
+        updatedAt: normalizeTimestamp(row.page_updated_at),
       }))
       .sort((left, right) => left.position - right.position),
     tracking: {

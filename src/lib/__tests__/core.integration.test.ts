@@ -14,6 +14,7 @@ const IMPORT_BUNDLE: ImportBundle = {
     artworkUrl: "https://images.example.com/glass-hearts.jpg",
     previewUrl: "https://audio.example.com/glass-hearts-preview.mp3",
     releaseYear: 2026,
+    releaseDate: "2026-03-14",
     explicit: false,
     durationMs: null,
     rawSource: {
@@ -28,6 +29,7 @@ const IMPORT_BUNDLE: ImportBundle = {
       matchStatus: "matched",
       matchSource: "spotify_track_url",
       confidence: 1,
+      matchedReleaseDate: "2026-03-14",
       notes: null,
     },
     {
@@ -116,6 +118,10 @@ describe("core data flow", () => {
     const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
 
     expect(adminPage).not.toBeNull();
+    expect(adminPage!.song.releaseDate).toBe("2026-03-14");
+    expect(
+      adminPage!.links.find((link) => link.service === "spotify")?.matchedReleaseDate,
+    ).toBe("2026-03-14");
     expect(await getPublishedSongPage(USERNAME, adminPage!.page.slug)).toBeNull();
 
     await updateSongDraft({
