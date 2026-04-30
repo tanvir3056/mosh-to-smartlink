@@ -1,4 +1,4 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -165,13 +165,12 @@ export default async function AdminOverviewPage() {
                     className="grid gap-4 bg-white px-4 py-4 transition-colors hover:bg-[#fcfbf8] lg:grid-cols-[minmax(0,2.15fr)_120px_100px_100px_100px_240px] lg:items-center lg:px-5"
                   >
                     <div className="flex min-w-0 gap-4">
-                      <Image
+                      <img
                         src={song.artworkUrl}
-                        alt=""
-                        width={72}
-                        height={72}
+                        alt={`${song.artistName} - ${song.title} artwork`}
                         className="h-[72px] w-[72px] rounded-[1rem] object-cover"
-                        unoptimized={song.artworkUrl.startsWith("data:")}
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="min-w-0">
                         <div className="truncate text-lg font-semibold text-[var(--app-text)]">

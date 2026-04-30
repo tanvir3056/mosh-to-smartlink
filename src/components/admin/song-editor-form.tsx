@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import Image from "next/image";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -137,13 +137,12 @@ export function SongEditorForm({
 
         <aside className="order-2 grid gap-5 xl:order-1 xl:sticky xl:top-6">
           <div className="app-card rounded-[1.75rem] p-5">
-            <Image
+            <img
               src={artworkUrl}
-              alt=""
-              width={320}
-              height={320}
+              alt={`${page.song.artistName} - ${page.song.title} artwork`}
               className="aspect-square w-full rounded-[1.5rem] object-cover shadow-[0_18px_40px_rgba(11,14,19,0.12)]"
-              unoptimized={artworkUrl.startsWith("data:")}
+              loading="eager"
+              decoding="async"
             />
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
