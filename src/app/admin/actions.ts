@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import type { ActionState } from "@/app/admin/action-types";
 import { normalizeRewardUrl } from "@/lib/email-capture";
-import { APP_NAME, SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
+import { APP_NAME, STREAMING_SERVICES } from "@/lib/constants";
 import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/auth";
 import {
   createSongImportDraft,
@@ -58,6 +58,15 @@ function getNullableNumberValue(formData: FormData, key: string) {
 
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isValidHttpStreamingLink(value: string) {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
 }
 
 function deriveReviewStatus(matchStatus: MatchStatus, url: string | null): ReviewStatus {
@@ -313,19 +322,31 @@ export async function updateSongAction(
     title,
   });
 
-  const manualLinkErrors = links
-    .filter(
-      (link) =>
-        link.isVisible &&
-        getStringValue(formData, `${link.service}_resolution_mode`) === "manual" &&
-        !link.url,
-    )
-    .map((link) => SERVICE_LABELS[link.service]);
+  const manualLinkFieldErrors = links.reduce<Record<string, string>>((errors, link) => {
+      const resolutionMode = getStringValue(formData, `${link.service}_resolution_mode`);
 
-  if (manualLinkErrors.length > 0) {
+      if (!link.isVisible || resolutionMode !== "manual") {
+        return errors;
+      }
+
+      if (!link.url) {
+        errors[link.service] = "Add a link or choose search fallback for this service.";
+        return errors;
+      }
+
+      if (!isValidHttpStreamingLink(link.url)) {
+        errors[link.service] = "Enter a valid http or https URL for this service.";
+        return errors;
+      }
+
+      return errors;
+    }, {});
+
+  if (Object.keys(manualLinkFieldErrors).length > 0) {
     return {
-      error: `Add a link or choose search fallback for: ${manualLinkErrors.join(", ")}.`,
+      error: "Check the highlighted service links.",
       success: null,
+      fieldErrors: manualLinkFieldErrors,
     };
   }
 

@@ -264,6 +264,7 @@ export function SongEditorForm({
               {importedMissingServices.map((service) => {
                 const draft = serviceDrafts[service];
                 const fallbackUrl = buildServiceSearchUrl(service, fallbackQuery);
+                const manualFieldError = state.fieldErrors?.[service];
 
                 return (
                   <div
@@ -347,7 +348,11 @@ export function SongEditorForm({
                           }
                           className="app-input"
                           placeholder="https://..."
+                          aria-invalid={Boolean(manualFieldError)}
                         />
+                        {manualFieldError ? (
+                          <p className="text-sm text-red-300">{manualFieldError}</p>
+                        ) : null}
                       </div>
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-[var(--app-dark-muted)]">
@@ -585,6 +590,7 @@ export function SongEditorForm({
                 const link = serviceLookup.get(service);
                 const draft = serviceDrafts[service];
                 const fallbackUrl = buildServiceSearchUrl(service, fallbackQuery);
+                const manualFieldError = state.fieldErrors?.[service];
                 const needsResolution = needsResolutionControl(
                   draft.matchStatus,
                   draft.url || null,
@@ -781,7 +787,11 @@ export function SongEditorForm({
                                 }
                                 className="app-input"
                                 placeholder="https://..."
+                                aria-invalid={Boolean(manualFieldError)}
                               />
+                              {manualFieldError ? (
+                                <p className="text-sm text-red-600">{manualFieldError}</p>
+                              ) : null}
                             </label>
                           ) : (
                             <>
