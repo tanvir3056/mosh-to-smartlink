@@ -7,6 +7,11 @@ test("editing a song keeps the admin stable when toggling service visibility", a
   request,
 }) => {
   test.setTimeout(120000);
+  const pageErrors: string[] = [];
+
+  page.on("pageerror", (error) => {
+    pageErrors.push(error.message);
+  });
 
   const seeded = await seedQaSongPage(request, {
     scenario: "basic",
@@ -34,4 +39,5 @@ test("editing a song keeps the admin stable when toggling service visibility", a
   await expect(spotifyToggle).toBeChecked();
   await expect(page.getByText("Streaming links")).toBeVisible();
   await expect(page.getByText("This page hit a temporary problem.")).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
 });

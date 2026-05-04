@@ -25,9 +25,6 @@ export function PublicLinkPanel({
   previewHref: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const [origin] = useState(() =>
-    typeof window === "undefined" ? null : window.location.origin,
-  );
 
   useEffect(() => {
     if (!copied) {
@@ -40,7 +37,6 @@ export function PublicLinkPanel({
 
   const isPublished = status === "published";
   const publicPath = buildPublicSongPath(username, slug);
-  const publicUrl = origin ? `${origin}${publicPath}` : publicPath;
 
   return (
     <section className="app-card grid gap-4 rounded-[1.6rem] p-5">
@@ -63,7 +59,7 @@ export function PublicLinkPanel({
           URL
         </div>
         <div className="mt-2 break-all text-sm font-medium text-[var(--app-text)]">
-          {publicUrl}
+          {publicPath}
         </div>
       </div>
 
@@ -81,6 +77,10 @@ export function PublicLinkPanel({
         <button
           type="button"
           onClick={async () => {
+            const publicUrl =
+              typeof window === "undefined"
+                ? publicPath
+                : `${window.location.origin}${publicPath}`;
             await navigator.clipboard.writeText(publicUrl);
             setCopied(true);
           }}
