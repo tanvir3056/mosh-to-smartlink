@@ -25,7 +25,7 @@ export default async function AdminDashboardLayout({
             <BrandLockup
               includeDomain
               tagline={null}
-              tone="light"
+              tone="dark"
               className="items-start"
             />
             <p className="mt-4 max-w-[15rem] text-sm leading-7 text-[color:rgba(244,246,251,0.8)]">
@@ -70,7 +70,7 @@ export default async function AdminDashboardLayout({
           <header className="app-shell-card sticky top-0 z-30 mb-5 rounded-[1.5rem] px-4 py-4 backdrop-blur-xl sm:px-5 lg:hidden">
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
-                <BrandLockup includeDomain tagline={null} tone="light" compact />
+                <BrandLockup includeDomain tagline={null} tone="dark" compact />
                 <div className="rounded-full border border-[rgba(255,255,255,0.1)] bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--app-sidebar-text)]">
                   @{session.username}
                 </div>
