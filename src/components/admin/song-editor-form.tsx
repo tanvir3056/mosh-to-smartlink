@@ -279,12 +279,13 @@ export function SongEditorForm({
                         <input
                           type="checkbox"
                           checked={draft.isVisible}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const isVisible = event.currentTarget.checked;
                             updateServiceDraft(service, (current) => ({
                               ...current,
-                              isVisible: event.currentTarget.checked,
-                            }))
-                          }
+                              isVisible,
+                            }));
+                          }}
                           className="h-4 w-4 rounded border-white/20 bg-transparent"
                         />
                         Show on page
@@ -339,13 +340,14 @@ export function SongEditorForm({
                         </label>
                         <input
                           value={draft.url}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const url = event.currentTarget.value;
                             updateServiceDraft(service, (current) => ({
                               ...current,
-                              url: event.currentTarget.value,
-                              matchStatus: event.currentTarget.value ? "manual" : "unresolved",
-                            }))
-                          }
+                              url,
+                              matchStatus: url ? "manual" : "unresolved",
+                            }));
+                          }}
                           className="app-input"
                           placeholder="https://..."
                           aria-invalid={Boolean(manualFieldError)}
@@ -714,12 +716,13 @@ export function SongEditorForm({
                           name={`${service}_is_visible`}
                           type="checkbox"
                           checked={draft.isVisible}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const isVisible = event.currentTarget.checked;
                             updateServiceDraft(service, (current) => ({
                               ...current,
-                              isVisible: event.currentTarget.checked,
-                            }))
-                          }
+                              isVisible,
+                            }));
+                          }}
                           className="h-4 w-4 rounded border-slate-300 bg-transparent"
                         />
                         Show on public page
@@ -776,15 +779,14 @@ export function SongEditorForm({
                               <input
                                 name={`${service}_url`}
                                 value={draft.url}
-                                onChange={(event) =>
+                                onChange={(event) => {
+                                  const url = event.currentTarget.value;
                                   updateServiceDraft(service, (current) => ({
                                     ...current,
-                                    url: event.currentTarget.value,
-                                    matchStatus: event.currentTarget.value
-                                      ? "manual"
-                                      : "unresolved",
-                                  }))
-                                }
+                                    url,
+                                    matchStatus: url ? "manual" : "unresolved",
+                                  }));
+                                }}
                                 className="app-input"
                                 placeholder="https://..."
                                 aria-invalid={Boolean(manualFieldError)}
@@ -815,12 +817,13 @@ export function SongEditorForm({
                             <input
                               name={`${service}_url`}
                               value={draft.url}
-                              onChange={(event) =>
+                              onChange={(event) => {
+                                const url = event.currentTarget.value;
                                 updateServiceDraft(service, (current) => ({
                                   ...current,
-                                  url: event.currentTarget.value,
-                                }))
-                              }
+                                  url,
+                                }));
+                              }}
                               className="app-input"
                               aria-invalid={Boolean(manualFieldError)}
                             />
@@ -837,16 +840,17 @@ export function SongEditorForm({
                               <select
                                 name={`${service}_match_status`}
                                 value={draft.matchStatus}
-                                onChange={(event) =>
+                                onChange={(event) => {
+                                  const matchStatus = event.currentTarget.value as MatchStatus;
                                   updateServiceDraft(service, (current) => ({
                                     ...current,
-                                    matchStatus: event.currentTarget.value as MatchStatus,
+                                    matchStatus,
                                     resolutionMode:
-                                      event.currentTarget.value === "search_fallback"
+                                      matchStatus === "search_fallback"
                                         ? "search_fallback"
                                         : "manual",
-                                  }))
-                                }
+                                  }));
+                                }}
                                 className="app-input"
                               >
                                 <option value="matched">Matched</option>
