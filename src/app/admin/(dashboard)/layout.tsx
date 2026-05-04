@@ -18,45 +18,48 @@ export default async function AdminDashboardLayout({
   const session = await requireUserSession();
 
   return (
-    <div className="min-h-screen bg-[var(--app-surface)] text-[var(--app-text)]">
-      <div className="mx-auto grid min-h-screen w-full max-w-[1680px] lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[var(--app-line)] bg-[linear-gradient(180deg,#fbfaf6_0%,#f3efe7_100%)] lg:flex lg:min-h-screen lg:flex-col lg:px-5 lg:py-6">
-          <div>
+    <div className="min-h-screen text-[var(--app-text)]">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1740px] gap-4 px-4 py-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-5 lg:py-5">
+        <aside className="app-shell-card hidden lg:sticky lg:top-5 lg:flex lg:h-[calc(100vh-2.5rem)] lg:flex-col lg:overflow-hidden lg:rounded-[2rem] lg:px-5 lg:py-5">
+          <div className="rounded-[1.5rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
             <BrandLockup
               includeDomain
               tagline={null}
               tone="light"
               className="items-start"
             />
+            <p className="mt-4 max-w-[15rem] text-sm leading-6 text-[var(--app-sidebar-muted)]">
+              Build release pages, review links, and publish from one workspace.
+            </p>
           </div>
 
-          <Link href="/admin/songs/new" className="mt-8">
-            <Button className="w-full justify-center shadow-none">
+          <Link href="/admin/songs/new" className="mt-6">
+            <Button className="w-full justify-center">
               <Plus className="h-4 w-4" />
               Import song
             </Button>
           </Link>
 
-          <div className="mt-8">
-            <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--app-muted)]">
+          <div className="mt-7">
+            <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--app-sidebar-muted)]">
               Navigation
             </div>
             <AdminNav />
           </div>
 
           <div className="mt-auto space-y-3">
-            <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-muted)]">
+            <div className="app-sidebar-card rounded-[1.35rem] px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-sidebar-muted)]">
                 Account
               </div>
-              <div className="mt-2 text-sm font-medium text-[var(--app-text)]">@{session.username}</div>
-              <div className="mt-1 text-xs text-[var(--app-muted)]">{session.loginEmail}</div>
+              <div className="mt-3 text-sm font-medium text-[var(--app-sidebar-text)]">@{session.username}</div>
+              <div className="mt-1 text-xs text-[var(--app-sidebar-muted)]">{session.loginEmail}</div>
             </div>
-            <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
+            <div className="app-sidebar-note rounded-[1.35rem] px-4 py-4 text-sm leading-6">
               Live links use {APP_DOMAIN_HINT} style URLs with your username in the path.
             </div>
             <form action={signOutAction}>
-              <Button type="submit" tone="secondary" className="w-full justify-center">
+              <Button type="submit" tone="secondary" className="w-full justify-center border-white/10 bg-white/6 text-[var(--app-sidebar-text)] hover:bg-white/10 hover:text-[var(--app-sidebar-text)]">
                 Sign out
               </Button>
             </form>
@@ -64,21 +67,21 @@ export default async function AdminDashboardLayout({
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-30 border-b border-[var(--app-line)] bg-[rgba(252,251,248,0.92)] px-4 py-4 backdrop-blur-xl sm:px-6 lg:hidden">
+          <header className="app-shell-card sticky top-0 z-30 mb-5 rounded-[1.5rem] px-4 py-4 backdrop-blur-xl sm:px-5 lg:hidden">
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
                 <BrandLockup includeDomain tagline={null} tone="light" compact />
-                <div className="rounded-full border border-[var(--app-line)] bg-white/82 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-text)]">
+                <div className="rounded-full border border-[rgba(255,255,255,0.08)] bg-white/6 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-sidebar-text)]">
                   @{session.username}
                 </div>
               </div>
 
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <Link href="/admin/songs/new">
-                  <Button className="w-full justify-center shadow-none">Import song</Button>
+                  <Button className="w-full justify-center">Import song</Button>
                 </Link>
                 <form action={signOutAction}>
-                  <Button type="submit" tone="secondary" className="shadow-none">
+                  <Button type="submit" tone="secondary" className="border-white/10 bg-white/6 text-[var(--app-sidebar-text)] hover:bg-white/10 hover:text-[var(--app-sidebar-text)]">
                     Sign out
                   </Button>
                 </form>
@@ -90,7 +93,7 @@ export default async function AdminDashboardLayout({
             </div>
           </header>
 
-          <main className="px-4 pb-8 pt-5 sm:px-6 sm:pb-12 sm:pt-6 lg:px-8 lg:py-8">
+          <main className="px-1 pb-8 pt-0 sm:px-0 sm:pb-12 lg:py-2">
             {children}
           </main>
         </div>

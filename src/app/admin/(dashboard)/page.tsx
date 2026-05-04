@@ -35,31 +35,40 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="app-enter flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl">
-          <p className="app-kicker text-[var(--app-muted)]">Overview</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-[var(--app-text)] sm:text-5xl">
-            Songs
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-[var(--app-muted)] sm:text-base">
-            Manage released-song pages, publish live links, and keep first-party
-            performance visible in one workspace.
-          </p>
+      <section className="app-card app-enter rounded-[1.85rem] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="app-kicker text-[var(--app-muted)]">Overview</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-[var(--app-text)] sm:text-5xl">
+              Release workspace
+            </h1>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)] sm:text-base">
+              Manage drafts, launch live pages, and keep outbound performance visible
+              in one place.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/songs/new">
+              <Button>
+                <Sparkles className="h-4 w-4" />
+                Import song
+              </Button>
+            </Link>
+            <Link href="/admin/analytics">
+              <Button tone="secondary">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Link href="/admin/songs/new">
-            <Button className="shadow-none">
-              <Sparkles className="h-4 w-4" />
-              Import song
-            </Button>
-          </Link>
-          <Link href="/admin/analytics">
-            <Button tone="secondary" className="shadow-none">
-              <BarChart3 className="h-4 w-4" />
-              View analytics
-            </Button>
-          </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-[1.35rem] border border-[var(--app-line)] bg-white/78 px-4 py-4 text-sm text-[var(--app-muted)]">
+          <span className="app-chip">Published {snapshot.publishedSongs}</span>
+          <span className="app-chip">Drafts {snapshot.draftSongs}</span>
+          <span className="app-chip">Visits {snapshot.totalVisits}</span>
+          <span className="font-medium text-[var(--app-text)]">@{session.username}</span>
         </div>
       </section>
 
@@ -132,13 +141,13 @@ export default async function AdminOverviewPage() {
               Live and draft pages
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
-              Open a draft, preview the public page, jump to the live link, or remove
-              a release that should no longer exist.
+              Edit a draft, preview the page, jump to the live link, or remove a
+              release entirely.
             </p>
           </div>
 
           <Link href="/admin/songs/new">
-            <Button className="shadow-none">Import song</Button>
+            <Button tone="secondary">Import song</Button>
           </Link>
         </div>
 
@@ -207,9 +216,7 @@ export default async function AdminOverviewPage() {
 
                     <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                       <Link href={`/admin/songs/${song.songId}`}>
-                        <Button tone="secondary">
-                          Edit
-                        </Button>
+                        <Button tone="secondary">Edit</Button>
                       </Link>
                       <Link href={`/admin/preview/${song.songId}`}>
                         <Button tone="secondary">
@@ -252,7 +259,10 @@ export default async function AdminOverviewPage() {
                 "Review destinations and artwork.",
                 "Publish when the page is ready.",
               ].map((line, index) => (
-                <div key={line} className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div
+                  key={line}
+                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-4"
+                >
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-semibold text-[var(--app-text)]">
                       0{index + 1}
@@ -276,7 +286,10 @@ export default async function AdminOverviewPage() {
                 `${snapshot.draftSongs} drafts still in review`,
                 `${snapshot.totalVisits} visits and ${snapshot.totalClicks} clicks recorded`,
               ].map((line) => (
-                <div key={line} className="rounded-[1rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-text)]">
+                <div
+                  key={line}
+                  className="rounded-[1rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-text)]"
+                >
                   {line}
                 </div>
               ))}

@@ -57,19 +57,14 @@ export default async function AdminSettingsPage() {
               Site settings
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-              Public defaults, Mailchimp sync, and lead export.
+              Manage public defaults, Mailchimp sync, and lead export.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
-            {["Mailchimp", "Lead inbox", "Excel export"].map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-[var(--app-line)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]"
-              >
-                {item}
-              </span>
-            ))}
+          <div className="flex flex-wrap items-center gap-3 rounded-[1.2rem] border border-[var(--app-line)] bg-white/76 px-4 py-3 text-sm text-[var(--app-muted)]">
+            <span className="app-chip">Mailchimp</span>
+            <span className="app-chip">Lead inbox</span>
+            <span className="app-chip">Export</span>
           </div>
         </div>
       </div>

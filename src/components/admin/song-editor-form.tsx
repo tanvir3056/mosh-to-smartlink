@@ -388,14 +388,15 @@ export function SongEditorForm({
               <span className="text-sm text-[var(--app-muted)]">
                 {linkedServices}/{STREAMING_SERVICES.length} services ready
               </span>
+              <span className="app-chip">@{page.page.username}</span>
             </div>
 
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
               {page.song.artistName} • {page.song.title}
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-              Tighten the release details, confirm every service destination, then
-              publish when the page is ready for fan traffic.
+              Tighten the release details, confirm the service list, then publish when
+              the page is ready for fan traffic.
             </p>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-1">
@@ -448,8 +449,7 @@ export function SongEditorForm({
                 Song page details
               </h3>
               <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Tune the public title, slug, headline, preview, and artwork before
-                the page goes live.
+                Tune the public title, slug, headline, preview, and artwork before the page goes live.
               </p>
             </div>
 
@@ -503,8 +503,7 @@ export function SongEditorForm({
                 Email offer on the song page
               </h3>
               <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Turn this release page into a lightweight fan capture page. If a
-                download URL is set, fans get the reward right after they submit.
+                Turn this release page into a lightweight fan capture page. If a download URL is set, fans get the reward right after they submit.
               </p>
             </div>
 
@@ -582,8 +581,7 @@ export function SongEditorForm({
                 Streaming links
               </h3>
               <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Review every destination before publishing. Search fallbacks are
-                allowed in V1, but manual correction is always available here.
+                Review each destination before publishing. Search fallbacks can stay live, or you can replace or hide them here.
               </p>
             </div>
 

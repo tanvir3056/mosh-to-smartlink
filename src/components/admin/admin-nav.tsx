@@ -54,8 +54,8 @@ export function AdminNavLinks({
               "app-interactive inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
               orientation === "horizontal" && "min-w-0 justify-start px-3 py-2.5 sm:px-3.5 sm:py-3",
               active
-                ? "border-[var(--app-line)] bg-white text-[var(--app-text)] shadow-[0_1px_0_rgba(255,255,255,0.8),0_10px_18px_rgba(11,14,19,0.05)]"
-                : "border-transparent text-[var(--app-muted)] hover:border-[var(--app-line)] hover:bg-white/70 hover:text-[var(--app-text)]",
+                ? "border-[var(--app-sidebar-line)] bg-[var(--app-sidebar-panel-strong)] text-[var(--app-sidebar-text)] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_32px_rgba(0,0,0,0.16)]"
+                : "border-transparent text-[var(--app-sidebar-muted)] hover:border-[var(--app-sidebar-line)] hover:bg-white/4 hover:text-[var(--app-sidebar-text)]",
             )}
           >
             <span
@@ -63,8 +63,8 @@ export function AdminNavLinks({
                 "inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
                 orientation === "horizontal" && "h-8 w-8 shrink-0",
                 active
-                  ? "border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]"
-                  : "border-transparent bg-transparent text-[var(--app-muted)]",
+                  ? "border-[rgba(255,255,255,0.08)] bg-white/8 text-[var(--app-sidebar-text)]"
+                  : "border-transparent bg-transparent text-[var(--app-sidebar-muted)]",
               )}
             >
               <Icon className="h-4 w-4" />

@@ -29,7 +29,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
       <div className="grid gap-1.5">
         <p className="text-sm font-medium text-[var(--app-text)]">Spotify track URL</p>
         <p className="text-sm leading-6 text-[var(--app-muted)]">
-          Use the released track link from Spotify. Draft first, publish later.
+          Use the released track URL from Spotify.
         </p>
       </div>
       <label className="grid gap-2">
@@ -44,17 +44,17 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           spellCheck={false}
         />
       </label>
-      <div className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-white/70 px-4 py-4 text-sm leading-6 text-[var(--app-muted)]">
-        <p>
-          After import, you land on review. Nothing goes live until you press{" "}
-          <span className="font-semibold text-[var(--app-text)]">Publish</span>.
-        </p>
+      <div className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-soft)]/72 px-4 py-4 text-sm leading-6 text-[var(--app-muted)]">
         <div className="flex flex-wrap gap-2">
           <span className="app-chip">Metadata</span>
           <span className="app-chip">Artwork</span>
           <span className="app-chip">Preview</span>
-          <span className="app-chip">Service links</span>
+          <span className="app-chip">Links</span>
         </div>
+        <p>
+          Import opens review immediately. Nothing goes live until you press{" "}
+          <span className="font-semibold text-[var(--app-text)]">Publish</span>.
+        </p>
       </div>
       <FormStateMessage error={state.error} success={state.success} />
       <SubmitButton />

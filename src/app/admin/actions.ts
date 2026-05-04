@@ -373,7 +373,6 @@ export async function updateSongAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/analytics");
-    revalidatePath(`/admin/songs/${songId}`);
     const slug = getStringValue(formData, "slug") || `${artistName}-${title}`;
     revalidatePath(buildPublicSongPath(session.username, slug));
     revalidateTag(publishedSongPageTag(session.username, slug), "max");

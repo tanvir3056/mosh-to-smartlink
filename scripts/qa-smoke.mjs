@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
 
 const scenario = process.argv[2];
-const baseUrl = process.env.QA_BASE_URL ?? "http://127.0.0.1:3000";
+const baseUrl = process.env.QA_BASE_URL ?? "http://127.0.0.1:3001";
 
 function invariant(condition, message) {
   if (!condition) {

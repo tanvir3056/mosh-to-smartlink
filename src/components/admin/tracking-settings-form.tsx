@@ -40,7 +40,7 @@ export function TrackingSettingsForm({
             Public defaults and Mailchimp
           </h3>
           <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-            Keep the public brand clean, then decide whether leads should also sync to Mailchimp.
+            Keep the public brand clean, then decide whether leads should sync outward.
           </p>
         </div>
 
@@ -55,7 +55,9 @@ export function TrackingSettingsForm({
           <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
             Live page defaults
           </h4>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">Applied account-wide.</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
+            Applied account-wide.
+          </p>
 
           <div className="mt-5 grid gap-4">
             <label className="grid gap-2">

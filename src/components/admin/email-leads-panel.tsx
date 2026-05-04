@@ -44,7 +44,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
         <Link
           href="/api/admin/email-leads/export"
           prefetch={false}
-          className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
+          className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_10px_24px_rgba(11,14,19,0.04)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
         >
           Export CSV
         </Link>
@@ -57,7 +57,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
           { label: "Local only", value: snapshot.localOnlyLeads },
           { label: "Needs attention", value: snapshot.failedLeads },
         ].map((item) => (
-          <div key={item.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+          <div key={item.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset]">
             <p className="app-kicker text-[var(--app-muted)]">{item.label}</p>
             <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
               {item.value}

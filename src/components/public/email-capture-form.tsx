@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo } from "react";
 import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 
@@ -36,11 +36,16 @@ export function EmailCaptureForm({
   buttonLabel: string;
 }) {
   const searchParams = useSearchParams();
-  const action = captureEmailLeadAction.bind(null, {
-    username,
-    slug,
-    searchString: searchParams?.toString() ?? "",
-  });
+  const searchString = searchParams?.toString() ?? "";
+  const action = useMemo(
+    () =>
+      captureEmailLeadAction.bind(null, {
+        username,
+        slug,
+        searchString,
+      }),
+    [username, slug, searchString],
+  );
   const [state, formAction] = useActionState(action, INITIAL_PUBLIC_LEAD_ACTION_STATE);
   const isUnlocked = Boolean(state.success && state.downloadUrl);
   const unlockedDownloadUrl = isUnlocked ? state.downloadUrl ?? undefined : undefined;
