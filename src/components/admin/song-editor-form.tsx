@@ -627,7 +627,7 @@ export function SongEditorForm({
                           : "Check the destination and adjust anything that looks wrong."}
                       </div>
                       <div className="flex flex-wrap gap-2 pt-1">
-                        <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-text)]">
+                        <span className="inline-flex min-h-11 items-center rounded-full border border-[var(--app-line)] bg-[var(--app-soft)] px-5 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--app-text)]">
                           {needsResolution
                             ? draft.resolutionMode === "search_fallback"
                               ? "Search fallback"
@@ -636,7 +636,7 @@ export function SongEditorForm({
                                 : "Unresolved"
                             : reviewStatusLabel(reviewStatus)}
                         </span>
-                        <span className="rounded-full border border-[var(--app-line)] bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--app-muted)]">
+                        <span className="inline-flex min-h-11 items-center rounded-full border border-[var(--app-line)] bg-white px-5 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
                           {formatConfidence(link?.confidence ?? null)}
                         </span>
                       </div>
