@@ -26,11 +26,11 @@
   --app-surface-text: #151922;
   --app-surface-muted: #66707f;
   --app-sidebar-bg: rgba(13, 18, 26, 0.94);
-  --app-sidebar-panel: rgba(255, 255, 255, 0.055);
-  --app-sidebar-panel-strong: rgba(255, 255, 255, 0.09);
-  --app-sidebar-line: rgba(255, 255, 255, 0.08);
+  --app-sidebar-panel: rgba(255, 255, 255, 0.075);
+  --app-sidebar-panel-strong: rgba(255, 255, 255, 0.14);
+  --app-sidebar-line: rgba(255, 255, 255, 0.12);
   --app-sidebar-text: #f4f6fb;
-  --app-sidebar-muted: #98a3b3;
+  --app-sidebar-muted: #c0c9d5;
   --font-display: "Avenir Next Condensed", "Avenir Next", "Helvetica Neue",
     "Segoe UI", sans-serif;
   --font-body: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
@@ -136,7 +136,7 @@ textarea::placeholder {
 .app-kicker {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -150,18 +150,19 @@ textarea::placeholder {
   border-radius: 999px;
   border: 1px solid var(--app-line);
   background: rgba(255, 255, 255, 0.94);
-  padding: 0.45rem 0.8rem;
-  font-size: 11px;
+  padding: 0.42rem 0.78rem;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.12em;
+  line-height: 1;
   text-transform: uppercase;
   color: var(--app-muted);
 }
 
 .app-chip-dark {
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.74);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .app-input {
@@ -206,12 +207,14 @@ textarea::placeholder {
 .app-sidebar-card {
   border: 1px solid var(--app-sidebar-line);
   background: var(--app-sidebar-panel);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 14px 28px rgba(0, 0, 0, 0.12);
 }
 
 .app-sidebar-note {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--app-sidebar-muted);
 }
 

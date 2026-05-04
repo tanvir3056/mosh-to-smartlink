@@ -13,7 +13,12 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/songs/new", label: "Import song", icon: Sparkles },
+  {
+    href: "/admin/songs/new",
+    label: "Import song",
+    icon: Sparkles,
+    activePrefixes: ["/admin/songs/"],
+  },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
@@ -39,10 +44,13 @@ export function AdminNavLinks({
       )}
     >
       {navItems.map((item) => {
+        const activePrefixes =
+          "activePrefixes" in item ? item.activePrefixes : undefined;
         const active =
           item.href === "/admin"
             ? pathname === item.href
-            : pathname.startsWith(item.href);
+            : pathname.startsWith(item.href) ||
+              activePrefixes?.some((prefix) => pathname.startsWith(prefix)) === true;
         const Icon = item.icon;
 
         return (
@@ -55,7 +63,7 @@ export function AdminNavLinks({
               orientation === "horizontal" && "min-w-0 justify-start px-3 py-2.5 sm:px-3.5 sm:py-3",
               active
                 ? "border-[var(--app-sidebar-line)] bg-[var(--app-sidebar-panel-strong)] text-[var(--app-sidebar-text)] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_32px_rgba(0,0,0,0.16)]"
-                : "border-transparent text-[var(--app-sidebar-muted)] hover:border-[var(--app-sidebar-line)] hover:bg-white/4 hover:text-[var(--app-sidebar-text)]",
+                : "border-transparent text-white/78 hover:border-[var(--app-sidebar-line)] hover:bg-white/7 hover:text-white",
             )}
           >
             <span
@@ -63,8 +71,8 @@ export function AdminNavLinks({
                 "inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
                 orientation === "horizontal" && "h-8 w-8 shrink-0",
                 active
-                  ? "border-[rgba(255,255,255,0.08)] bg-white/8 text-[var(--app-sidebar-text)]"
-                  : "border-transparent bg-transparent text-[var(--app-sidebar-muted)]",
+                  ? "border-[rgba(255,255,255,0.1)] bg-white/10 text-[var(--app-sidebar-text)]"
+                  : "border-transparent bg-transparent text-white/65",
               )}
             >
               <Icon className="h-4 w-4" />

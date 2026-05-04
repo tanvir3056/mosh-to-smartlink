@@ -21,14 +21,14 @@ export default async function AdminDashboardLayout({
     <div className="min-h-screen text-[var(--app-text)]">
       <div className="mx-auto grid min-h-screen w-full max-w-[1740px] gap-4 px-4 py-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-5 lg:py-5">
         <aside className="app-shell-card hidden lg:sticky lg:top-5 lg:flex lg:h-[calc(100vh-2.5rem)] lg:flex-col lg:overflow-hidden lg:rounded-[2rem] lg:px-5 lg:py-5">
-          <div className="rounded-[1.5rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+          <div className="rounded-[1.5rem] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)] px-4 py-4">
             <BrandLockup
               includeDomain
               tagline={null}
               tone="light"
               className="items-start"
             />
-            <p className="mt-4 max-w-[15rem] text-sm leading-6 text-[var(--app-sidebar-muted)]">
+            <p className="mt-4 max-w-[15rem] text-sm leading-7 text-[color:rgba(244,246,251,0.8)]">
               Build release pages, review links, and publish from one workspace.
             </p>
           </div>
@@ -41,7 +41,7 @@ export default async function AdminDashboardLayout({
           </Link>
 
           <div className="mt-7">
-            <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--app-sidebar-muted)]">
+            <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--app-sidebar-muted)]">
               Navigation
             </div>
             <AdminNav />
@@ -49,17 +49,17 @@ export default async function AdminDashboardLayout({
 
           <div className="mt-auto space-y-3">
             <div className="app-sidebar-card rounded-[1.35rem] px-4 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-sidebar-muted)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--app-sidebar-muted)]">
                 Account
               </div>
               <div className="mt-3 text-sm font-medium text-[var(--app-sidebar-text)]">@{session.username}</div>
-              <div className="mt-1 text-xs text-[var(--app-sidebar-muted)]">{session.loginEmail}</div>
+              <div className="mt-1 text-sm text-[color:rgba(244,246,251,0.74)]">{session.loginEmail}</div>
             </div>
             <div className="app-sidebar-note rounded-[1.35rem] px-4 py-4 text-sm leading-6">
               Live links use {APP_DOMAIN_HINT} style URLs with your username in the path.
             </div>
             <form action={signOutAction}>
-              <Button type="submit" tone="secondary" className="w-full justify-center border-white/10 bg-white/6 text-[var(--app-sidebar-text)] hover:bg-white/10 hover:text-[var(--app-sidebar-text)]">
+              <Button type="submit" tone="secondary" className="w-full justify-center border-white/12 bg-white/12 text-white/92 hover:bg-white/16 hover:text-white">
                 Sign out
               </Button>
             </form>
@@ -71,7 +71,7 @@ export default async function AdminDashboardLayout({
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
                 <BrandLockup includeDomain tagline={null} tone="light" compact />
-                <div className="rounded-full border border-[rgba(255,255,255,0.08)] bg-white/6 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-sidebar-text)]">
+                <div className="rounded-full border border-[rgba(255,255,255,0.1)] bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--app-sidebar-text)]">
                   @{session.username}
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default async function AdminDashboardLayout({
                   <Button className="w-full justify-center">Import song</Button>
                 </Link>
                 <form action={signOutAction}>
-                  <Button type="submit" tone="secondary" className="border-white/10 bg-white/6 text-[var(--app-sidebar-text)] hover:bg-white/10 hover:text-[var(--app-sidebar-text)]">
+                  <Button type="submit" tone="secondary" className="border-white/12 bg-white/12 text-white/92 hover:bg-white/16 hover:text-white">
                     Sign out
                   </Button>
                 </form>

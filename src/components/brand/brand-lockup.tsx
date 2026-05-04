@@ -23,7 +23,7 @@ export function BrandLockup({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={cn(
-              "text-sm font-semibold uppercase tracking-[0.28em]",
+              "text-sm font-semibold uppercase tracking-[0.18em]",
               tone === "dark" ? "text-white" : "text-[var(--app-text)]",
             )}
           >
@@ -32,7 +32,7 @@ export function BrandLockup({
           {includeDomain ? (
             <span
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em]",
+                "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
                 tone === "dark"
                   ? "border-white/10 bg-white/6 text-white/72"
                   : "border-[var(--app-line)] bg-white text-[var(--app-muted)]",
