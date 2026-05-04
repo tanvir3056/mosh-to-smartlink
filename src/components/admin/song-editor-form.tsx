@@ -822,7 +822,11 @@ export function SongEditorForm({
                                 }))
                               }
                               className="app-input"
+                              aria-invalid={Boolean(manualFieldError)}
                             />
+                            {manualFieldError ? (
+                              <p className="text-sm text-red-600">{manualFieldError}</p>
+                            ) : null}
                           </label>
 
                           <div className="grid gap-3 lg:grid-cols-[200px_minmax(0,1fr)]">

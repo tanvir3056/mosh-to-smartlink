@@ -324,8 +324,13 @@ export async function updateSongAction(
 
   const manualLinkFieldErrors = links.reduce<Record<string, string>>((errors, link) => {
       const resolutionMode = getStringValue(formData, `${link.service}_resolution_mode`);
+      const requestedMatchStatus = getStringValue(formData, `${link.service}_match_status`);
+      const requiresManualUrl =
+        resolutionMode === "manual" ||
+        requestedMatchStatus === "manual" ||
+        link.matchStatus === "manual";
 
-      if (!link.isVisible || resolutionMode !== "manual") {
+      if (!link.isVisible || !requiresManualUrl) {
         return errors;
       }
 

@@ -14,17 +14,23 @@ export default async function EditSongPage({
   const session = await requireUserSession();
   const { songId } = await params;
   const resolvedSearchParams = await searchParams;
-  const [page, dashboard] = await Promise.all([
+  const [pageResult, dashboardResult] = await Promise.allSettled([
     getAdminSongPageBySongId(songId, session.userId),
     getDashboardSnapshot(session.userId),
   ]);
+  const page = pageResult.status === "fulfilled" ? pageResult.value : null;
 
   if (!page) {
+    if (pageResult.status === "rejected") {
+      throw pageResult.reason;
+    }
     notFound();
   }
 
+  const dashboard =
+    dashboardResult.status === "fulfilled" ? dashboardResult.value : null;
   const performance =
-    dashboard.songs.find((song) => song.songId === page.song.id) ?? null;
+    dashboard?.songs.find((song) => song.songId === page.song.id) ?? null;
 
   return (
     <section className="grid gap-5">

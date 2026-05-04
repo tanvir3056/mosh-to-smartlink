@@ -133,6 +133,34 @@ describe("SongEditorForm missing link review", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
+  test("keeps the editor stable when hiding a found service", async () => {
+    const user = userEvent.setup();
+
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const showOnPage = screen.getAllByLabelText("Show on public page")[0];
+    expect(showOnPage).toBeChecked();
+
+    await user.click(showOnPage);
+
+    expect(showOnPage).not.toBeChecked();
+    expect(screen.getByText("Streaming links")).toBeInTheDocument();
+  });
+
+  test("keeps the editor stable when hiding an unresolved service", async () => {
+    const user = userEvent.setup();
+
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const showOnPage = screen.getAllByLabelText("Show on public page")[2];
+    expect(showOnPage).toBeChecked();
+
+    await user.click(showOnPage);
+
+    expect(showOnPage).not.toBeChecked();
+    expect(screen.getByText("Streaming links")).toBeInTheDocument();
+  });
+
   test("keeps the review popup stable when hiding an unresolved service", async () => {
     const user = userEvent.setup();
 

@@ -149,6 +149,29 @@ describe("updateSongAction manual streaming link validation", () => {
     expect(mockUpdateSongDraft).not.toHaveBeenCalled();
   });
 
+  test("rejects a visible found link edited to an invalid URL", async () => {
+    const { updateSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    formData.set("spotify_original_url", "https://open.spotify.com/track/track_1");
+    setServiceFields(formData, "spotify", {
+      url: "youtube",
+      isVisible: true,
+      matchStatus: "matched",
+    });
+
+    const result = await updateSongAction({ error: null, success: null }, formData);
+
+    expect(result).toEqual({
+      error: "Check the highlighted service links.",
+      success: null,
+      fieldErrors: {
+        spotify: "Enter a valid http or https URL for this service.",
+      },
+    });
+    expect(mockUpdateSongDraft).not.toHaveBeenCalled();
+  });
+
   test("does not block hidden manual services with empty URLs", async () => {
     const { updateSongAction } = await import("@/app/admin/actions");
     const formData = buildBaseFormData();
@@ -158,6 +181,26 @@ describe("updateSongAction manual streaming link validation", () => {
       url: "",
       isVisible: false,
       matchStatus: "unresolved",
+    });
+
+    const result = await updateSongAction({ error: null, success: null }, formData);
+
+    expect(result).toEqual({
+      error: null,
+      success: "Draft saved.",
+    });
+    expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
+  });
+
+  test("allows hiding a found service without blocking save", async () => {
+    const { updateSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    formData.set("spotify_original_url", "https://open.spotify.com/track/track_1");
+    setServiceFields(formData, "spotify", {
+      url: "https://open.spotify.com/track/track_1",
+      isVisible: false,
+      matchStatus: "matched",
     });
 
     const result = await updateSongAction({ error: null, success: null }, formData);
