@@ -24,26 +24,33 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
   );
 
   return (
-    <form action={formAction} className="grid gap-5">
+    <form action={formAction} className="grid gap-5" noValidate>
       <input type="hidden" name="requested_by" value={requestedBy} />
       <div className="grid gap-1.5">
-        <p className="text-sm font-medium text-[var(--app-text)]">Spotify track URL</p>
-        <p className="text-sm leading-6 text-[var(--app-muted)]">
+        <label
+          htmlFor="spotify-url"
+          className="text-sm font-medium text-[var(--app-text)]"
+        >
+          Spotify track URL
+        </label>
+        <p id="spotify-url-help" className="text-sm leading-6 text-[var(--app-muted)]">
           Use the released track URL from Spotify.
         </p>
       </div>
-      <label className="grid gap-2">
+      <div className="grid gap-2">
         <input
+          id="spotify-url"
           name="spotify_url"
           placeholder="https://open.spotify.com/track/..."
           className="app-input"
           required
+          aria-describedby="spotify-url-help"
           inputMode="url"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
         />
-      </label>
+      </div>
       <div className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-soft)]/72 px-4 py-4 text-sm leading-6 text-[var(--app-muted)]">
         <div className="flex flex-wrap gap-2">
           <span className="app-chip">Metadata</span>

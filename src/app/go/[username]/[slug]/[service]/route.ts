@@ -38,6 +38,7 @@ export async function GET(
     searchParams: requestUrl.searchParams,
   });
 
+  const publicPageUrl = new URL(buildPublicSongPath(username, slug), request.url);
   const click = await recordClickBySlug({
     username,
     slug,
@@ -45,10 +46,13 @@ export async function GET(
     context: contextSnapshot,
     lastVisitId,
     fallbackAttribution: parseUTMAttribution(requestUrl.searchParams),
+  }).catch((error) => {
+    console.error("Service redirect click could not be recorded.", error);
+    return null;
   });
 
   if (!click?.destinationUrl) {
-    return NextResponse.redirect(new URL(buildPublicSongPath(username, slug), request.url));
+    return NextResponse.redirect(publicPageUrl);
   }
 
   const response = NextResponse.redirect(click.destinationUrl, { status: 307 });

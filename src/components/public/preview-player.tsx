@@ -74,32 +74,35 @@ export function PreviewPlayer({
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#0b0d11]">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.04)_38%,rgba(8,10,14,0.24)_100%)]" />
-      <div className="relative aspect-square overflow-hidden rounded-t-[1.55rem]">
+    <div className="relative overflow-hidden bg-[#070708]">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,10,0.08),rgba(8,8,10,0.04)_38%,rgba(8,8,10,0.28)_100%)]" />
+      <div className="relative aspect-square overflow-hidden rounded-t-[1.35rem]">
         <div
           aria-hidden="true"
-          className="absolute inset-0 scale-[1.03] bg-cover bg-center opacity-28 blur-[10px]"
+          className="absolute inset-0 scale-[1.05] bg-cover bg-center opacity-34 blur-[12px] saturate-150"
           style={{ backgroundImage: `url(${artworkUrl})` }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_42%),linear-gradient(180deg,rgba(8,10,14,0.02),rgba(8,10,14,0.18)_45%,rgba(8,10,14,0.5)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(238,230,214,0.12),transparent_42%),linear-gradient(180deg,rgba(8,8,10,0.02),rgba(8,8,10,0.2)_45%,rgba(8,8,10,0.56)_100%)]" />
         <img
           src={artworkUrl}
           alt={`${artistName} - ${title} artwork`}
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center contrast-[1.04] saturate-[1.08]"
           loading="eager"
           decoding="async"
           draggable={false}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0)_55%,rgba(8,10,14,0.14)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,10,0)_52%,rgba(8,8,10,0.34)_100%)]" />
+        <div className="pointer-events-none absolute inset-3 border border-[#eee6d6]/18" />
+        <div className="pointer-events-none absolute bottom-3 left-3 h-10 w-10 border-b border-l border-[#f04444]/55" />
+        <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 border-r border-t border-[#eee6d6]/24" />
         {previewUrl ? (
           <button
             type="button"
             onClick={togglePlayback}
             className={cn(
-              "absolute right-3 top-3 inline-flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full border border-white/18 bg-[rgba(7,9,12,0.28)] text-white/88 backdrop-blur-[2px] transition-[transform,background-color,color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:border-white/26 hover:bg-[rgba(7,9,12,0.4)] hover:text-white hover:shadow-[0_12px_22px_rgba(0,0,0,0.2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 active:scale-[0.97]",
+              "absolute right-5 top-5 inline-flex h-[2.45rem] w-[2.45rem] items-center justify-center rounded-full border border-[#eee6d6]/26 bg-[rgba(7,7,8,0.54)] text-[#fff9ec] backdrop-blur-[3px] transition-[transform,background-color,color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:border-[#eee6d6]/42 hover:bg-[rgba(7,7,8,0.72)] hover:text-white hover:shadow-[0_12px_22px_rgba(0,0,0,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#eee6d6] active:scale-[0.97]",
               playing &&
-                "border-white/28 bg-[rgba(245,241,232,0.22)] text-white",
+                "border-[#f04444]/48 bg-[rgba(179,22,36,0.5)] text-white",
             )}
             aria-label={playing ? "Pause preview" : "Play preview"}
           >

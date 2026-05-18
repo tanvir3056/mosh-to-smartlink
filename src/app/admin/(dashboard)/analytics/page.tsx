@@ -240,10 +240,10 @@ export default async function AdminAnalyticsPage({
               Marketing performance that actually helps decisions
             </h1>
             <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-              Inspired by music analytics tools that prioritize trends, source quality,
-              and audience behavior over vanity numbers. This dashboard stays focused on
-              your first-party funnel: landing traffic, outbound clicks, service
-              choice, campaign attribution, and device mix.
+              Use first-party traffic, click, source, and device signals to judge
+              release-page performance. This dashboard stays focused on the smart-link
+              funnel: landing traffic, outbound clicks, service choice, campaign
+              attribution, and device mix.
             </p>
           </div>
 
@@ -362,9 +362,9 @@ export default async function AdminAnalyticsPage({
                 Visits and click-throughs over time
               </h2>
               <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-                Spotify for Artists emphasizes timeline context. This view does the same for
-                your smart-link funnel, so you can see whether traffic is translating into
-                action over the selected window.
+                Timeline context shows whether attention is turning into outbound streaming
+                action over the selected window, so traffic spikes are easier to connect to
+                release moments and campaign pushes.
               </p>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">

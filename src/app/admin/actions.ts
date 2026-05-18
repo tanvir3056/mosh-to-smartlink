@@ -69,6 +69,37 @@ function isValidHttpStreamingLink(value: string) {
   }
 }
 
+function validateMetaPixelId(pixelId: string | null, enabled: boolean) {
+  if (enabled && !pixelId) {
+    return "Meta Pixel ID is required when tracking is enabled.";
+  }
+
+  if (pixelId && !/^\d+$/.test(pixelId)) {
+    return "Meta Pixel ID should contain digits only.";
+  }
+
+  return null;
+}
+
+function validateMailchimpSettings(input: {
+  audienceId: string | null;
+  apiKey: string | null;
+}) {
+  const fieldErrors: Record<string, string> = {};
+
+  if (input.apiKey && !/-[A-Za-z]{2}\d+$/.test(input.apiKey)) {
+    fieldErrors.mailchimp_api_key =
+      "Mailchimp API keys must end with a datacenter suffix like -us21.";
+  }
+
+  if (input.apiKey && !input.audienceId) {
+    fieldErrors.mailchimp_audience_id =
+      "Audience ID is required when adding a Mailchimp API key.";
+  }
+
+  return fieldErrors;
+}
+
 function deriveReviewStatus(matchStatus: MatchStatus, url: string | null): ReviewStatus {
   if (!url || matchStatus === "unresolved") {
     return "unresolved";
@@ -355,6 +386,16 @@ export async function updateSongAction(
     };
   }
 
+  if (
+    status === "published" &&
+    !links.some((link) => link.isVisible && link.url && isValidHttpStreamingLink(link.url))
+  ) {
+    return {
+      error: "Add or show at least one valid streaming destination before publishing.",
+      success: null,
+    };
+  }
+
   try {
     await updateSongDraft({
       ownerUserId: session.userId,
@@ -407,20 +448,48 @@ export async function saveTrackingSettingsAction(
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireUserSession();
+  const metaPixelId = getNullableStringValue(formData, "meta_pixel_id");
+  const metaPixelEnabled = getStringValue(formData, "meta_pixel_enabled") === "on";
+  const metaPixelIdError = validateMetaPixelId(metaPixelId, metaPixelEnabled);
+  const mailchimpAudienceId = getNullableStringValue(formData, "mailchimp_audience_id");
+  const mailchimpApiKey = getNullableStringValue(formData, "mailchimp_api_key");
+  const mailchimpFieldErrors = validateMailchimpSettings({
+    audienceId: mailchimpAudienceId,
+    apiKey: mailchimpApiKey,
+  });
+
+  if (metaPixelIdError) {
+    return {
+      error: "Add a valid Meta Pixel ID before enabling tracking.",
+      success: null,
+      fieldErrors: {
+        meta_pixel_id: metaPixelIdError,
+      },
+    };
+  }
+
+  if (Object.keys(mailchimpFieldErrors).length > 0) {
+    return {
+      error: "Check the Mailchimp settings before saving.",
+      success: null,
+      fieldErrors: mailchimpFieldErrors,
+    };
+  }
+
   const input: TrackingConfig = {
     siteName: getStringValue(formData, "site_name") || APP_NAME,
-    metaPixelId: getNullableStringValue(formData, "meta_pixel_id"),
-    metaPixelEnabled: getStringValue(formData, "meta_pixel_enabled") === "on",
+    metaPixelId,
+    metaPixelEnabled,
     metaTestEventCode: getNullableStringValue(formData, "meta_test_event_code"),
   };
 
   await saveTrackingConfig(session.userId, input);
   await saveEmailConnectorConfig(session.userId, {
     provider: "mailchimp",
-    audienceId: getNullableStringValue(formData, "mailchimp_audience_id"),
+    audienceId: mailchimpAudienceId,
     defaultTags: getNullableStringValue(formData, "mailchimp_default_tags"),
     doubleOptIn: getStringValue(formData, "mailchimp_double_opt_in") === "on",
-    apiKey: getNullableStringValue(formData, "mailchimp_api_key"),
+    apiKey: mailchimpApiKey,
     clearApiKey: getStringValue(formData, "mailchimp_clear_api_key") === "on",
   });
 

@@ -20,11 +20,11 @@ export default async function SignUpPage() {
             Start using {APP_NAME}
           </h1>
           <p className="mt-4 text-sm leading-7 text-[var(--app-muted)]">
-            Choose a unique username and a password. No email verification is required in this first version.
+            Choose a unique username and password. Your workspace opens right after account creation.
           </p>
 
           <div className="mt-8">
-            <SignUpForm modeLabel={appEnv.hasSupabaseAuth ? "Instant Supabase account" : "Local development mode"} />
+            <SignUpForm modeLabel={appEnv.hasSupabaseAuth ? "Secure account creation" : "Local development mode"} />
           </div>
         </div>
       </section>

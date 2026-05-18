@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SongEditorForm } from "@/components/admin/song-editor-form";
+import { STREAMING_SERVICES } from "@/lib/constants";
 import type { SongPageWithLinks } from "@/lib/types";
 
 vi.mock("@/app/admin/actions", () => ({
@@ -128,6 +129,47 @@ const PAGE: SongPageWithLinks = {
   },
 };
 
+const PAGE_WITH_NO_VISIBLE_DESTINATIONS: SongPageWithLinks = {
+  ...PAGE,
+  links: STREAMING_SERVICES.map((service, index) => ({
+    id: `link_${service}`,
+    songId: "song_1",
+    service,
+    url: null,
+    isVisible: false,
+    matchStatus: "unresolved",
+    reviewStatus: "unresolved",
+    matchSource: "manual_review_required",
+    confidence: null,
+    notes: "Missing",
+    confidenceReason: "No destination set yet.",
+    matchedTitle: null,
+    matchedArtist: null,
+    matchedAlbum: null,
+    matchedDurationMs: null,
+    matchedReleaseDate: null,
+    matchedIsrc: null,
+    position: index,
+    createdAt: "2026-04-30T00:00:00.000Z",
+    updatedAt: "2026-04-30T00:00:00.000Z",
+  })),
+};
+
+const PAGE_WITH_INVALID_VISIBLE_DESTINATION: SongPageWithLinks = {
+  ...PAGE_WITH_NO_VISIBLE_DESTINATIONS,
+  links: PAGE_WITH_NO_VISIBLE_DESTINATIONS.links.map((link) =>
+    link.service === "spotify"
+      ? {
+          ...link,
+          url: "not-a-url",
+          isVisible: true,
+          matchStatus: "manual",
+          reviewStatus: "needs_review",
+        }
+      : link,
+  ),
+};
+
 describe("SongEditorForm missing link review", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -173,5 +215,35 @@ describe("SongEditorForm missing link review", () => {
 
     expect(showOnPage).not.toBeChecked();
     expect(screen.getByText("Some music service links were not found.")).toBeInTheDocument();
+  });
+
+  test("shows a launch readiness warning when no visible destination is ready", () => {
+    render(
+      <SongEditorForm
+        page={PAGE_WITH_NO_VISIBLE_DESTINATIONS}
+        showMissingLinksReview={false}
+      />,
+    );
+
+    expect(screen.getByText("Not ready to publish")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Show at least one valid streaming destination before this page goes live.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  test("does not mark an invalid visible destination as ready to publish", () => {
+    render(
+      <SongEditorForm
+        page={PAGE_WITH_INVALID_VISIBLE_DESTINATION}
+        showMissingLinksReview={false}
+      />,
+    );
+
+    expect(screen.getByText("Not ready to publish")).toBeInTheDocument();
+    expect(
+      screen.getByText("1 destination still needs attention before launch."),
+    ).toBeInTheDocument();
   });
 });

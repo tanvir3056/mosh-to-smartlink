@@ -7,6 +7,8 @@ const mockRevalidateTag = vi.fn();
 const mockRedirect = vi.fn();
 const mockRequireUserSession = vi.fn();
 const mockUpdateSongDraft = vi.fn();
+const mockSaveEmailConnectorConfig = vi.fn();
+const mockSaveTrackingConfig = vi.fn();
 const mockPublishedSongPageTag = vi.fn(() => "published-tag");
 
 vi.mock("next/cache", () => ({
@@ -28,9 +30,9 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/data", () => ({
   createSongImportDraft: vi.fn(),
   deleteSongById: vi.fn(),
-  saveEmailConnectorConfig: vi.fn(),
+  saveEmailConnectorConfig: mockSaveEmailConnectorConfig,
   publishedSongPageTag: mockPublishedSongPageTag,
-  saveTrackingConfig: vi.fn(),
+  saveTrackingConfig: mockSaveTrackingConfig,
   updateSongDraft: mockUpdateSongDraft,
 }));
 
@@ -229,5 +231,201 @@ describe("updateSongAction manual streaming link validation", () => {
       success: "Draft saved.",
     });
     expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
+  });
+
+  test("rejects publishing when no visible destination is ready", async () => {
+    const { updateSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    formData.set("intent", "publish");
+
+    const result = await updateSongAction({ error: null, success: null }, formData);
+
+    expect(result).toEqual({
+      error: "Add or show at least one valid streaming destination before publishing.",
+      success: null,
+    });
+    expect(mockUpdateSongDraft).not.toHaveBeenCalled();
+  });
+
+  test("allows publishing with a visible search fallback destination", async () => {
+    const { updateSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    formData.set("intent", "publish");
+    setServiceFields(formData, "youtube_music", {
+      resolutionMode: "search_fallback",
+      isVisible: true,
+      matchStatus: "search_fallback",
+    });
+
+    const result = await updateSongAction({ error: null, success: null }, formData);
+
+    expect(result).toEqual({
+      error: null,
+      success: "Song page published.",
+    });
+    expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("saveTrackingSettingsAction validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRequireUserSession.mockResolvedValue({
+      userId: "user_1",
+      username: "artist",
+    });
+    mockSaveTrackingConfig.mockResolvedValue(undefined);
+    mockSaveEmailConnectorConfig.mockResolvedValue(undefined);
+  });
+
+  test("rejects enabling Meta Pixel without a pixel id", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("meta_pixel_enabled", "on");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Add a valid Meta Pixel ID before enabling tracking.",
+      success: null,
+      fieldErrors: {
+        meta_pixel_id: "Meta Pixel ID is required when tracking is enabled.",
+      },
+    });
+    expect(mockSaveTrackingConfig).not.toHaveBeenCalled();
+    expect(mockSaveEmailConnectorConfig).not.toHaveBeenCalled();
+  });
+
+  test("rejects a non-numeric Meta Pixel ID", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("meta_pixel_id", "pixel-abc");
+    formData.set("meta_pixel_enabled", "on");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Add a valid Meta Pixel ID before enabling tracking.",
+      success: null,
+      fieldErrors: {
+        meta_pixel_id: "Meta Pixel ID should contain digits only.",
+      },
+    });
+    expect(mockSaveTrackingConfig).not.toHaveBeenCalled();
+    expect(mockSaveEmailConnectorConfig).not.toHaveBeenCalled();
+  });
+
+  test("saves a valid Meta Pixel configuration", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("meta_pixel_id", "123456789012345");
+    formData.set("meta_pixel_enabled", "on");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: null,
+      success: "Settings saved.",
+    });
+    expect(mockSaveTrackingConfig).toHaveBeenCalledWith("user_1", {
+      siteName: "Backstage",
+      metaPixelId: "123456789012345",
+      metaPixelEnabled: true,
+      metaTestEventCode: null,
+    });
+    expect(mockSaveEmailConnectorConfig).toHaveBeenCalledTimes(1);
+  });
+
+  test("rejects a Mailchimp API key without a datacenter suffix", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("mailchimp_audience_id", "aud_123");
+    formData.set("mailchimp_api_key", "not-a-mailchimp-key");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Check the Mailchimp settings before saving.",
+      success: null,
+      fieldErrors: {
+        mailchimp_api_key: "Mailchimp API keys must end with a datacenter suffix like -us21.",
+      },
+    });
+    expect(mockSaveTrackingConfig).not.toHaveBeenCalled();
+    expect(mockSaveEmailConnectorConfig).not.toHaveBeenCalled();
+  });
+
+  test("rejects a new Mailchimp API key without an audience id", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("mailchimp_api_key", "abcd1234-us21");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Check the Mailchimp settings before saving.",
+      success: null,
+      fieldErrors: {
+        mailchimp_audience_id: "Audience ID is required when adding a Mailchimp API key.",
+      },
+    });
+    expect(mockSaveTrackingConfig).not.toHaveBeenCalled();
+    expect(mockSaveEmailConnectorConfig).not.toHaveBeenCalled();
+  });
+
+  test("saves valid Mailchimp connector settings", async () => {
+    const { saveTrackingSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Backstage");
+    formData.set("mailchimp_audience_id", "aud_123");
+    formData.set("mailchimp_api_key", "abcd1234-us21");
+    formData.set("mailchimp_default_tags", "smart-link, release");
+    formData.set("mailchimp_double_opt_in", "on");
+
+    const result = await saveTrackingSettingsAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: null,
+      success: "Settings saved.",
+    });
+    expect(mockSaveEmailConnectorConfig).toHaveBeenCalledWith("user_1", {
+      provider: "mailchimp",
+      audienceId: "aud_123",
+      defaultTags: "smart-link, release",
+      doubleOptIn: true,
+      apiKey: "abcd1234-us21",
+      clearApiKey: false,
+    });
   });
 });

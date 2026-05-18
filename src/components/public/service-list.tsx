@@ -39,7 +39,7 @@ export function ServiceList({
   });
 
   return (
-    <div className="bg-[#f3efe7] text-[#13151c]">
+    <div className="deathcore-bone-panel text-[#111113]">
       {services.map((service, index) => {
         const link = byService.get(service);
         const isReady = Boolean(link?.url);
@@ -59,13 +59,17 @@ export function ServiceList({
 
         const content = (
           <>
-            <ServiceBranding service={service} supportingText={helperText} />
+            <ServiceBranding
+              service={service}
+              supportingText={helperText}
+              loading="eager"
+            />
             <span
               className={cn(
-                "inline-flex h-[2.375rem] w-24 items-center justify-center rounded-[0.5rem] border text-[0.96rem] font-medium tracking-[-0.01em] transition-[background-color,border-color,color] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151922]",
+                "inline-flex h-[2.375rem] w-24 items-center justify-center rounded-[0.35rem] border text-[0.96rem] font-semibold tracking-[-0.01em] transition-[background-color,border-color,color,box-shadow] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151922]",
                 isReady
-                  ? "border-[#d8d0c3] bg-[#fbfaf7] text-[#2a2d33] group-hover:border-[#cdc5b8] group-hover:bg-white group-active:bg-[#f2ede3]"
-                  : "border-dashed border-[#d8d1c4] bg-[#ece6db] text-[#91948b]",
+                  ? "border-[#a8957c] bg-[#111113] text-[#fff9ec] shadow-[0_1px_0_rgba(255,255,255,0.08)_inset] group-hover:border-[#8f1420] group-hover:bg-[#8f1420] group-active:bg-[#5f0e16]"
+                  : "border-dashed border-[#b9ac99] bg-[#d5cab8] text-[#6f6659]",
               )}
             >
               {ctaLabel}
@@ -76,7 +80,7 @@ export function ServiceList({
         return (
           <div
             key={service}
-            className={cn(index !== 0 && "border-t border-[#dfd8cb]")}
+            className={cn(index !== 0 && "border-t border-[#cfc0aa]")}
           >
             {isReady ? (
               <a
@@ -86,6 +90,7 @@ export function ServiceList({
                 rel={isPreview ? "noreferrer" : undefined}
                 className={cn(
                   "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5 transition-[background-color] duration-200 ease-out hover:bg-white/42 active:bg-[#ede6d8]",
+                  "relative",
                   isPreview && helperText ? "py-3" : "py-0",
                 )}
                 onClick={() => {

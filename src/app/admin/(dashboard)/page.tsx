@@ -187,7 +187,7 @@ export default async function AdminOverviewPage() {
                         </div>
                         <div className="text-sm text-[var(--app-muted)]">{song.artistName}</div>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-[var(--app-muted)]">
-                          <span>/{song.slug}</span>
+                          <span>{buildPublicSongPath(song.username, song.slug)}</span>
                           <span>@{song.username}</span>
                           <span>Updated {formatDateTime(song.updatedAt)}</span>
                         </div>

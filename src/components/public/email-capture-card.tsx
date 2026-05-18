@@ -18,25 +18,25 @@ export function EmailCaptureCard({
   const isPreview = mode === "preview";
 
   return (
-    <section className="border-t border-white/6 bg-[#121318] px-5 pb-5 pt-5 text-white sm:px-6 sm:pb-6">
+    <section className="border-t border-[#eee6d6]/10 bg-[linear-gradient(180deg,#101012,#08080a)] px-5 pb-5 pt-5 text-[#fff9ec] sm:px-6 sm:pb-6">
       <div className="grid gap-3.5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/38">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c9bda9]">
               {capture.badgeLabel}
             </p>
-            <h2 className="mt-2 text-pretty font-[var(--font-display)] text-[1.2rem] font-semibold tracking-[-0.035em] text-white">
+            <h2 className="mt-2 text-pretty font-[var(--font-display)] text-[1.28rem] font-semibold tracking-[-0.02em] text-[#fff9ec]">
               {capture.title}
             </h2>
           </div>
           {isPreview ? (
-            <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-white/38">
+            <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-[#b8b0a3]">
               Preview
             </span>
           ) : null}
         </div>
 
-        <p className="max-w-xl text-[0.93rem] leading-6 text-white/60">
+        <p className="max-w-xl text-[0.93rem] leading-6 text-[#c9c0b2]">
           {capture.description}
         </p>
 
@@ -47,12 +47,12 @@ export function EmailCaptureCard({
               type="email"
               value="fan@example.com"
               readOnly
-              className="min-h-11 rounded-[0.9rem] border border-[#d6cbb9] bg-[#f7f3eb] px-4 text-[15px] text-[#171a1f] opacity-80"
+              className="min-h-11 rounded-[0.7rem] border border-[#b9ac99] bg-[#eee6d6] px-4 text-[15px] text-[#111113] opacity-90"
             />
             <button
               type="button"
               disabled
-              className="inline-flex min-h-11 items-center justify-center rounded-[0.9rem] bg-[#f4efe4] px-5 text-sm font-semibold text-[#171a1f] opacity-80"
+              className="inline-flex min-h-11 items-center justify-center rounded-[0.7rem] bg-[#eee6d6] px-5 text-sm font-semibold text-[#111113] opacity-90"
             >
               {capture.buttonLabel}
             </button>

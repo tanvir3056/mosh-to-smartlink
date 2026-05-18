@@ -18,6 +18,11 @@ function SubmitButton() {
   );
 }
 
+function fieldDescription(...ids: Array<string | false | null | undefined>) {
+  const description = ids.filter(Boolean).join(" ");
+  return description.length > 0 ? description : undefined;
+}
+
 export function TrackingSettingsForm({
   config,
   connector,
@@ -30,6 +35,9 @@ export function TrackingSettingsForm({
     INITIAL_ACTION_STATE,
   );
   const isMailchimpConnected = connector.hasApiKey && Boolean(connector.audienceId);
+  const metaPixelIdError = state.fieldErrors?.meta_pixel_id;
+  const mailchimpAudienceIdError = state.fieldErrors?.mailchimp_audience_id;
+  const mailchimpApiKeyError = state.fieldErrors?.mailchimp_api_key;
 
   return (
     <form action={formAction} className="grid gap-6">
@@ -45,7 +53,7 @@ export function TrackingSettingsForm({
         </div>
 
         <div className="w-fit rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
-          {isMailchimpConnected ? "Mailchimp connected" : "Mailchimp only"}
+          {isMailchimpConnected ? "Mailchimp connected" : "Local lead storage"}
         </div>
       </div>
 
@@ -65,15 +73,36 @@ export function TrackingSettingsForm({
               <input name="site_name" defaultValue={config.siteName} className="app-input" />
             </label>
 
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--app-text)]">Meta Pixel ID</span>
+            <div className="grid gap-2">
+              <label
+                htmlFor="meta-pixel-id"
+                className="text-sm font-medium text-[var(--app-text)]"
+              >
+                Meta Pixel ID
+              </label>
               <input
+                id="meta-pixel-id"
                 name="meta_pixel_id"
                 defaultValue={config.metaPixelId ?? ""}
                 className="app-input"
                 placeholder="123456789012345"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-invalid={Boolean(metaPixelIdError)}
+                aria-describedby={fieldDescription(
+                  "meta-pixel-id-help",
+                  metaPixelIdError && "meta-pixel-id-error",
+                )}
               />
-            </label>
+              <span id="meta-pixel-id-help" className="text-xs leading-5 text-[var(--app-muted)]">
+                Use digits only. Required before Meta Pixel can be enabled.
+              </span>
+              {metaPixelIdError ? (
+                <p id="meta-pixel-id-error" className="text-sm text-red-600">
+                  {metaPixelIdError}
+                </p>
+              ) : null}
+            </div>
 
             <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
               <input
@@ -105,28 +134,62 @@ export function TrackingSettingsForm({
           </div>
 
           <div className="mt-5 grid gap-4">
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--app-text)]">Mailchimp Audience ID</span>
+            <div className="grid gap-2">
+              <label
+                htmlFor="mailchimp-audience-id"
+                className="text-sm font-medium text-[var(--app-text)]"
+              >
+                Mailchimp Audience ID
+              </label>
               <input
+                id="mailchimp-audience-id"
                 name="mailchimp_audience_id"
                 defaultValue={connector.audienceId ?? ""}
                 className="app-input"
                 placeholder="a1b2c3d4e5"
+                aria-invalid={Boolean(mailchimpAudienceIdError)}
+                aria-describedby={fieldDescription(
+                  mailchimpAudienceIdError && "mailchimp-audience-id-error",
+                )}
               />
-            </label>
+              {mailchimpAudienceIdError ? (
+                <p id="mailchimp-audience-id-error" className="text-sm text-red-600">
+                  {mailchimpAudienceIdError}
+                </p>
+              ) : null}
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--app-text)]">Mailchimp API key</span>
+            <div className="grid gap-2">
+              <label
+                htmlFor="mailchimp-api-key"
+                className="text-sm font-medium text-[var(--app-text)]"
+              >
+                Mailchimp API key
+              </label>
               <input
+                id="mailchimp-api-key"
                 name="mailchimp_api_key"
                 className="app-input"
                 placeholder={
                   connector.hasApiKey
                     ? "Leave blank to keep the saved key"
-                    : "us21-key-goes-here"
+                    : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-us21"
                 }
+                aria-invalid={Boolean(mailchimpApiKeyError)}
+                aria-describedby={fieldDescription(
+                  "mailchimp-api-key-help",
+                  mailchimpApiKeyError && "mailchimp-api-key-error",
+                )}
               />
-            </label>
+              <span id="mailchimp-api-key-help" className="text-xs leading-5 text-[var(--app-muted)]">
+                Use the full key, including the datacenter suffix like -us21.
+              </span>
+              {mailchimpApiKeyError ? (
+                <p id="mailchimp-api-key-error" className="text-sm text-red-600">
+                  {mailchimpApiKeyError}
+                </p>
+              ) : null}
+            </div>
 
             <label className="grid gap-2">
               <span className="text-sm font-medium text-[var(--app-text)]">Default tags</span>

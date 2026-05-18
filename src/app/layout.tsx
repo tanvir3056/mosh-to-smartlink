@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { appEnv } from "@/lib/env";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(appEnv.appUrl),
   title: APP_NAME,
   description: APP_DESCRIPTION,
 };

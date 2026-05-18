@@ -6,74 +6,57 @@ import { buildPublicSongPath, formatDateTime } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
-function escapeHtml(value: string | null | undefined) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+function escapeCsvCell(value: string | null | undefined) {
+  let cell = String(value ?? "");
+
+  if (/^\s*[=+\-@]/.test(cell) || /^[\t\r]/.test(cell)) {
+    cell = `'${cell}`;
+  }
+
+  return `"${cell.replaceAll('"', '""')}"`;
 }
 
-function buildLeadExportDocument(rows: Awaited<ReturnType<typeof getEmailLeadExportRows>>) {
-  const bodyRows = rows
-    .map(
-      (lead) => `
-        <tr>
-          <td>${escapeHtml(formatDateTime(lead.createdAt))}</td>
-          <td>${escapeHtml(lead.email)}</td>
-          <td>${escapeHtml(lead.songTitle)}</td>
-          <td>${escapeHtml(lead.artistName)}</td>
-          <td>${escapeHtml(buildPublicSongPath(lead.username, lead.slug))}</td>
-          <td>${escapeHtml(lead.source)}</td>
-          <td>${escapeHtml(lead.medium)}</td>
-          <td>${escapeHtml(lead.campaign)}</td>
-          <td>${escapeHtml(lead.referrerHost)}</td>
-          <td>${escapeHtml(lead.country)}</td>
-          <td>${escapeHtml(lead.city)}</td>
-          <td>${escapeHtml(lead.connectorStatus)}</td>
-          <td>${escapeHtml(lead.connectorProvider)}</td>
-          <td>${escapeHtml(lead.connectorError)}</td>
-        </tr>`,
-    )
-    .join("");
+function buildCsvRow(values: Array<string | null | undefined>) {
+  return values.map(escapeCsvCell).join(",");
+}
 
-  return `<!DOCTYPE html>
-  <html xmlns:o="urn:schemas-microsoft-com:office:office"
-        xmlns:x="urn:schemas-microsoft-com:office:excel"
-        xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="utf-8" />
-      <style>
-        table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; }
-        th, td { border: 1px solid #d7dbe3; padding: 6px 8px; text-align: left; vertical-align: top; }
-        th { background: #f4f6fa; font-weight: 700; }
-      </style>
-    </head>
-    <body>
-      <table>
-        <thead>
-          <tr>
-            <th>Captured</th>
-            <th>Email</th>
-            <th>Song</th>
-            <th>Artist</th>
-            <th>Public path</th>
-            <th>Source</th>
-            <th>Medium</th>
-            <th>Campaign</th>
-            <th>Referrer host</th>
-            <th>Country</th>
-            <th>City</th>
-            <th>Sync status</th>
-            <th>Connector</th>
-            <th>Connector error</th>
-          </tr>
-        </thead>
-        <tbody>${bodyRows}</tbody>
-      </table>
-    </body>
-  </html>`;
+function buildLeadExportCsv(rows: Awaited<ReturnType<typeof getEmailLeadExportRows>>) {
+  const headers = [
+    "Captured",
+    "Email",
+    "Song",
+    "Artist",
+    "Public path",
+    "Source",
+    "Medium",
+    "Campaign",
+    "Referrer host",
+    "Country",
+    "City",
+    "Sync status",
+    "Connector",
+    "Connector error",
+  ];
+  const bodyRows = rows.map((lead) =>
+    buildCsvRow([
+      formatDateTime(lead.createdAt),
+      lead.email,
+      lead.songTitle,
+      lead.artistName,
+      buildPublicSongPath(lead.username, lead.slug),
+      lead.source,
+      lead.medium,
+      lead.campaign,
+      lead.referrerHost,
+      lead.country,
+      lead.city,
+      lead.connectorStatus,
+      lead.connectorProvider,
+      lead.connectorError,
+    ]),
+  );
+
+  return [buildCsvRow(headers), ...bodyRows].join("\r\n");
 }
 
 export async function GET() {
@@ -89,10 +72,10 @@ export async function GET() {
   const rows = await getEmailLeadExportRows(session.userId);
   const fileDate = new Date().toISOString().slice(0, 10);
 
-  return new NextResponse(buildLeadExportDocument(rows), {
+  return new NextResponse(buildLeadExportCsv(rows), {
     headers: {
-      "content-type": "application/vnd.ms-excel; charset=utf-8",
-      "content-disposition": `attachment; filename="backstage-email-leads-${fileDate}.xls"`,
+      "content-type": "text/csv; charset=utf-8",
+      "content-disposition": `attachment; filename="backstage-email-leads-${fileDate}.csv"`,
       "cache-control": "no-store",
     },
   });

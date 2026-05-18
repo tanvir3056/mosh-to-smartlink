@@ -76,17 +76,43 @@ export async function POST(request: Request) {
       : null;
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const processed = await processArtworkUpload({
-    bytes,
-    crop,
-  });
+  let processed: Awaited<ReturnType<typeof processArtworkUpload>>;
 
-  const stored = await storeArtworkAsset({
-    ownerUserId: session.userId,
-    songId: typeof songId === "string" && songId.length > 0 ? songId : null,
-    bytes: processed.bytes,
-    mimeType: processed.mimeType,
-  });
+  try {
+    processed = await processArtworkUpload({
+      bytes,
+      crop,
+    });
+  } catch (error) {
+    console.error("Artwork upload could not be processed.", error);
+
+    return NextResponse.json(
+      {
+        error: "Artwork uploads must be valid image files.",
+      },
+      { status: 400 },
+    );
+  }
+
+  let stored: Awaited<ReturnType<typeof storeArtworkAsset>>;
+
+  try {
+    stored = await storeArtworkAsset({
+      ownerUserId: session.userId,
+      songId: typeof songId === "string" && songId.length > 0 ? songId : null,
+      bytes: processed.bytes,
+      mimeType: processed.mimeType,
+    });
+  } catch (error) {
+    console.error("Artwork upload could not be stored.", error);
+
+    return NextResponse.json(
+      {
+        error: "Artwork could not be saved right now. Please try again.",
+      },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({
     ok: true,

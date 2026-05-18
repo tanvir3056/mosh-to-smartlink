@@ -57,12 +57,23 @@ export async function captureEmailLeadAction(
     searchParams: new URLSearchParams(route.searchString),
   });
 
-  await recordEmailCaptureSubmission({
-    page,
-    email: validated.data.email,
-    lastVisitId,
-    context,
-  });
+  try {
+    await recordEmailCaptureSubmission({
+      page,
+      email: validated.data.email,
+      lastVisitId,
+      context,
+    });
+  } catch (error) {
+    console.error("Failed to record email capture submission.", error);
+
+    return {
+      error: "We could not save that email right now. Please try again.",
+      success: null,
+      downloadUrl: null,
+      downloadLabel: null,
+    };
+  }
 
   cookieStore.set(VISITOR_COOKIE, visitorId, {
     httpOnly: true,

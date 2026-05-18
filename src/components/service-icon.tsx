@@ -94,8 +94,10 @@ const BRAND_CONFIG: Record<StreamingService, BrandConfig> = {
 
 function AssetLockup({
   config,
+  loading = "lazy",
 }: {
   config: AssetLockupConfig;
+  loading?: "eager" | "lazy";
 }) {
   return (
     <Image
@@ -105,6 +107,7 @@ function AssetLockup({
       height={config.height}
       unoptimized
       draggable={false}
+      loading={loading}
       className={cn(
         "h-auto max-h-[1.85rem] w-auto object-contain object-left",
         config.imageClassName,
@@ -116,8 +119,10 @@ function AssetLockup({
 
 function IconLabelLockup({
   config,
+  loading = "lazy",
 }: {
   config: IconLabelConfig;
+  loading?: "eager" | "lazy";
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
@@ -128,11 +133,12 @@ function IconLabelLockup({
         height={config.height}
         unoptimized
         draggable={false}
+        loading={loading}
         className={cn("object-contain", config.iconClassName)}
       />
       <span
         className={cn(
-          "truncate text-[1.02rem] font-semibold tracking-[-0.02em] text-[#16181d]",
+          "truncate text-[1.02rem] font-semibold tracking-[-0.02em] text-[#111113]",
           config.textClassName,
         )}
       >
@@ -185,9 +191,11 @@ export function ServiceIcon({
 export function ServiceBranding({
   service,
   supportingText,
+  loading = "lazy",
 }: {
   service: StreamingService;
   supportingText?: string | null;
+  loading?: "eager" | "lazy";
 }) {
   const config = BRAND_CONFIG[service];
 
@@ -195,13 +203,13 @@ export function ServiceBranding({
     <div className="w-[11.25rem] shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-[1px]">
       <div className="flex h-[1.9rem] items-center">
         {config.kind === "asset" ? (
-          <AssetLockup config={config} />
+          <AssetLockup config={config} loading={loading} />
         ) : (
-          <IconLabelLockup config={config} />
+          <IconLabelLockup config={config} loading={loading} />
         )}
       </div>
       {supportingText ? (
-        <div className="mt-1 text-[12px] leading-4 text-[#7a7b74]">
+        <div className="mt-1 text-[12px] font-medium leading-4 text-[#5f574c]">
           {supportingText}
         </div>
       ) : null}

@@ -6,14 +6,36 @@ import { summariseRequestContext } from "@/lib/analytics";
 import { getPublishedSongPage, recordVisit } from "@/lib/data";
 import { appEnv } from "@/lib/env";
 
+interface VisitPayload {
+  username?: string;
+  slug?: string;
+  path?: string;
+  searchString?: string;
+  referrer?: string | null;
+}
+
+async function parseVisitPayload(request: Request): Promise<VisitPayload | null> {
+  try {
+    const body = (await request.json()) as unknown;
+    return body && typeof body === "object" && !Array.isArray(body)
+      ? (body as VisitPayload)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
-  const body = (await request.json()) as {
-    username?: string;
-    slug?: string;
-    path?: string;
-    searchString?: string;
-    referrer?: string | null;
-  };
+  const body = await parseVisitPayload(request);
+
+  if (!body) {
+    return NextResponse.json(
+      {
+        error: "Invalid tracking payload.",
+      },
+      { status: 400 },
+    );
+  }
 
   if (!body.username || !body.slug || !body.path) {
     return NextResponse.json(

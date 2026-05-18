@@ -77,6 +77,12 @@ function reviewStatusLabel(value: ReviewStatus) {
   }
 }
 
+function formatDestinationAttention(count: number) {
+  return `${count} destination${count === 1 ? "" : "s"} still ${
+    count === 1 ? "needs" : "need"
+  } attention before launch.`;
+}
+
 function needsResolutionControl(
   matchStatus: SongPageWithLinks["links"][number]["matchStatus"] | MatchStatus,
   url: string | null,
@@ -84,12 +90,31 @@ function needsResolutionControl(
   return !url || matchStatus !== "matched";
 }
 
-function SaveButtons() {
+function isValidHttpUrl(value: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function SaveButtons({ canPublish }: { canPublish: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <Button name="intent" value="publish" type="submit" busy={pending}>
+      <Button
+        name="intent"
+        value="publish"
+        type="submit"
+        busy={pending}
+        disabled={pending || !canPublish}
+      >
         Publish
       </Button>
       <Button
@@ -191,7 +216,7 @@ export function SongEditorForm({
         ? buildServiceSearchUrl(service, fallbackQuery)
         : draft.url;
 
-    return draft.isVisible && Boolean(effectiveUrl);
+    return draft.isVisible && isValidHttpUrl(effectiveUrl);
   }).length;
   const manualReviewCount = STREAMING_SERVICES.filter((service) => {
     const draft = serviceDrafts[service];
@@ -219,6 +244,7 @@ export function SongEditorForm({
   const clickCount = performance?.clickCount ?? 0;
   const clickRate =
     visitCount > 0 ? `${Math.round((clickCount / visitCount) * 100)}% CTR` : "No clicks yet";
+  const publishReady = linkedServices > 0;
 
   function updateServiceDraft(
     service: StreamingService,
@@ -407,7 +433,7 @@ export function SongEditorForm({
                 },
                 {
                   title: "Manual review",
-                  body: `${manualReviewCount} destinations still need attention before launch.`,
+                  body: formatDestinationAttention(manualReviewCount),
                 },
                 {
                   title: "Performance",
@@ -425,10 +451,36 @@ export function SongEditorForm({
               ))}
             </div>
 
+            <div
+              className={`mt-5 rounded-[1.2rem] border px-4 py-4 ${
+                publishReady
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                  : "border-amber-200 bg-amber-50 text-amber-950"
+              }`}
+            >
+              <p
+                className={`app-kicker ${
+                  publishReady ? "text-emerald-700" : "text-amber-700"
+                }`}
+              >
+                Launch readiness
+              </p>
+              <h3 className="mt-2 text-base font-semibold">
+                {publishReady ? "Ready to publish" : "Not ready to publish"}
+              </h3>
+              <p className="mt-2 text-sm leading-6">
+                {publishReady
+                  ? `${linkedServices} visible destination${
+                      linkedServices === 1 ? " is" : "s are"
+                    } ready for fan traffic.`
+                  : "Show at least one valid streaming destination before this page goes live."}
+              </p>
+            </div>
+
             <div className="mt-6 border-t border-[var(--app-line)] pt-5">
               <p className="app-kicker text-[var(--app-muted)]">Save state</p>
               <div className="mt-4">
-                <SaveButtons />
+                <SaveButtons canPublish={publishReady} />
               </div>
             </div>
           </div>
@@ -941,7 +993,7 @@ export function SongEditorForm({
                   Save a draft while you review, or publish when everything is approved.
                 </p>
               </div>
-              <SaveButtons />
+              <SaveButtons canPublish={publishReady} />
             </div>
           </div>
 

@@ -19,7 +19,7 @@ export function PublicSongPage({
   const isPreview = mode === "preview";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0a0c10]">
+    <main className="deathcore-field relative min-h-screen overflow-hidden bg-[#08080a]">
       {!isPreview ? (
         <MetaPixel
           pixelId={page.tracking.metaPixelId}
@@ -29,10 +29,12 @@ export function PublicSongPage({
         />
       ) : null}
       <div
-        className="absolute inset-0 scale-[1.03] bg-cover bg-center opacity-16 blur-[42px]"
+        className="absolute inset-0 scale-[1.08] bg-cover bg-center opacity-24 blur-[54px] saturate-[1.35]"
         style={{ backgroundImage: `url(${page.song.artworkUrl})` }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,12,0.38),rgba(7,9,12,0.82)_32%,rgba(7,9,12,0.96)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,6,0.3),rgba(8,8,10,0.82)_38%,rgba(5,5,6,0.98)_100%)]" />
+      <div className="absolute left-1/2 top-3 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full border border-[#eee6d6]/8 opacity-50" />
+      <div className="absolute bottom-6 left-1/2 h-24 w-[min(36rem,92vw)] -translate-x-1/2 border-x border-[#eee6d6]/10" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center px-3 py-6 sm:px-6 sm:py-10">
         {isPreview ? (
@@ -49,7 +51,7 @@ export function PublicSongPage({
           </div>
         ) : null}
 
-        <section className="app-enter w-full max-w-[27.25rem] overflow-hidden rounded-[1.55rem]">
+        <section className="deathcore-shell app-enter w-full max-w-[27.25rem] overflow-hidden rounded-[1.35rem]">
           <PreviewPlayer
             previewUrl={page.song.previewUrl}
             artworkUrl={page.song.artworkUrl}
@@ -57,14 +59,15 @@ export function PublicSongPage({
             artistName={page.song.artistName}
           />
 
-          <div className="bg-[#121318] px-5 pb-3.5 pt-2.5 text-center sm:px-6">
-            <p className="text-[11px] font-medium text-white/50">
+          <div className="relative bg-[linear-gradient(180deg,#121114,#09090b)] px-5 pb-4 pt-3 text-center sm:px-6">
+            <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(238,230,214,0.36),transparent)]" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c9bda9]">
               {page.song.artistName}
             </p>
-            <h1 className="mt-1.5 text-balance font-[var(--font-display)] text-[1.95rem] font-semibold tracking-[-0.04em] text-white">
+            <h1 className="mt-2 text-balance font-[var(--font-display)] text-[2.15rem] font-semibold leading-[0.92] text-[#fff9ec]">
               {page.song.title}
             </h1>
-            <p className="mt-1 text-[13px] text-white/42">
+            <p className="mx-auto mt-2 max-w-[20rem] text-[13px] font-medium text-[#b8b0a3]">
               {page.page.headline || "Stream now"}
             </p>
           </div>

@@ -79,6 +79,7 @@ describe("ServiceList", () => {
     );
     expect(screen.queryByTestId("service-link-apple_music")).toBeNull();
     expect(screen.queryByTestId("service-link-youtube_music")).toBeNull();
+    expect(screen.getByAltText("Spotify logo")).toHaveAttribute("loading", "eager");
   });
 
   test("hides deselected services on the live page", () => {

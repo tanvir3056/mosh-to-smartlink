@@ -24,7 +24,7 @@ export default async function SignInPage() {
           </p>
 
           <div className="mt-8">
-            <SignInForm modeLabel={appEnv.hasSupabaseAuth ? "Supabase sessions" : "Local development mode"} />
+            <SignInForm modeLabel={appEnv.hasSupabaseAuth ? "Secure account access" : "Local development mode"} />
           </div>
         </div>
       </section>
