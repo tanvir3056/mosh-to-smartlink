@@ -31,6 +31,7 @@ const supabaseAnonKey =
 const supabaseServiceRoleKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null;
 const postgresUrl = process.env.POSTGRES_URL?.trim() || null;
+const blobReadWriteToken = process.env.BLOB_READ_WRITE_TOKEN?.trim() || null;
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
 
@@ -52,7 +53,9 @@ export const appEnv = {
   supabaseUrl,
   supabaseAnonKey,
   supabaseServiceRoleKey,
+  blobReadWriteToken,
   hasPostgres: Boolean(postgresUrl),
+  hasBlobPersistence: Boolean(blobReadWriteToken),
   hasSupabaseAuth: Boolean(supabaseUrl && supabaseAnonKey),
   hasSupabaseAdmin: Boolean(supabaseUrl && supabaseServiceRoleKey),
   isLocalDatabase: !postgresUrl,

@@ -31,6 +31,157 @@ declare global {
 let runtimePromise: Promise<DatabaseRuntime> | null =
   globalThis.__ffmDatabaseRuntimePromise ?? null;
 
+const localSnapshotPath = "backstage/local-database-snapshot.json";
+const persistedLocalTables = [
+  "admin_access",
+  "app_users",
+  "tracking_config",
+  "songs",
+  "song_pages",
+  "streaming_links",
+  "import_attempts",
+  "visits",
+  "click_events",
+  "email_connectors",
+  "email_capture_submissions",
+] as const;
+
+type LocalTableName = (typeof persistedLocalTables)[number];
+
+interface LocalTableSnapshot {
+  columns: string[];
+  rows: Record<string, unknown>[];
+}
+
+interface LocalDatabaseSnapshot {
+  version: 1;
+  savedAt: string;
+  tables: Partial<Record<LocalTableName, LocalTableSnapshot>>;
+}
+
+function quoteIdentifier(identifier: string) {
+  return `"${identifier.replaceAll("\"", "\"\"")}"`;
+}
+
+function isLocalMutationQuery(text: string) {
+  return /^(insert|update|delete|truncate|alter|create|drop)\b/i.test(text.trim());
+}
+
+function canPersistLocalRuntime() {
+  return appEnv.hasBlobPersistence;
+}
+
+async function readLocalSnapshotFromBlob() {
+  if (!canPersistLocalRuntime()) {
+    return null;
+  }
+
+  const { get } = await import("@vercel/blob");
+  const result = await get(localSnapshotPath, {
+    access: "private",
+    useCache: false,
+  });
+
+  if (!result || result.statusCode !== 200 || !result.stream) {
+    return null;
+  }
+
+  const body = await new Response(result.stream).text();
+  return JSON.parse(body) as LocalDatabaseSnapshot;
+}
+
+async function restoreLocalSnapshot(pool: Pool) {
+  const snapshot = await readLocalSnapshotFromBlob();
+
+  if (!snapshot || snapshot.version !== 1) {
+    return;
+  }
+
+  for (const tableName of persistedLocalTables) {
+    const table = snapshot.tables[tableName];
+
+    if (!table || table.rows.length === 0 || table.columns.length === 0) {
+      continue;
+    }
+
+    const columnList = table.columns.map(quoteIdentifier).join(", ");
+    const valuePlaceholders = table.columns
+      .map((_, index) => `$${index + 1}`)
+      .join(", ");
+
+    for (const row of table.rows) {
+      await pool.query(
+        `
+          insert into ${quoteIdentifier(tableName)} (${columnList})
+          values (${valuePlaceholders})
+          on conflict do nothing
+        `,
+        table.columns.map((column) => row[column] ?? null),
+      );
+    }
+  }
+}
+
+async function buildLocalSnapshot(pool: Pool): Promise<LocalDatabaseSnapshot> {
+  const snapshot: LocalDatabaseSnapshot = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    tables: {},
+  };
+
+  for (const tableName of persistedLocalTables) {
+    const result = await pool.query<Record<string, unknown>>(
+      `select * from ${quoteIdentifier(tableName)}`,
+    );
+    const rowColumnNames = result.rows[0] ? Object.keys(result.rows[0]) : [];
+
+    snapshot.tables[tableName] = {
+      columns:
+        result.fields.length > 0
+          ? result.fields.map((field) => field.name)
+          : rowColumnNames,
+      rows: result.rows,
+    };
+  }
+
+  return snapshot;
+}
+
+async function writeLocalSnapshotToBlob(snapshot: LocalDatabaseSnapshot) {
+  if (!canPersistLocalRuntime()) {
+    return;
+  }
+
+  const { put } = await import("@vercel/blob");
+
+  await put(localSnapshotPath, JSON.stringify(snapshot), {
+    access: "private",
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
+}
+
+function createLocalSnapshotPersister(pool: Pool) {
+  let persistQueue = Promise.resolve();
+
+  return async function persistLocalSnapshot() {
+    if (!canPersistLocalRuntime()) {
+      return;
+    }
+
+    persistQueue = persistQueue
+      .catch(() => {
+        // A later write should still be able to persist after a transient failure.
+      })
+      .then(async () => {
+        const snapshot = await buildLocalSnapshot(pool);
+        await writeLocalSnapshotToBlob(snapshot);
+      });
+
+    await persistQueue;
+  };
+}
+
 function normalizeErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message.toLowerCase();
@@ -270,6 +421,8 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
   const adapter = memoryDb.adapters.createPg();
   const LocalPool = adapter.Pool as typeof Pool;
   const pool = new LocalPool();
+  await restoreLocalSnapshot(pool);
+  const persistLocalSnapshot = createLocalSnapshotPersister(pool);
 
   return {
     mode: "local",
@@ -281,6 +434,9 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
       params?: unknown[],
     ) {
       const result = await pool.query<T>(text, params);
+      if (isLocalMutationQuery(text)) {
+        await persistLocalSnapshot();
+      }
       return result.rows;
     },
     async withTransaction<T>(
@@ -299,6 +455,7 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
           queryPgClient(client, text, params),
         );
         await client.query("commit");
+        await persistLocalSnapshot();
         return result;
       } catch (error) {
         await client.query("rollback");

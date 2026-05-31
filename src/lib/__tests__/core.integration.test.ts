@@ -86,6 +86,7 @@ beforeEach(() => {
   process.env.ADMIN_EMAIL = "admin@local.test";
   process.env.NEXT_PUBLIC_SUPABASE_URL = "";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "";
+  process.env.BLOB_READ_WRITE_TOKEN = "";
   Object.assign(globalThis, {
     __ffmDatabaseRuntimePromise: undefined,
   });
@@ -94,6 +95,76 @@ beforeEach(() => {
 });
 
 describe("core data flow", () => {
+  test("hydrates local fallback accounts from Blob persistence after a cold start", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
+
+    let savedSnapshot: string | null = null;
+    const putMock = vi.fn(async (_pathname: string, body: string) => {
+      savedSnapshot = body;
+      return {
+        url: "https://blob.example/backstage/local-database-snapshot.json",
+        downloadUrl: "https://blob.example/backstage/local-database-snapshot.json",
+        pathname: "backstage/local-database-snapshot.json",
+        contentType: "application/json",
+        contentDisposition: "inline",
+      };
+    });
+    const getMock = vi.fn(async () => {
+      if (!savedSnapshot) {
+        return null;
+      }
+
+      return {
+        statusCode: 200,
+        stream: new Response(savedSnapshot).body,
+        headers: new Headers(),
+        blob: {
+          url: "https://blob.example/backstage/local-database-snapshot.json",
+          downloadUrl: "https://blob.example/backstage/local-database-snapshot.json",
+          pathname: "backstage/local-database-snapshot.json",
+          contentDisposition: "inline",
+          cacheControl: "no-cache",
+          uploadedAt: new Date(),
+          etag: "snapshot-etag",
+          contentType: "application/json",
+          size: savedSnapshot.length,
+        },
+      };
+    });
+
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const { createAccountOwner } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    expect(putMock).toHaveBeenCalled();
+    expect(savedSnapshot).toContain(USERNAME);
+
+    Object.assign(globalThis, {
+      __ffmDatabaseRuntimePromise: undefined,
+    });
+    vi.resetModules();
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const { getUserByUsername } = await import("@/lib/data");
+    await expect(getUserByUsername(USERNAME)).resolves.toMatchObject({
+      id: USER_ID,
+      username: USERNAME,
+    });
+  });
+
   test("imports, publishes, records analytics, and exposes the public page", async () => {
     const {
       createAccountOwner,
