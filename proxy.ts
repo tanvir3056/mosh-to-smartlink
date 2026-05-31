@@ -31,7 +31,11 @@ export async function proxy(request: NextRequest) {
       },
     );
 
-    await supabase.auth.getUser();
+    try {
+      await supabase.auth.getUser();
+    } catch (error) {
+      console.error("Supabase proxy session refresh failed.", error);
+    }
   }
 
   if (!request.cookies.get(VISITOR_COOKIE)) {

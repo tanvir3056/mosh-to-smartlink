@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  cookieSet: vi.fn(),
   createServerClient: vi.fn(),
   createClient: vi.fn(),
   getUserByUsername: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({
     get: vi.fn(),
     getAll: vi.fn(() => []),
-    set: vi.fn(),
+    set: mocks.cookieSet,
     delete: vi.fn(),
   })),
 }));
@@ -244,7 +245,7 @@ describe("signInUser Supabase account recovery", () => {
     expect(mocks.adminUpdateUserById).not.toHaveBeenCalled();
   });
 
-  test("returns a controlled migration error when admin credentials are missing", async () => {
+  test("falls back to a local session when admin credentials are missing", async () => {
     configureSupabaseEnv({ admin: false });
     mocks.getUserByUsername.mockResolvedValue(appUser());
     mocks.serverSignInWithPassword.mockResolvedValue({
@@ -258,17 +259,69 @@ describe("signInUser Supabase account recovery", () => {
     const { signInUser } = await import("@/lib/auth");
 
     await expect(signInUser("artist", "correct-password")).resolves.toEqual({
-      error: "This account needs a one-time login repair. Contact support to restore access.",
+      error: null,
     });
 
     expect(consoleError).toHaveBeenCalledWith(
-      "Supabase legacy account migration is blocked by missing admin credentials.",
+      "Supabase legacy account migration is blocked by missing admin credentials. Falling back to a local session.",
       {
         userId: "user_1",
         username: "artist",
       },
     );
+    expect(mocks.cookieSet).toHaveBeenCalledWith(
+      "ffm_admin_session",
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      }),
+    );
     expect(mocks.adminCreateUser).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  test("creates a local password account when Supabase account creation throws", async () => {
+    mocks.getUserByUsername.mockResolvedValue(null);
+    mocks.adminCreateUser.mockRejectedValue(new Error("fetch failed"));
+    mocks.hashPassword.mockResolvedValue("new-password-hash");
+    mocks.createAccountOwner.mockResolvedValue(
+      appUser({
+        id: "user_local",
+        username: "new-artist",
+        loginEmail: "new-artist@users.backstage.local",
+        passwordHash: "new-password-hash",
+      }),
+    );
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { signUpUser } = await import("@/lib/auth");
+
+    await expect(signUpUser("new artist", "new-password")).resolves.toEqual({
+      error: null,
+    });
+
+    expect(mocks.createAccountOwner).toHaveBeenCalledWith({
+      userId: expect.stringMatching(/^user_/),
+      username: "new-artist",
+      loginEmail: "new-artist@users.backstage.local",
+      passwordHash: "new-password-hash",
+    });
+    expect(mocks.cookieSet).toHaveBeenCalledWith(
+      "ffm_admin_session",
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      }),
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      "Supabase account creation threw during sign-up. Falling back to a local password account.",
+      expect.objectContaining({
+        username: "new-artist",
+      }),
+    );
     consoleError.mockRestore();
   });
 });
