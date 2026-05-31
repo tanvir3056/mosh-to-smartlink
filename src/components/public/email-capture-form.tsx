@@ -18,7 +18,7 @@ function SubmitButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-11 items-center justify-center rounded-[0.7rem] border border-[#eee6d6]/18 bg-[#eee6d6] px-5 text-sm font-semibold text-[#111113] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-65"
+      className="inline-flex min-h-11 items-center justify-center rounded-[0.7rem] border border-[#d8d1c4] bg-white px-5 text-sm font-semibold text-[#111827] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_8px_18px_rgba(0,0,0,0.16)] transition hover:border-[#bcb4a5] hover:bg-[#faf8f2] disabled:cursor-not-allowed disabled:opacity-65"
       style={{ color: "#111113", WebkitTextFillColor: "#111113" }}
     >
       {pending ? "Saving..." : label}
@@ -61,7 +61,7 @@ export function EmailCaptureForm({
             href={unlockedDownloadUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex min-h-11 w-fit items-center justify-center rounded-[0.7rem] border border-[#eee6d6]/18 bg-[#eee6d6] px-4 text-sm font-semibold text-[#111113] transition hover:bg-white"
+            className="inline-flex min-h-11 w-fit items-center justify-center rounded-[0.7rem] border border-[#d8d1c4] bg-white px-4 text-sm font-semibold text-[#111827] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_8px_18px_rgba(0,0,0,0.16)] transition hover:border-[#bcb4a5] hover:bg-[#faf8f2]"
             style={{ color: "#111113", WebkitTextFillColor: "#111113" }}
           >
             {state.downloadLabel ?? "Open reward"}
@@ -80,7 +80,7 @@ export function EmailCaptureForm({
                 name="email"
                 required
                 autoComplete="email"
-                className="min-h-11 rounded-[0.7rem] border border-[#b9ac99] bg-[#eee6d6] px-4 text-[15px] text-[#111113] outline-none transition placeholder:text-[#6f6659] focus:border-[#f04444] focus:bg-white"
+                className="min-h-11 rounded-[0.7rem] border border-[#d8d1c4] bg-white px-4 text-[15px] text-[#111827] outline-none shadow-[0_1px_0_rgba(255,255,255,0.86)_inset] transition placeholder:text-[#8b8275] focus:border-[#bcb4a5] focus:bg-[#fffefa] focus:shadow-[0_0_0_3px_rgba(238,230,214,0.16)]"
                 placeholder="Enter your email"
               />
             </label>

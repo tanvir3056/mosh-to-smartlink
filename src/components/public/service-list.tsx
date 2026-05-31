@@ -39,7 +39,7 @@ export function ServiceList({
   });
 
   return (
-    <div className="deathcore-bone-panel text-[#111113]">
+    <div className="deathcore-bone-panel text-[#151922]">
       {services.map((service, index) => {
         const link = byService.get(service);
         const isReady = Boolean(link?.url);
@@ -66,10 +66,10 @@ export function ServiceList({
             />
             <span
               className={cn(
-                "inline-flex h-[2.375rem] w-24 items-center justify-center rounded-[0.35rem] border text-[0.96rem] font-semibold tracking-[-0.01em] transition-[background-color,border-color,color,box-shadow] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151922]",
+                "inline-flex h-[2.375rem] w-24 items-center justify-center rounded-[0.65rem] border text-[0.96rem] font-semibold tracking-[-0.01em] transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151922]",
                 isReady
-                  ? "border-[#a8957c] bg-[#111113] text-[#fff9ec] shadow-[0_1px_0_rgba(255,255,255,0.08)_inset] group-hover:border-[#8f1420] group-hover:bg-[#8f1420] group-active:bg-[#5f0e16]"
-                  : "border-dashed border-[#b9ac99] bg-[#d5cab8] text-[#6f6659]",
+                  ? "border-[#d8d1c4] bg-white text-[#111827] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_8px_18px_rgba(17,24,39,0.08)] group-hover:border-[#bcb4a5] group-hover:bg-[#faf8f2] group-hover:shadow-[0_10px_22px_rgba(17,24,39,0.12)] group-active:translate-y-px group-active:bg-[#f2eee4]"
+                  : "border-dashed border-[#d5ccbc] bg-[#f3efe6] text-[#8b8275]",
               )}
             >
               {ctaLabel}
@@ -89,7 +89,7 @@ export function ServiceList({
                 target={isPreview ? "_blank" : undefined}
                 rel={isPreview ? "noreferrer" : undefined}
                 className={cn(
-                  "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5 transition-[background-color] duration-200 ease-out hover:bg-white/42 active:bg-[#ede6d8]",
+                  "group grid min-h-[72px] grid-cols-[180px_96px] items-center justify-between gap-4 px-5 transition-[background-color] duration-200 ease-out hover:bg-white/62 active:bg-[#f4f0e7]",
                   "relative",
                   isPreview && helperText ? "py-3" : "py-0",
                 )}

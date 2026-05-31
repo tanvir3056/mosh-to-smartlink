@@ -173,10 +173,9 @@ textarea::placeholder {
 
 .deathcore-bone-panel {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 5rem),
-    radial-gradient(circle at 20% 0%, rgba(179, 22, 36, 0.12), transparent 16rem),
-    linear-gradient(180deg, #f0e8d9 0%, #ddd2bd 100%);
-  color: #111113;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.72) 5rem),
+    linear-gradient(180deg, #fffdf8 0%, #f3eee3 100%);
+  color: #151922;
 }
 
 .app-card {

@@ -47,12 +47,12 @@ export function EmailCaptureCard({
               type="email"
               value="fan@example.com"
               readOnly
-              className="min-h-11 rounded-[0.7rem] border border-[#b9ac99] bg-[#eee6d6] px-4 text-[15px] text-[#111113] opacity-90"
+              className="min-h-11 rounded-[0.7rem] border border-[#d8d1c4] bg-white px-4 text-[15px] text-[#111827] opacity-90 shadow-[0_1px_0_rgba(255,255,255,0.86)_inset]"
             />
             <button
               type="button"
               disabled
-              className="inline-flex min-h-11 items-center justify-center rounded-[0.7rem] bg-[#eee6d6] px-5 text-sm font-semibold text-[#111113] opacity-90"
+              className="inline-flex min-h-11 items-center justify-center rounded-[0.7rem] border border-[#d8d1c4] bg-white px-5 text-sm font-semibold text-[#111827] opacity-90 shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_8px_18px_rgba(0,0,0,0.16)]"
             >
               {capture.buttonLabel}
             </button>
