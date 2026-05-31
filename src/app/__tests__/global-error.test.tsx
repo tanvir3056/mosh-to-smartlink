@@ -2,9 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 
 describe("GlobalError", () => {
-  test("renders browser-native recovery controls", async () => {
+  test("renders a branded plain-link fallback instead of trapping users on an error card", async () => {
     const { default: GlobalError } = await import("@/app/global-error");
     const unstableRetry = vi.fn();
+    window.sessionStorage.setItem("backstage-root-recovery:/:digest_123", "tried");
 
     render(
       <GlobalError
@@ -15,17 +16,19 @@ describe("GlobalError", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Backstage hit a temporary problem.",
+        name: "Backstage gives every artist a clean home for every release.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Ref digest_123")).toBeInTheDocument();
+    expect(screen.queryByText("Temporary error")).not.toBeInTheDocument();
 
-    expect(
-      screen.getByRole("button", { name: "Reload page" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Return home" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open homepage" })).toHaveAttribute(
       "href",
       "/",
     );
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+    expect(screen.getByRole("button", { name: "Reload page" })).toBeInTheDocument();
   });
 });
