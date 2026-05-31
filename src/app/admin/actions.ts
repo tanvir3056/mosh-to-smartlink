@@ -442,16 +442,6 @@ export async function updateSongAction(
       revalidatePath(buildPublicSongPath(session.username, currentSlug));
       revalidateTag(publishedSongPageTag(session.username, currentSlug), "max");
     }
-
-    return {
-      error: null,
-      success:
-        status === "published"
-          ? "Song page published."
-          : status === "unpublished"
-            ? "Song page unpublished."
-            : "Draft saved.",
-    };
   } catch (error) {
     return {
       error:
@@ -461,6 +451,50 @@ export async function updateSongAction(
       success: null,
     };
   }
+
+  const successMessage =
+    status === "published"
+      ? "Song page published."
+      : status === "unpublished"
+        ? "Song page unpublished."
+        : "Draft saved.";
+
+  if (status === "published") {
+    redirect(`/admin/songs/${songId}?published=1`);
+  }
+
+  if (status === "unpublished") {
+    redirect(`/admin/songs/${songId}?unpublished=1`);
+  }
+
+  return {
+    error: null,
+    success: successMessage,
+  };
+}
+
+export async function saveSongDraftAction(
+  previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  formData.set("intent", "draft");
+  return updateSongAction(previousState, formData);
+}
+
+export async function publishSongAction(
+  previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  formData.set("intent", "publish");
+  return updateSongAction(previousState, formData);
+}
+
+export async function unpublishSongAction(
+  previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  formData.set("intent", "unpublish");
+  return updateSongAction(previousState, formData);
 }
 
 export async function saveTrackingSettingsAction(

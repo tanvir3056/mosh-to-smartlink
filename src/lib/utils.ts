@@ -41,7 +41,7 @@ export function buildServiceRedirectPath(
 
 export function parseSpotifyTrackId(value: string) {
   const match = value.match(
-    /(?:spotify:track:|open\.spotify\.com\/track\/)([A-Za-z0-9]{22})/,
+    /(?:spotify:track:|open\.spotify\.com\/(?:intl-[^/]+\/)?(?:embed\/)?track\/)([A-Za-z0-9]{22})/,
   );
 
   return match?.[1] ?? null;

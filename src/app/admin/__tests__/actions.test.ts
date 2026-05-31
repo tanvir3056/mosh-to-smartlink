@@ -286,24 +286,24 @@ describe("updateSongAction manual streaming link validation", () => {
     expect(mockUpdateSongDraft).not.toHaveBeenCalled();
   });
 
-  test("allows publishing with a visible search fallback destination", async () => {
-    const { updateSongAction } = await import("@/app/admin/actions");
+  test("refreshes the editor after publishing with a visible search fallback destination", async () => {
+    const { publishSongAction } = await import("@/app/admin/actions");
     const formData = buildBaseFormData();
 
-    formData.set("intent", "publish");
     setServiceFields(formData, "youtube_music", {
       resolutionMode: "search_fallback",
       isVisible: true,
       matchStatus: "search_fallback",
     });
 
-    const result = await updateSongAction({ error: null, success: null }, formData);
+    const result = await publishSongAction({ error: null, success: null }, formData);
 
     expect(result).toEqual({
       error: null,
       success: "Song page published.",
     });
     expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
+    expect(mockRedirect).toHaveBeenCalledWith("/admin/songs/song_1?published=1");
   });
 });
 

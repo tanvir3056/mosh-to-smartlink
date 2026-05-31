@@ -5,7 +5,11 @@ import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
-import { updateSongAction } from "@/app/admin/actions";
+import {
+  publishSongAction,
+  saveSongDraftAction,
+  unpublishSongAction,
+} from "@/app/admin/actions";
 import { ArtworkUploadField } from "@/components/admin/artwork-upload-field";
 import { DeleteSongButton } from "@/components/admin/delete-song-button";
 import { FormStateMessage } from "@/components/admin/form-state";
@@ -103,34 +107,43 @@ function isValidHttpUrl(value: string | null) {
   }
 }
 
-function SaveButtons({ canPublish }: { canPublish: boolean }) {
+type EditorFormAction = (payload: FormData) => void;
+
+function SaveButtons({
+  canPublish,
+  draftAction,
+  publishAction,
+  unpublishAction,
+}: {
+  canPublish: boolean;
+  draftAction: EditorFormAction;
+  publishAction: EditorFormAction;
+  unpublishAction: EditorFormAction;
+}) {
   const { pending } = useFormStatus();
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
       <Button
-        name="intent"
-        value="publish"
         type="submit"
+        formAction={publishAction}
         busy={pending}
         disabled={pending || !canPublish}
       >
         Publish
       </Button>
       <Button
-        name="intent"
-        value="draft"
         type="submit"
         tone="secondary"
+        formAction={draftAction}
         busy={pending}
       >
         Save draft
       </Button>
       <Button
-        name="intent"
-        value="unpublish"
         type="submit"
         tone="ghost"
+        formAction={unpublishAction}
         busy={pending}
       >
         Unpublish
@@ -163,10 +176,24 @@ export function SongEditorForm({
   performance?: DashboardSongRow | null;
   showMissingLinksReview?: boolean;
 }) {
-  const [state, formAction] = useActionState<ActionState, FormData>(
-    updateSongAction,
+  const [draftState, draftAction] = useActionState<ActionState, FormData>(
+    saveSongDraftAction,
     INITIAL_ACTION_STATE,
   );
+  const [publishState, publishAction] = useActionState<ActionState, FormData>(
+    publishSongAction,
+    INITIAL_ACTION_STATE,
+  );
+  const [unpublishState, unpublishAction] = useActionState<ActionState, FormData>(
+    unpublishSongAction,
+    INITIAL_ACTION_STATE,
+  );
+  const state =
+    publishState.error || publishState.success
+      ? publishState
+      : unpublishState.error || unpublishState.success
+        ? unpublishState
+        : draftState;
   const [artworkUrl, setArtworkUrl] = useState(page.song.artworkUrl);
   const serviceLookup = useMemo(
     () => new Map(page.links.map((entry) => [entry.service, entry])),
@@ -395,7 +422,10 @@ export function SongEditorForm({
         </div>
       )}
 
-      <form action={formAction} className="grid gap-5 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
+      <form
+        action={draftAction}
+        className="grid gap-5 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start"
+      >
         <input type="hidden" name="song_id" value={page.song.id} />
         <input type="hidden" name="current_slug" value={page.page.slug} />
 
@@ -480,7 +510,12 @@ export function SongEditorForm({
             <div className="mt-6 border-t border-[var(--app-line)] pt-5">
               <p className="app-kicker text-[var(--app-muted)]">Save state</p>
               <div className="mt-4">
-                <SaveButtons canPublish={publishReady} />
+                <SaveButtons
+                  canPublish={publishReady}
+                  draftAction={draftAction}
+                  publishAction={publishAction}
+                  unpublishAction={unpublishAction}
+                />
               </div>
             </div>
           </div>
@@ -993,7 +1028,12 @@ export function SongEditorForm({
                   Save a draft while you review, or publish when everything is approved.
                 </p>
               </div>
-              <SaveButtons canPublish={publishReady} />
+              <SaveButtons
+                canPublish={publishReady}
+                draftAction={draftAction}
+                publishAction={publishAction}
+                unpublishAction={unpublishAction}
+              />
             </div>
           </div>
 

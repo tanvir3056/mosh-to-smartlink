@@ -7,7 +7,9 @@ import { STREAMING_SERVICES } from "@/lib/constants";
 import type { SongPageWithLinks } from "@/lib/types";
 
 vi.mock("@/app/admin/actions", () => ({
-  updateSongAction: vi.fn(),
+  publishSongAction: vi.fn(),
+  saveSongDraftAction: vi.fn(),
+  unpublishSongAction: vi.fn(),
   deleteSongAction: vi.fn(),
 }));
 
@@ -245,5 +247,14 @@ describe("SongEditorForm missing link review", () => {
     expect(
       screen.getByText("1 destination still needs attention before launch."),
     ).toBeInTheDocument();
+  });
+
+  test("uses a dedicated action for the publish submit control", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const publishButton = screen.getAllByRole("button", { name: "Publish" })[0];
+
+    expect(publishButton).toHaveAttribute("type", "submit");
+    expect(publishButton).not.toHaveAttribute("name", "intent");
   });
 });

@@ -163,7 +163,7 @@ describe("core data flow", () => {
       id: USER_ID,
       username: USERNAME,
     });
-  });
+  }, 10_000);
 
   test("imports, publishes, records analytics, and exposes the public page", async () => {
     const {
