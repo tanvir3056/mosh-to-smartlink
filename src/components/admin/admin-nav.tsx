@@ -59,25 +59,25 @@ export function AdminNavLinks({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "app-interactive inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
+              "app-interactive app-sidebar-nav-link inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
               orientation === "horizontal" && "min-w-0 justify-start px-3 py-2.5 sm:px-3.5 sm:py-3",
               active
-                ? "border-[var(--app-sidebar-line)] bg-[var(--app-sidebar-panel-strong)] text-[var(--app-sidebar-text)] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_32px_rgba(0,0,0,0.16)]"
-                : "border-transparent text-white/78 hover:border-[var(--app-sidebar-line)] hover:bg-white/7 hover:text-white",
+                ? "border-[var(--app-sidebar-line)] bg-[var(--app-sidebar-panel-strong)] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_32px_rgba(0,0,0,0.16)]"
+                : "border-transparent hover:border-[var(--app-sidebar-line)] hover:bg-white/7",
             )}
           >
             <span
               className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+                "app-sidebar-nav-icon inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
                 orientation === "horizontal" && "h-8 w-8 shrink-0",
                 active
-                  ? "border-[rgba(255,255,255,0.1)] bg-white/10 text-[var(--app-sidebar-text)]"
-                  : "border-transparent bg-transparent text-white/65",
+                  ? "border-[rgba(255,255,255,0.1)] bg-white/10"
+                  : "border-transparent bg-transparent",
               )}
             >
               <Icon className="h-4 w-4" />
             </span>
-            <span className="min-w-0 truncate font-medium">{item.label}</span>
+            <span className="app-sidebar-nav-label min-w-0 truncate font-medium">{item.label}</span>
           </Link>
         );
       })}

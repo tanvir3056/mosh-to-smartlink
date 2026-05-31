@@ -293,6 +293,30 @@ textarea::placeholder {
   color: var(--app-sidebar-muted);
 }
 
+.app-sidebar-nav-link {
+  color: rgba(244, 246, 251, 0.78);
+}
+
+.app-sidebar-nav-link[aria-current="page"] {
+  color: var(--app-sidebar-text);
+}
+
+.app-sidebar-nav-link:hover {
+  color: #ffffff;
+}
+
+.app-sidebar-nav-icon {
+  color: rgba(244, 246, 251, 0.66);
+}
+
+.app-sidebar-nav-link[aria-current="page"] .app-sidebar-nav-icon {
+  color: var(--app-sidebar-text);
+}
+
+.app-sidebar-nav-link:hover .app-sidebar-nav-icon {
+  color: #ffffff;
+}
+
 .app-enter {
   animation: app-fade-up 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
