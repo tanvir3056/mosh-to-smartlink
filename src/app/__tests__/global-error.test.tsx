@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 
 describe("GlobalError", () => {
-  test("renders a recovery screen and retries the failed render", async () => {
+  test("renders browser-native recovery controls", async () => {
     const { default: GlobalError } = await import("@/app/global-error");
     const unstableRetry = vi.fn();
 
@@ -20,8 +20,12 @@ describe("GlobalError", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Ref digest_123")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-
-    expect(unstableRetry).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Reload page" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Return home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
   });
 });

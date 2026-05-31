@@ -1,7 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-html-link-for-pages -- Root error recovery must bypass Next client routing when the router/runtime is the failing layer. */
 import { useEffect } from "react";
-import Link from "next/link";
 
 import "./globals.css";
 
@@ -16,6 +16,15 @@ export default function GlobalError({
     console.error("Root application render failed.", error);
   }, [error]);
 
+  const reloadPage = () => {
+    if (typeof window === "undefined") {
+      unstable_retry();
+      return;
+    }
+
+    window.location.reload();
+  };
+
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-[var(--app-bg)] text-[var(--app-text)]">
@@ -27,7 +36,7 @@ export default function GlobalError({
               Backstage hit a temporary problem.
             </h1>
             <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[var(--app-muted)] sm:text-base">
-              The app could not finish loading this screen. Try again first, or return
+              The app could not finish loading this screen. Reload first, or return
               home if the issue keeps happening.
             </p>
 
@@ -40,17 +49,17 @@ export default function GlobalError({
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => unstable_retry()}
+                onClick={reloadPage}
                 className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[rgba(6,44,40,0.06)] bg-[linear-gradient(135deg,var(--app-accent)_0%,#77e7db_100%)] px-4 text-sm font-semibold text-[#062c28] shadow-[0_14px_30px_rgba(63,212,196,0.22),0_1px_0_rgba(255,255,255,0.45)_inset]"
               >
-                Try again
+                Reload page
               </button>
-              <Link
+              <a
                 href="/"
                 className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_0_rgba(255,255,255,0.7)_inset]"
               >
                 Return home
-              </Link>
+              </a>
             </div>
           </section>
         </main>
