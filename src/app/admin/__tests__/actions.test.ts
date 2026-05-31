@@ -75,6 +75,44 @@ function setServiceFields(
   }
 }
 
+describe("auth actions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("returns a stable sign-in error when auth throws", async () => {
+    const { signInUser } = await import("@/lib/auth");
+    const { signInAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("username", "artist");
+    formData.set("password", "correct-password");
+    vi.mocked(signInUser).mockRejectedValueOnce(new Error("Supabase is unavailable"));
+
+    await expect(
+      signInAction({ error: null, success: null }, formData),
+    ).resolves.toEqual({
+      error: "Sign-in could not be completed. Try again in a moment.",
+      success: null,
+    });
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
+  test("redirects to admin after successful sign-in", async () => {
+    const { signInUser } = await import("@/lib/auth");
+    const { signInAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("username", "artist");
+    formData.set("password", "correct-password");
+    vi.mocked(signInUser).mockResolvedValueOnce({ error: null });
+
+    await signInAction({ error: null, success: null }, formData);
+
+    expect(mockRedirect).toHaveBeenCalledWith("/admin");
+  });
+});
+
 describe("updateSongAction manual streaming link validation", () => {
   beforeEach(() => {
     vi.clearAllMocks();

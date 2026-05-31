@@ -75,7 +75,7 @@ export default function GlobalError({
                     Backstage gives every artist a clean home for every release.
                   </h1>
                   <p className="mt-5 max-w-2xl text-sm leading-7 text-[#c9c0b2] sm:text-base">
-                    The page is refreshing a stale browser state. You can continue from here, or reload once to fetch the newest app shell.
+                    The app is refreshing this screen. You can still sign in with a normal browser link while it recovers.
                   </p>
                 </div>
               </div>
@@ -83,23 +83,23 @@ export default function GlobalError({
               <div className="deathcore-bone-panel app-enter app-enter-delay-1 rounded-[1.05rem] border border-[#eee6d6]/24 p-5 shadow-[0_20px_48px_rgba(0,0,0,0.28)] sm:p-6">
                 <p className="app-kicker text-[#8f1420]">Continue</p>
                 <h2 className="mt-3 text-2xl font-semibold tracking-[-0.02em] text-[#111113]">
-                  Open the latest Backstage app shell
+                  Continue to your account
                 </h2>
                 <p className="mt-4 text-sm font-medium leading-7 text-[#38332a]">
-                  This fallback uses normal browser links, so it still works if the Next.js client router is recovering from an old deploy.
+                  Use sign in first. If the page still feels stuck, reload once and the app will request a fresh screen.
                 </p>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="/"
-                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#cdbf9e] bg-[#111113] px-4 text-sm font-semibold text-[#fff9ec] shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
-                  >
-                    Open homepage
-                  </a>
-                  <a
                     href="/sign-in"
-                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#cdbf9e] bg-[#f8f1e3] px-4 text-sm font-semibold text-[#111113] shadow-[0_1px_0_rgba(255,255,255,0.75)_inset]"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#111113] bg-[#111113] px-4 text-sm font-semibold text-white shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
                   >
                     Sign in
+                  </a>
+                  <a
+                    href="/"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#cdbf9e] bg-[#f8f1e3] px-4 text-sm font-semibold text-[#111113] shadow-[0_1px_0_rgba(255,255,255,0.75)_inset]"
+                  >
+                    Open homepage
                   </a>
                 </div>
                 <div className="mt-3">

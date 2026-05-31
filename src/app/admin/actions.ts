@@ -235,7 +235,17 @@ export async function signInAction(
     };
   }
 
-  const result = await signInUser(username, password);
+  let result: Awaited<ReturnType<typeof signInUser>>;
+
+  try {
+    result = await signInUser(username, password);
+  } catch (error) {
+    console.error("Sign-in action failed.", error);
+    return {
+      error: "Sign-in could not be completed. Try again in a moment.",
+      success: null,
+    };
+  }
 
   if (result.error) {
     return {
@@ -261,7 +271,17 @@ export async function signUpAction(
     };
   }
 
-  const result = await signUpUser(username, password);
+  let result: Awaited<ReturnType<typeof signUpUser>>;
+
+  try {
+    result = await signUpUser(username, password);
+  } catch (error) {
+    console.error("Sign-up action failed.", error);
+    return {
+      error: "Account creation could not be completed. Try again in a moment.",
+      success: null,
+    };
+  }
 
   if (result.error) {
     return {

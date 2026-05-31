@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,6 +16,7 @@ import {
 } from "@/lib/data";
 import { appEnv, assertSupabaseAdminEnv } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/passwords";
+import type { AppUserRecord } from "@/lib/types";
 import { createId, normalizeUsername } from "@/lib/utils";
 
 export interface AppSession {
@@ -121,6 +122,10 @@ function validatePassword(password: string) {
   return null;
 }
 
+const incorrectCredentialsError = "That username or password is incorrect.";
+const accountRepairRequiredError =
+  "This account needs a one-time login repair. Contact support to restore access.";
+
 export async function createServerSupabaseClient() {
   if (!appEnv.hasSupabaseAuth || !appEnv.supabaseUrl || !appEnv.supabaseAnonKey) {
     throw new Error("Supabase auth is not configured.");
@@ -156,6 +161,201 @@ export function createAdminSupabaseClient() {
       persistSession: false,
     },
   });
+}
+
+type SupabaseAdminClient = ReturnType<typeof createAdminSupabaseClient>;
+
+function buildLegacySupabaseAuthAttributes(
+  user: AppUserRecord,
+  password: string,
+) {
+  return {
+    email: user.loginEmail,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      username: user.username,
+    },
+  };
+}
+
+async function getLinkedSupabaseAuthUser(
+  admin: SupabaseAdminClient,
+  user: AppUserRecord,
+) {
+  if (!user.authUserId) {
+    return null;
+  }
+
+  const { data, error } = await admin.auth.admin.getUserById(user.authUserId);
+
+  if (error) {
+    console.warn("Linked Supabase auth user lookup failed during login repair.", {
+      userId: user.id,
+      authUserId: user.authUserId,
+      error: error.message,
+    });
+    return null;
+  }
+
+  return data.user ?? null;
+}
+
+async function findSupabaseAuthUserByEmail(
+  admin: SupabaseAdminClient,
+  email: string,
+) {
+  const normalizedEmail = email.toLowerCase();
+  const perPage = 100;
+
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+
+    if (error) {
+      console.warn("Supabase auth user email lookup failed during login repair.", {
+        email,
+        error: error.message,
+      });
+      return null;
+    }
+
+    const users = data.users ?? [];
+    const matchingUser = users.find(
+      (candidate: User) => candidate.email?.toLowerCase() === normalizedEmail,
+    );
+
+    if (matchingUser) {
+      return matchingUser;
+    }
+
+    if (users.length < perPage) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function updateLegacySupabaseAuthUser(
+  admin: SupabaseAdminClient,
+  user: AppUserRecord,
+  authUserId: string,
+  password: string,
+) {
+  const { data, error } = await admin.auth.admin.updateUserById(
+    authUserId,
+    buildLegacySupabaseAuthAttributes(user, password),
+  );
+
+  if (error || !data.user?.id) {
+    console.error("Supabase legacy account repair failed while updating auth user.", {
+      userId: user.id,
+      authUserId,
+      error: error?.message ?? "No Supabase auth user returned.",
+    });
+    return {
+      authUserId: null,
+      error: accountRepairRequiredError,
+    };
+  }
+
+  return {
+    authUserId: data.user.id,
+    error: null,
+  };
+}
+
+async function createLegacySupabaseAuthUser(
+  admin: SupabaseAdminClient,
+  user: AppUserRecord,
+  password: string,
+) {
+  const { data, error } = await admin.auth.admin.createUser(
+    buildLegacySupabaseAuthAttributes(user, password),
+  );
+
+  if (!error && data.user?.id) {
+    return {
+      authUserId: data.user.id,
+      error: null,
+    };
+  }
+
+  const existingUser = await findSupabaseAuthUserByEmail(admin, user.loginEmail);
+
+  if (existingUser?.id) {
+    return updateLegacySupabaseAuthUser(
+      admin,
+      user,
+      existingUser.id,
+      password,
+    );
+  }
+
+  console.error("Supabase legacy account migration failed while creating auth user.", {
+    userId: user.id,
+    username: user.username,
+    error: error?.message ?? "No Supabase auth user returned.",
+  });
+
+  return {
+    authUserId: null,
+    error: accountRepairRequiredError,
+  };
+}
+
+async function recoverLegacySupabaseAccount(
+  user: AppUserRecord,
+  password: string,
+) {
+  if (!user.passwordHash) {
+    return {
+      authUserId: null,
+      error: incorrectCredentialsError,
+    };
+  }
+
+  const matches = await verifyPassword(password, user.passwordHash);
+
+  if (!matches) {
+    return {
+      authUserId: null,
+      error: incorrectCredentialsError,
+    };
+  }
+
+  if (!appEnv.hasSupabaseAdmin) {
+    console.error(
+      "Supabase legacy account migration is blocked by missing admin credentials.",
+      {
+        userId: user.id,
+        username: user.username,
+      },
+    );
+    return {
+      authUserId: null,
+      error: accountRepairRequiredError,
+    };
+  }
+
+  const admin = createAdminSupabaseClient();
+  const existingUser =
+    (await getLinkedSupabaseAuthUser(admin, user)) ??
+    (await findSupabaseAuthUserByEmail(admin, user.loginEmail));
+
+  if (existingUser?.id) {
+    return updateLegacySupabaseAuthUser(
+      admin,
+      user,
+      existingUser.id,
+      password,
+    );
+  }
+
+  return createLegacySupabaseAuthUser(admin, user, password);
 }
 
 async function writeLocalSessionCookie(session: {
@@ -257,7 +457,7 @@ export async function signInUser(username: string, password: string) {
 
   if (!user) {
     return {
-      error: "That username or password is incorrect.",
+      error: incorrectCredentialsError,
     };
   }
 
@@ -269,9 +469,36 @@ export async function signInUser(username: string, password: string) {
     });
 
     if (error || !data.user?.id) {
-      return {
-        error: "That username or password is incorrect.",
-      };
+      const recovery = await recoverLegacySupabaseAccount(user, password);
+
+      if (recovery.error) {
+        return {
+          error: recovery.error,
+        };
+      }
+
+      const retry = await supabase.auth.signInWithPassword({
+        email: user.loginEmail,
+        password,
+      });
+
+      if (retry.error || !retry.data.user?.id) {
+        console.error("Supabase sign-in failed after legacy account repair.", {
+          userId: user.id,
+          username: user.username,
+          authUserId: recovery.authUserId,
+          error: retry.error?.message ?? "No Supabase auth user returned.",
+        });
+        return {
+          error: accountRepairRequiredError,
+        };
+      }
+
+      if (retry.data.user.id !== user.authUserId) {
+        await linkUserAuthIdentity(user.id, retry.data.user.id);
+      }
+
+      return { error: null };
     }
 
     if (data.user.id !== user.authUserId) {
@@ -285,7 +512,7 @@ export async function signInUser(username: string, password: string) {
 
   if (!matches) {
     return {
-      error: "That username or password is incorrect.",
+      error: incorrectCredentialsError,
     };
   }
 

@@ -22,6 +22,13 @@ describe("auth page launch copy", () => {
     expect(screen.getByText("Sign-in mode: Secure account access")).toBeInTheDocument();
   });
 
+  test("sign-in page is rendered dynamically so login actions stay deploy-fresh", async () => {
+    const signInPage = await import("@/app/sign-in/page");
+
+    expect(signInPage.dynamic).toBe("force-dynamic");
+    expect(signInPage.revalidate).toBe(0);
+  });
+
   test("sign-up copy does not expose implementation provider jargon", async () => {
     const { default: SignUpPage } = await import("@/app/sign-up/page");
 
@@ -30,5 +37,12 @@ describe("auth page launch copy", () => {
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/first version/i)).not.toBeInTheDocument();
     expect(screen.getByText("Account mode: Secure account creation")).toBeInTheDocument();
+  });
+
+  test("sign-up page is rendered dynamically so account creation actions stay deploy-fresh", async () => {
+    const signUpPage = await import("@/app/sign-up/page");
+
+    expect(signUpPage.dynamic).toBe("force-dynamic");
+    expect(signUpPage.revalidate).toBe(0);
   });
 });

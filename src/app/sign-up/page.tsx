@@ -3,6 +3,9 @@ import { SignUpForm } from "@/components/admin/sign-up-form";
 import { APP_NAME } from "@/lib/constants";
 import { appEnv } from "@/lib/env";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function SignUpPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-5 py-8">
