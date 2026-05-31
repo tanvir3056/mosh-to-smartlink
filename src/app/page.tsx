@@ -4,6 +4,9 @@ import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   return (
     <main className="deathcore-field relative mx-auto flex min-h-screen w-full flex-col justify-center overflow-hidden px-5 py-8 sm:px-8 sm:py-12">
