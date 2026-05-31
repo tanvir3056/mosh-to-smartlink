@@ -1,5 +1,29 @@
-const appUrl =
-  process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
+const defaultAppUrl = "http://localhost:3000";
+
+export function normalizeAppUrl(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return defaultAppUrl;
+  }
+
+  const hasProtocol = /^[a-z][a-z\d+\-.]*:\/\//i.test(trimmed);
+  const candidate = hasProtocol ? trimmed : `https://${trimmed}`;
+
+  try {
+    const url = new URL(candidate);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return defaultAppUrl;
+    }
+
+    return url.origin;
+  } catch {
+    return defaultAppUrl;
+  }
+}
+
+const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || null;
 const supabaseAnonKey =
