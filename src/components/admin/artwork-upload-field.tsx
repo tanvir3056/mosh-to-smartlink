@@ -717,18 +717,18 @@ export function ArtworkUploadField({
       </div>
 
       {cropSession && cropGeometry && artworkFrameStyle ? (
-        <div className="fixed inset-0 z-[70] bg-[rgba(7,9,12,0.7)] px-4 py-6 backdrop-blur-[3px]">
-          <div className="mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[2rem] border border-white/10 bg-[#0f131a] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="fixed inset-0 z-[70] bg-[var(--scrim)] px-4 py-6 backdrop-blur-[3px]">
+          <div className="app-card mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[20px] bg-[var(--app-panel)] p-5 shadow-[0_16px_48px_oklch(0.2_0.02_270_/_0.16),0_4px_12px_oklch(0.2_0.02_270_/_0.08)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/42">
+                  <p className="app-kicker text-[var(--app-muted-2)]">
                     Crop artwork
                   </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
                     Choose the final square cover
                   </h3>
-                  <p className="mt-2 max-w-xl text-sm leading-7 text-white/58">
+                  <p className="mt-2 max-w-xl text-sm leading-7 text-[var(--app-muted)]">
                     Drag the image to reposition it. Use zoom only if you want a tighter crop.
                   </p>
                 </div>
@@ -736,7 +736,7 @@ export function ArtworkUploadField({
                 <button
                   type="button"
                   onClick={() => setCropSession(null)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/72 transition hover:bg-white/10 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)] transition hover:bg-[var(--app-line)] hover:text-[var(--app-text)]"
                   aria-label="Close crop editor"
                 >
                   <X className="h-4 w-4" />
@@ -746,7 +746,7 @@ export function ArtworkUploadField({
               <div
                 role="img"
                 aria-label="Artwork crop editor"
-                className="relative mx-auto aspect-square w-full max-w-[440px] touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090c11] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                className="relative mx-auto aspect-square w-full max-w-[440px] touch-none overflow-hidden rounded-[16px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] shadow-[inset_0_0_0_1px_var(--app-line)]"
                 onPointerDown={(event) => {
                   dragState.current = {
                     pointerId: event.pointerId,
@@ -807,18 +807,18 @@ export function ArtworkUploadField({
                   className="pointer-events-none absolute max-w-none select-none"
                   style={artworkFrameStyle}
                 />
-                <div className="absolute inset-0 border border-white/14" />
-                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/12" />
-                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/12" />
+                <div className="absolute inset-0 border border-[var(--app-line-strong)]" />
+                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--app-line-strong)]" />
+                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--app-line-strong)]" />
               </div>
             </div>
 
             <div className="grid content-start gap-4">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">
+              <div className="app-card-soft rounded-[14px] p-4">
+                <p className="app-kicker text-[var(--app-muted-2)]">
                   Final cover
                 </p>
-                <div className="relative mt-3 aspect-square overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#090c11]">
+                <div className="relative mt-3 aspect-square overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
                   <img
                     src={cropSession.imageDataUrl}
                     alt=""
@@ -828,15 +828,15 @@ export function ArtworkUploadField({
                     style={artworkFrameStyle}
                   />
                 </div>
-                <div className="mt-3 text-xs leading-6 text-white/52">
+                <div className="mt-3 text-xs leading-6 text-[var(--app-muted)]">
                   {cropSession.image.naturalWidth}×{cropSession.image.naturalHeight} source
                 </div>
               </div>
 
-              <div className="rounded-[1.5rem] border border-white/10 bg-[#0b0f15] p-4">
+              <div className="app-card-soft rounded-[14px] p-4">
                 <label className="grid gap-2">
-                  <span className="inline-flex items-center gap-2 text-sm font-medium text-white">
-                    <ZoomIn className="h-4 w-4 text-white/58" />
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
+                    <ZoomIn className="h-4 w-4 text-[var(--app-muted)]" />
                     Zoom
                   </span>
                   <input
@@ -853,7 +853,7 @@ export function ArtworkUploadField({
                 </label>
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-white/10 pt-1">
+              <div className="flex flex-col gap-3 border-t border-[var(--app-line)] pt-1">
                 <button
                   type="button"
                   onClick={() =>
@@ -863,7 +863,7 @@ export function ArtworkUploadField({
                       zoom: current.defaultZoom,
                     }))
                   }
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 text-sm font-semibold text-white/82 transition hover:bg-white/10"
+                  className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Reset suggested crop
@@ -873,7 +873,7 @@ export function ArtworkUploadField({
                   <button
                     type="button"
                     onClick={() => setCropSession(null)}
-                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-transparent px-4 text-sm font-semibold text-white/72 transition hover:bg-white/6 hover:text-white"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-transparent px-4 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
                   >
                     Cancel
                   </button>
@@ -902,7 +902,7 @@ export function ArtworkUploadField({
                       }
                     }}
                     disabled={busy}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-[#10141b] transition hover:bg-[#f1ede3] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-transparent bg-[var(--app-accent)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--app-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {busy ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />

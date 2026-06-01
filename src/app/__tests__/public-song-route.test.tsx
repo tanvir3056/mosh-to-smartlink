@@ -5,12 +5,14 @@ import type { AppSession } from "@/lib/auth";
 import type { SongPageWithLinks } from "@/lib/types";
 
 const {
+  mockConnection,
   mockGetAdminSongPageByPublicPathForOwner,
   mockGetPublishedSongPage,
   mockGetUserSession,
   mockNotFound,
   mockRedirect,
 } = vi.hoisted(() => ({
+  mockConnection: vi.fn(),
   mockGetAdminSongPageByPublicPathForOwner: vi.fn(),
   mockGetPublishedSongPage: vi.fn(),
   mockGetUserSession: vi.fn(),
@@ -25,6 +27,10 @@ const {
 vi.mock("next/navigation", () => ({
   notFound: mockNotFound,
   redirect: mockRedirect,
+}));
+
+vi.mock("next/server", () => ({
+  connection: mockConnection,
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -110,8 +116,17 @@ describe("public song route", () => {
     mockGetAdminSongPageByPublicPathForOwner.mockReset();
     mockGetPublishedSongPage.mockReset();
     mockGetUserSession.mockReset();
+    mockConnection.mockReset();
     mockNotFound.mockClear();
     mockRedirect.mockClear();
+  });
+
+  test("keeps draft preview fallback out of the public route cache", async () => {
+    const publicSongRouteModule = (await import("@/app/[username]/[slug]/page")) as {
+      revalidate?: unknown;
+    };
+
+    expect(publicSongRouteModule.revalidate).toBeUndefined();
   });
 
   test("renders published pages through the public output component", async () => {
@@ -127,6 +142,7 @@ describe("public song route", () => {
 
     expect(screen.getByTestId("public-song-page")).toHaveTextContent("Draft Track");
     expect(mockGetUserSession).not.toHaveBeenCalled();
+    expect(mockConnection).not.toHaveBeenCalled();
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 
@@ -148,6 +164,7 @@ describe("public song route", () => {
       "draft-track",
       "user_1",
     );
+    expect(mockConnection).toHaveBeenCalledOnce();
     expect(mockRedirect).toHaveBeenCalledWith("/admin/preview/song_1");
     expect(mockNotFound).not.toHaveBeenCalled();
   });
@@ -165,6 +182,7 @@ describe("public song route", () => {
     ).rejects.toThrow("NEXT_NOT_FOUND");
 
     expect(mockGetAdminSongPageByPublicPathForOwner).not.toHaveBeenCalled();
+    expect(mockConnection).toHaveBeenCalledOnce();
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { PublicSongPage } from "@/components/public/song-page";
 import { getUserSession } from "@/lib/auth";
@@ -7,8 +8,6 @@ import {
   getAdminSongPageByPublicPathForOwner,
   getPublishedSongPage,
 } from "@/lib/data";
-
-export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -48,6 +47,8 @@ export default async function PublicSongRoute({
   const page = await getPublishedSongPage(username, slug);
 
   if (!page) {
+    await connection();
+
     const session = await getUserSession();
 
     if (session) {
