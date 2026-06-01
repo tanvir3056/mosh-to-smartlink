@@ -130,6 +130,14 @@ export default async function AdminOverviewPage({
     snapshot.totalSongs > 0
       ? `${Math.round((snapshot.publishedSongs / snapshot.totalSongs) * 100)}% live`
       : "No pages yet";
+  const firstSongId = snapshot.songs[0]?.songId;
+  const firstDraftSongId = draftSongs[0]?.songId;
+  const reviewHref = firstDraftSongId
+    ? `/admin/songs/${firstDraftSongId}`
+    : firstSongId
+      ? `/admin/songs/${firstSongId}`
+      : "/admin/songs/new";
+  const reviewCta = firstSongId ? "Open a draft" : "Start with import";
   const emptyTitle =
     activeFilter === "published"
       ? "No published releases yet"
@@ -370,113 +378,114 @@ export default async function AdminOverviewPage({
         </div>
       </section>
 
-      {snapshot.songs.length > 0 ? (
-        <section className="grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
-          <div>
-            <h2 className="mb-1 text-[17px] font-semibold">How a release comes together</h2>
-            <p className="mb-4 text-[13px] text-[var(--app-muted-2)]">
-              Three steps from import to a live, shareable link.
-            </p>
-            <div className="grid gap-3.5 md:grid-cols-3">
-              {[
-                {
-                  step: "1",
-                  icon: Sparkles,
-                  title: "Import",
-                  desc: "Paste a Spotify URL — we pull artwork, metadata and matching services.",
-                  href: "/admin/songs/new",
-                  done: true,
-                },
-                {
-                  step: "2",
-                  icon: Edit3,
-                  title: "Review",
-                  desc: "Confirm links, set your slug and tune the page before it goes live.",
-                  href: `/admin/songs/${draftSongs[0]?.songId ?? snapshot.songs[0].songId}`,
-                },
-                {
-                  step: "3",
-                  icon: Globe2,
-                  title: "Publish",
-                  desc: "Flip it live and share one link that works everywhere.",
-                  href: "/admin/analytics",
-                },
-              ].map((item) => {
-                const Icon = item.done ? CheckCircle2 : item.icon;
+      <section className="grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
+        <div>
+          <h2 className="mb-1 text-[17px] font-semibold">How a release comes together</h2>
+          <p className="mb-4 text-[13px] text-[var(--app-muted-2)]">
+            Three steps from import to a live, shareable link.
+          </p>
+          <div className="grid gap-3.5 md:grid-cols-3">
+            {[
+              {
+                step: "1",
+                icon: Sparkles,
+                title: "Import",
+                desc: "Paste a Spotify URL — we pull artwork, metadata and matching services.",
+                href: "/admin/songs/new",
+                cta: "Import a song",
+                done: true,
+              },
+              {
+                step: "2",
+                icon: Edit3,
+                title: "Review",
+                desc: "Confirm links, set your slug and tune the page before it goes live.",
+                href: reviewHref,
+                cta: reviewCta,
+              },
+              {
+                step: "3",
+                icon: Globe2,
+                title: "Publish",
+                desc: "Flip it live and share one link that works everywhere.",
+                href: "/admin/analytics",
+                cta: "See analytics",
+              },
+            ].map((item) => {
+              const Icon = item.done ? CheckCircle2 : item.icon;
 
-                return (
-                  <div
-                    key={item.title}
-                    className="app-card flex flex-col overflow-hidden rounded-[14px] p-0"
-                  >
-                    <div className="flex flex-1 flex-col p-[18px]">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className={`flex h-9 w-9 items-center justify-center rounded-[9px] ${item.done ? "bg-[var(--app-green-soft)] text-[var(--app-green-text)]" : "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"}`}>
-                          <Icon className="h-4.5 w-4.5" />
-                        </span>
-                        <span className="font-mono text-xs font-semibold text-[var(--app-muted-2)]">
-                          STEP {item.step}
-                        </span>
-                      </div>
-                      <h3 className="text-[15px] font-semibold">{item.title}</h3>
-                      <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
-                        {item.desc}
-                      </p>
+              return (
+                <div
+                  key={item.title}
+                  className="app-card flex flex-col overflow-hidden rounded-[14px] p-0"
+                >
+                  <div className="flex flex-1 flex-col p-[18px]">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-[9px] ${item.done ? "bg-[var(--app-green-soft)] text-[var(--app-green-text)]" : "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"}`}>
+                        <Icon className="h-4.5 w-4.5" />
+                      </span>
+                      <span className="font-mono text-xs font-semibold text-[var(--app-muted-2)]">
+                        STEP {item.step}
+                      </span>
                     </div>
-                    <div className="px-[18px] pb-4">
-                      <Link href={item.href}>
-                        <Button tone="subtle" className="h-8 min-h-8 px-3">
-                          {item.title === "Import" ? "Import a song" : item.title === "Review" ? "Open a draft" : "See analytics"}
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                    </div>
+                    <h3 className="text-[15px] font-semibold">{item.title}</h3>
+                    <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
+                      {item.desc}
+                    </p>
                   </div>
-                );
-              })}
+                  <div className="px-[18px] pb-4">
+                    <Link href={item.href}>
+                      <Button tone="subtle" className="h-8 min-h-8 px-3">
+                        {item.cta}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <section className="app-card rounded-[14px] bg-[linear-gradient(165deg,var(--app-accent-soft),var(--app-panel)_75%)] p-[18px]">
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
+            <h3 className="text-[15px] font-semibold">Quick read</h3>
+          </div>
+          <div className="grid gap-3 text-[13.5px]">
+            <div className="flex justify-between gap-3">
+              <span className="text-[var(--app-muted)]">Top release</span>
+              <strong className="text-right font-semibold text-[var(--app-text)]">
+                {publishedSongs[0]?.title ?? "—"}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-[var(--app-muted)]">Published pages</span>
+              <strong className="font-semibold text-[var(--app-text)]">
+                {snapshot.publishedSongs}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-[var(--app-muted)]">Drafts in review</span>
+              <strong className="font-semibold text-[var(--app-text)]">
+                {snapshot.draftSongs}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-[var(--app-muted)]">Average CTR</span>
+              <strong className="font-semibold text-[var(--app-text)]">
+                {ctr(snapshot.totalClicks, snapshot.totalVisits)}
+              </strong>
             </div>
           </div>
-
-          <section className="app-card rounded-[14px] bg-[linear-gradient(165deg,var(--app-accent-soft),var(--app-panel)_75%)] p-[18px]">
-            <div className="mb-4 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
-              <h3 className="text-[15px] font-semibold">Quick read</h3>
-            </div>
-            <div className="grid gap-3 text-[13.5px]">
-              <div className="flex justify-between gap-3">
-                <span className="text-[var(--app-muted)]">Top release</span>
-                <strong className="text-right font-semibold text-[var(--app-text)]">
-                  {publishedSongs[0]?.title ?? "—"}
-                </strong>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-[var(--app-muted)]">Published pages</span>
-                <strong className="font-semibold text-[var(--app-text)]">
-                  {snapshot.publishedSongs}
-                </strong>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-[var(--app-muted)]">Drafts in review</span>
-                <strong className="font-semibold text-[var(--app-text)]">
-                  {snapshot.draftSongs}
-                </strong>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-[var(--app-muted)]">Average CTR</span>
-                <strong className="font-semibold text-[var(--app-text)]">
-                  {ctr(snapshot.totalClicks, snapshot.totalVisits)}
-                </strong>
-              </div>
-            </div>
-            <Link href="/admin/analytics" className="mt-5 block">
-              <Button tone="secondary" className="w-full justify-center">
-                Full analytics
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </section>
+          <Link href="/admin/analytics" className="mt-5 block">
+            <Button tone="secondary" className="w-full justify-center">
+              Full analytics
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </section>
-      ) : null}
+      </section>
     </div>
   );
 }

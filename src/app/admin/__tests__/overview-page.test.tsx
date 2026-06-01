@@ -97,4 +97,29 @@ describe("admin overview page", () => {
     expect(screen.getByText("/warcry/release")).toBeInTheDocument();
     expect(screen.queryByText("Draft Release")).not.toBeInTheDocument();
   });
+
+  test("keeps the first-run overview guidance visible when the library is empty", async () => {
+    mockGetDashboardSnapshot.mockResolvedValue({
+      totalSongs: 0,
+      publishedSongs: 0,
+      draftSongs: 0,
+      totalVisits: 0,
+      totalClicks: 0,
+      songs: [],
+    } satisfies DashboardSnapshot);
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("How a release comes together")).toBeInTheDocument();
+    expect(screen.getByText("Quick read")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /import a song/i })).toHaveAttribute(
+      "href",
+      "/admin/songs/new",
+    );
+    expect(screen.getByRole("link", { name: /start with import/i })).toHaveAttribute(
+      "href",
+      "/admin/songs/new",
+    );
+  });
 });
