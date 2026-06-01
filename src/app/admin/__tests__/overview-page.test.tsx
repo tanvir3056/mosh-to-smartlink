@@ -27,6 +27,11 @@ const dashboardSnapshot: DashboardSnapshot = {
   totalVisits: 250,
   totalClicks: 112,
   topService: { service: "spotify", clicks: 72 },
+  comparison: {
+    totalVisitsDeltaRate: 0.124,
+    totalClicksDeltaRate: 0.081,
+    clickThroughRateDelta: 0.013,
+  },
   daily: [
     { date: "2026-05-17", visits: 80 },
     { date: "2026-05-18", visits: 170 },
@@ -139,6 +144,11 @@ describe("admin overview page", () => {
       totalVisits: 0,
       totalClicks: 0,
       topService: null,
+      comparison: {
+        totalVisitsDeltaRate: null,
+        totalClicksDeltaRate: null,
+        clickThroughRateDelta: null,
+      },
       daily: [],
       songs: [],
     } satisfies DashboardSnapshot);
@@ -172,6 +182,19 @@ describe("admin overview page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Published pages")).not.toBeInTheDocument();
     expect(screen.queryByText("Drafts in review")).not.toBeInTheDocument();
+  });
+
+  test("renders backend comparison deltas on overview KPI cards", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(
+      screen.getByLabelText("Visits · 30d increased by 12%"),
+    ).toHaveTextContent("12%");
+    expect(
+      screen.getByLabelText("Service clicks · 30d increased by 8%"),
+    ).toHaveTextContent("8%");
   });
 
   test("selects the quick-read top release from backend performance data", async () => {

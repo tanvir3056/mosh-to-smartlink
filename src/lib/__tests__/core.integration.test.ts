@@ -647,6 +647,7 @@ describe("core data flow", () => {
       createSongImportDraft,
       getAdminSongPageBySongId,
       getAnalyticsSnapshot,
+      getDashboardSnapshot,
       getPublishedSongPage,
       recordClickBySlug,
       recordVisit,
@@ -812,6 +813,12 @@ describe("core data flow", () => {
     expect(analytics.comparison.uniqueVisitorsDeltaRate).toBe(0.5);
     expect(analytics.comparison.totalClicksDeltaRate).toBe(1);
     expect(analytics.comparison.clickThroughRateDelta).toBeCloseTo(1 / 6);
+
+    const dashboard = await getDashboardSnapshot(USER_ID);
+
+    expect(dashboard.comparison.totalVisitsDeltaRate).toBe(0.5);
+    expect(dashboard.comparison.totalClicksDeltaRate).toBe(1);
+    expect(dashboard.comparison.clickThroughRateDelta).toBeCloseTo(1 / 6);
   });
 
   test("refuses stale editor saves before inserting streaming links", async () => {

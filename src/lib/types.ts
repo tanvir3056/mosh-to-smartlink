@@ -205,6 +205,12 @@ export interface DashboardDailyPoint {
   visits: number;
 }
 
+export interface DashboardComparison {
+  totalVisitsDeltaRate: number | null;
+  totalClicksDeltaRate: number | null;
+  clickThroughRateDelta: number | null;
+}
+
 export interface DashboardSnapshot {
   totalSongs: number;
   publishedSongs: number;
@@ -212,6 +218,7 @@ export interface DashboardSnapshot {
   totalVisits: number;
   totalClicks: number;
   topService: ServiceBreakdownRow | null;
+  comparison: DashboardComparison;
   daily: DashboardDailyPoint[];
   songs: DashboardSongRow[];
 }

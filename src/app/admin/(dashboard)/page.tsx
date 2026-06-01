@@ -2,7 +2,9 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
 import {
+  ArrowDownRight,
   ArrowRight,
+  ArrowUpRight,
   BarChart3,
   CheckCircle2,
   ChevronRight,
@@ -56,19 +58,29 @@ function ctr(clicks: number, visits: number) {
   return `${Math.round((clicks / visits) * 100)}%`;
 }
 
+function formatDelta(value: number) {
+  return `${Math.round(Math.abs(value) * 100)}%`;
+}
+
 function MetricCard({
   label,
   value,
   note,
+  delta,
   icon: Icon,
   accent = false,
 }: {
   label: string;
   value: string | number;
   note: string;
+  delta?: number | null;
   icon: ComponentType<{ className?: string }>;
   accent?: boolean;
 }) {
+  const hasDelta = typeof delta === "number";
+  const deltaIsPositive = hasDelta ? delta >= 0 : false;
+  const DeltaIcon = deltaIsPositive ? ArrowUpRight : ArrowDownRight;
+
   return (
     <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
       <div className="flex items-center justify-between gap-3">
@@ -84,8 +96,23 @@ function MetricCard({
         </span>
       </div>
       <div>
-        <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
-          {value}
+        <div className="flex flex-wrap items-baseline gap-2.5">
+          <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
+            {value}
+          </div>
+          {hasDelta ? (
+            <span
+              aria-label={`${label} ${deltaIsPositive ? "increased" : "decreased"} by ${formatDelta(delta)}`}
+              className={`inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11.5px] font-[550] leading-none ${
+                deltaIsPositive
+                  ? "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"
+                  : "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
+              }`}
+            >
+              <DeltaIcon className="h-3 w-3" />
+              {formatDelta(delta)}
+            </span>
+          ) : null}
         </div>
         <p className="mt-2 text-[12.5px] text-[var(--app-muted-2)]">{note}</p>
       </div>
@@ -324,12 +351,14 @@ export default async function AdminOverviewPage({
           label="Visits · 30d"
           value={snapshot.totalVisits.toLocaleString()}
           note="First-party landing views"
+          delta={snapshot.comparison.totalVisitsDeltaRate}
           icon={Eye}
         />
         <MetricCard
           label="Service clicks · 30d"
           value={snapshot.totalClicks.toLocaleString()}
           note="Tracked service exits"
+          delta={snapshot.comparison.totalClicksDeltaRate}
           icon={MousePointer2}
         />
       </section>

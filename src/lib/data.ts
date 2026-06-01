@@ -226,6 +226,10 @@ function createSinceIso(rangeDays: number) {
   return since.toISOString();
 }
 
+function changeRate(current: number, previous: number) {
+  return previous > 0 ? (current - previous) / previous : null;
+}
+
 function normalizeDateKey(value: string | Date) {
   const raw = String(value);
 
@@ -1873,7 +1877,8 @@ export async function deleteSongById(songId: string, ownerUserId: string) {
 
 export async function getDashboardSnapshot(ownerUserId: string): Promise<DashboardSnapshot> {
   const sinceIso = createSinceIso(30);
-  const [totals, topServiceRows, dailyVisitEvents, songs] = await Promise.all([
+  const previousSinceIso = createSinceIso(60);
+  const [totals, previousTotals, topServiceRows, dailyVisitEvents, songs] = await Promise.all([
     dbQuery<{
       total_songs: string | number;
       published_songs: string | number;
@@ -1890,6 +1895,17 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
           (select count(*) from click_events where owner_user_id = $1 and created_at >= $2::timestamptz) as total_clicks
       `,
       [ownerUserId, sinceIso],
+    ),
+    dbQuery<{
+      total_visits: string | number;
+      total_clicks: string | number;
+    }>(
+      `
+        select
+          (select count(*) from visits where owner_user_id = $3 and created_at >= $1::timestamptz and created_at < $2::timestamptz) as total_visits,
+          (select count(*) from click_events where owner_user_id = $3 and created_at >= $1::timestamptz and created_at < $2::timestamptz) as total_clicks
+      `,
+      [previousSinceIso, sinceIso, ownerUserId],
     ),
     dbQuery<{
       service: StreamingLinkRecord["service"];
@@ -1972,6 +1988,14 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
 
   const row = totals[0];
   const topService = topServiceRows[0];
+  const totalVisits = Number(row?.total_visits ?? 0);
+  const totalClicks = Number(row?.total_clicks ?? 0);
+  const previousRow = previousTotals[0];
+  const previousVisits = Number(previousRow?.total_visits ?? 0);
+  const previousClicks = Number(previousRow?.total_clicks ?? 0);
+  const clickThroughRate = totalVisits > 0 ? totalClicks / totalVisits : 0;
+  const previousClickThroughRate =
+    previousVisits > 0 ? previousClicks / previousVisits : null;
   const dailyVisitMap = new Map<string, number>();
 
   for (const entry of dailyVisitEvents) {
@@ -1997,14 +2021,22 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
     totalSongs: Number(row?.total_songs ?? 0),
     publishedSongs: Number(row?.published_songs ?? 0),
     draftSongs: Number(row?.draft_songs ?? 0),
-    totalVisits: Number(row?.total_visits ?? 0),
-    totalClicks: Number(row?.total_clicks ?? 0),
+    totalVisits,
+    totalClicks,
     topService: topService
       ? {
           service: topService.service,
           clicks: Number(topService.clicks),
         }
       : null,
+    comparison: {
+      totalVisitsDeltaRate: changeRate(totalVisits, previousVisits),
+      totalClicksDeltaRate: changeRate(totalClicks, previousClicks),
+      clickThroughRateDelta:
+        previousClickThroughRate === null
+          ? null
+          : clickThroughRate - previousClickThroughRate,
+    },
     daily,
     songs: songs.map((song) => ({
       songId: song.song_id,
@@ -2317,8 +2349,6 @@ export async function getAnalyticsSnapshot(
   const clickThroughRate = totalVisits > 0 ? totalClicks / totalVisits : 0;
   const previousClickThroughRate =
     previousVisits > 0 ? previousClicks / previousVisits : null;
-  const changeRate = (current: number, previous: number) =>
-    previous > 0 ? (current - previous) / previous : null;
 
   const referrerClickMap = new Map(
     referrerClicks.map((entry) => [entry.label ?? "Direct", Number(entry.clicks)]),
