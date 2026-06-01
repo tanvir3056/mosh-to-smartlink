@@ -490,8 +490,7 @@ export default async function AdminAnalyticsPage({
             </h1>
           </div>
           <p className="mt-1.5 max-w-[620px] text-[14.5px] leading-6 text-[var(--app-muted)]">
-            Use first-party traffic, click, source, and device signals to judge
-            release-page performance. How fans find and move through your release links.
+            How fans find and move through your release links.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -546,10 +545,6 @@ export default async function AdminAnalyticsPage({
           }
         >
           <LineChart visits={visitSeries} clicks={clickSeries} labels={trendLabels} />
-          <p className="mt-4 text-sm leading-6 text-[var(--app-muted)]">
-            Timeline context shows whether attention is turning into outbound streaming
-            action over the selected window.
-          </p>
         </Panel>
 
         <Panel title="Signal" sub="What changed this period" icon={Sparkles}>

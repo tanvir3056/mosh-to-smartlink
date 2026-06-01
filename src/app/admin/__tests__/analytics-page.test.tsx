@@ -68,13 +68,9 @@ describe("admin analytics page launch copy", () => {
     expect(screen.queryByText(/spotify for artists/i)).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        /Use first-party traffic, click, source, and device signals to judge release-page performance/i,
+        "How fans find and move through your release links.",
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Timeline context shows whether attention is turning into outbound streaming action/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/Timeline context shows/i)).not.toBeInTheDocument();
   });
 });
