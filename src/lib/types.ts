@@ -176,9 +176,12 @@ export interface EmailLeadListItem extends EmailLeadRecord {
 
 export interface EmailLeadSnapshot {
   totalLeads: number;
+  recentLeads: number;
   syncedLeads: number;
   failedLeads: number;
   localOnlyLeads: number;
+  syncedLeadRate: number;
+  leadConversionRate: number;
   items: EmailLeadListItem[];
 }
 

@@ -66,9 +66,12 @@ const connectorConfig: EmailConnectorConfig = {
 
 const leadSnapshot: EmailLeadSnapshot = {
   totalLeads: 42,
+  recentLeads: 6,
   syncedLeads: 28,
   failedLeads: 2,
   localOnlyLeads: 12,
+  syncedLeadRate: 0.67,
+  leadConversionRate: 0.14,
   items: [],
 };
 
@@ -149,6 +152,13 @@ describe("admin settings page", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getByText("This week")).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("Synced to Mailchimp")).toBeInTheDocument();
+    expect(screen.getByText("67%")).toBeInTheDocument();
+    expect(screen.getByText("Conversion rate")).toBeInTheDocument();
+    expect(screen.getByText("14%")).toBeInTheDocument();
+    expect(screen.queryByText("Local only")).not.toBeInTheDocument();
     expect(screen.getByText("Lead inbox panel: 42 total leads")).toBeInTheDocument();
   });
 });

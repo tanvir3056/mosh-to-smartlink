@@ -4,12 +4,13 @@ import {
   Download,
   Globe2,
   Inbox,
-  Mail,
   Save,
   Settings2,
   ShieldCheck,
+  Target,
   Upload,
   User,
+  Users,
 } from "lucide-react";
 
 import {
@@ -116,11 +117,13 @@ function SectionCard({
 function Metric({
   label,
   value,
+  sub,
   icon: Icon,
   accent = false,
 }: {
   label: string;
   value: string | number;
+  sub?: string;
   icon: React.ComponentType<{ className?: string }>;
   accent?: boolean;
 }) {
@@ -142,8 +145,15 @@ function Metric({
       <div className="font-[var(--font-display)] text-[28px] font-semibold leading-none tracking-[-0.03em] text-[var(--app-text)]">
         {value}
       </div>
+      {sub ? (
+        <p className="text-[12.5px] leading-5 text-[var(--app-muted-2)]">{sub}</p>
+      ) : null}
     </div>
   );
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value * 100)}%`;
 }
 
 function TopAction({
@@ -364,10 +374,25 @@ function LeadInboxSettings({ leadSnapshot }: { leadSnapshot: EmailLeadSnapshot |
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Total leads" value={leadSnapshot.totalLeads} icon={Inbox} accent />
-        <Metric label="Synced" value={leadSnapshot.syncedLeads} icon={CheckCircle2} />
-        <Metric label="Local only" value={leadSnapshot.localOnlyLeads} icon={Mail} />
-        <Metric label="Needs attention" value={leadSnapshot.failedLeads} icon={ShieldCheck} />
+        <Metric label="Total leads" value={leadSnapshot.totalLeads} icon={Users} accent />
+        <Metric
+          label="This week"
+          value={leadSnapshot.recentLeads}
+          sub="Last 7 days"
+          icon={Inbox}
+        />
+        <Metric
+          label="Synced to Mailchimp"
+          value={formatPercent(leadSnapshot.syncedLeadRate)}
+          sub={`${leadSnapshot.syncedLeads} of ${leadSnapshot.totalLeads} total`}
+          icon={CheckCircle2}
+        />
+        <Metric
+          label="Conversion rate"
+          value={formatPercent(leadSnapshot.leadConversionRate)}
+          sub="Visits to email"
+          icon={Target}
+        />
       </div>
       <EmailLeadsPanel snapshot={leadSnapshot} showSummary={false} />
     </div>

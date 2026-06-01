@@ -882,6 +882,9 @@ describe("core data flow", () => {
 
     const leadSnapshot = await getEmailLeadSnapshot(USER_ID);
     expect(leadSnapshot.totalLeads).toBe(1);
+    expect(leadSnapshot.recentLeads).toBe(1);
+    expect(leadSnapshot.syncedLeadRate).toBe(1);
+    expect(leadSnapshot.leadConversionRate).toBe(1);
     expect(leadSnapshot.items[0]?.username).toBe(USERNAME);
     expect(leadSnapshot.items[0]?.slug).toBe(adminPage!.page.slug);
 

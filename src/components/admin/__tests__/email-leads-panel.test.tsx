@@ -10,9 +10,12 @@ vi.mock("@/app/admin/actions", () => ({
 
 const SNAPSHOT: EmailLeadSnapshot = {
   totalLeads: 3,
+  recentLeads: 2,
   syncedLeads: 1,
   localOnlyLeads: 1,
   failedLeads: 1,
+  syncedLeadRate: 1 / 3,
+  leadConversionRate: 0.15,
   items: [
     {
       id: "lead-1",

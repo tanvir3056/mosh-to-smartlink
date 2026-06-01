@@ -1116,34 +1116,54 @@ async function getEmailLeadResyncRows(ownerUserId: string, limit: number) {
 }
 
 export async function getEmailLeadSnapshot(ownerUserId: string): Promise<EmailLeadSnapshot> {
+  const weekSinceIso = createSinceIso(7);
+  const conversionSinceIso = createSinceIso(30);
   const [summaryRows, items] = await Promise.all([
     dbQuery<{
       total_leads: string | number;
+      recent_leads: string | number;
       synced_leads: string | number;
       failed_leads: string | number;
       local_only_leads: string | number;
+      conversion_leads: string | number;
+      conversion_visits: string | number;
     }>(
       `
         select
           count(*) as total_leads,
+          coalesce(sum(case when created_at >= $2::timestamptz then 1 else 0 end), 0) as recent_leads,
           coalesce(sum(case when connector_status = 'synced' then 1 else 0 end), 0) as synced_leads,
           coalesce(sum(case when connector_status = 'failed' then 1 else 0 end), 0) as failed_leads,
-          coalesce(sum(case when connector_status = 'not_configured' then 1 else 0 end), 0) as local_only_leads
+          coalesce(sum(case when connector_status = 'not_configured' then 1 else 0 end), 0) as local_only_leads,
+          coalesce(sum(case when created_at >= $3::timestamptz then 1 else 0 end), 0) as conversion_leads,
+          (
+            select count(*)
+            from visits
+            where owner_user_id = $1
+              and created_at >= $3::timestamptz
+          ) as conversion_visits
         from email_capture_submissions
         where owner_user_id = $1
       `,
-      [ownerUserId],
+      [ownerUserId, weekSinceIso, conversionSinceIso],
     ),
     getEmailLeadRows(ownerUserId, 50),
   ]);
 
   const summary = summaryRows[0];
+  const totalLeads = Number(summary?.total_leads ?? 0);
+  const syncedLeads = Number(summary?.synced_leads ?? 0);
+  const conversionLeads = Number(summary?.conversion_leads ?? 0);
+  const conversionVisits = Number(summary?.conversion_visits ?? 0);
 
   return {
-    totalLeads: Number(summary?.total_leads ?? 0),
-    syncedLeads: Number(summary?.synced_leads ?? 0),
+    totalLeads,
+    recentLeads: Number(summary?.recent_leads ?? 0),
+    syncedLeads,
     failedLeads: Number(summary?.failed_leads ?? 0),
     localOnlyLeads: Number(summary?.local_only_leads ?? 0),
+    syncedLeadRate: totalLeads > 0 ? syncedLeads / totalLeads : 0,
+    leadConversionRate: conversionVisits > 0 ? conversionLeads / conversionVisits : 0,
     items,
   };
 }
