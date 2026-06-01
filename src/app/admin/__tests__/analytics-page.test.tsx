@@ -31,7 +31,15 @@ const analyticsSnapshot: AnalyticsSnapshot = {
     clickThroughRateDelta: -0.013,
   },
   serviceBreakdown: [{ service: "spotify", clicks: 320 }],
-  referrers: [{ label: "Instagram", visits: 620, clicks: 290, ctr: 0.47 }],
+  referrers: [
+    {
+      label: "Instagram",
+      visits: 620,
+      clicks: 290,
+      ctr: 0.47,
+      visitsDeltaRate: 0.34,
+    },
+  ],
   utms: [
     {
       source: "instagram",
@@ -131,5 +139,19 @@ describe("admin analytics page launch copy", () => {
     expect(streamingServicesPanel).not.toBeNull();
     expect(within(streamingServicesPanel!).getByText("Spotify")).toBeInTheDocument();
     expect(within(streamingServicesPanel!).getByText("320 · 63%")).toBeInTheDocument();
+  });
+
+  test("uses period-over-period backend source movement in the Signal panel", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const signalPanel = screen.getByRole("heading", { name: "Signal" }).closest("section");
+
+    expect(signalPanel).not.toBeNull();
+    expect(within(signalPanel!).getByText("Instagram is up 34%")).toBeInTheDocument();
+    expect(
+      within(signalPanel!).getByText("620 visits with 47% click-through."),
+    ).toBeInTheDocument();
   });
 });

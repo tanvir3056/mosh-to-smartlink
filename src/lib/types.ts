@@ -233,6 +233,7 @@ export interface ReferrerRow {
   visits: number;
   clicks: number;
   ctr: number;
+  visitsDeltaRate?: number | null;
 }
 
 export interface UTMRow {

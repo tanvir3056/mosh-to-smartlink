@@ -452,13 +452,20 @@ function buildSignalRows(analytics: AnalyticsSnapshot) {
   const topReferrer = analytics.referrers[0];
   const topService = analytics.serviceBreakdown[0];
   const topGeo = analytics.geos[0];
+  const sourceDelta = topReferrer?.visitsDeltaRate;
+  const sourceIsUp = typeof sourceDelta === "number" && sourceDelta > 0;
+  const sourceIsDown = typeof sourceDelta === "number" && sourceDelta < 0;
 
   return [
     {
-      tone: "green" as const,
-      icon: ArrowUpRight,
+      tone: sourceIsDown ? ("amber" as const) : ("green" as const),
+      icon: sourceIsDown ? ArrowDownRight : ArrowUpRight,
       title: topReferrer
-        ? `${topReferrer.label} is leading traffic`
+        ? sourceIsUp
+          ? `${topReferrer.label} is up ${formatDelta(sourceDelta)}`
+          : sourceIsDown
+            ? `${topReferrer.label} is down ${formatDelta(sourceDelta)}`
+            : `${topReferrer.label} is leading traffic`
         : "Traffic signals are waiting",
       desc: topReferrer
         ? `${topReferrer.visits} visits with ${formatPercent(topReferrer.ctr)} click-through.`

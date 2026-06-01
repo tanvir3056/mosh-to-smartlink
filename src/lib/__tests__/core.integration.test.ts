@@ -813,6 +813,8 @@ describe("core data flow", () => {
     expect(analytics.comparison.uniqueVisitorsDeltaRate).toBe(0.5);
     expect(analytics.comparison.totalClicksDeltaRate).toBe(1);
     expect(analytics.comparison.clickThroughRateDelta).toBeCloseTo(1 / 6);
+    expect(analytics.referrers[0]?.label).toBe("instagram.com");
+    expect(analytics.referrers[0]?.visitsDeltaRate).toBe(0.5);
 
     const dashboard = await getDashboardSnapshot(USER_ID);
 

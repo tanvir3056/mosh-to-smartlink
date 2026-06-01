@@ -2070,6 +2070,7 @@ export async function getAnalyticsSnapshot(
     dailyClickEvents,
     referrers,
     referrerClicks,
+    previousReferrers,
     utms,
     utmClicks,
     geos,
@@ -2172,6 +2173,21 @@ export async function getAnalyticsSnapshot(
         order by clicks desc
       `,
       [sinceIso, ownerUserId],
+    ),
+    dbQuery<{
+      label: string | null;
+      visits: string | number;
+    }>(
+      `
+        select coalesce(referrer_host, 'Direct') as label, count(*) as visits
+        from visits
+        where owner_user_id = $3
+          and created_at >= $1::timestamptz
+          and created_at < $2::timestamptz
+        group by label
+        order by visits desc
+      `,
+      [previousSinceIso, sinceIso, ownerUserId],
     ),
     dbQuery<{
       source: string | null;
@@ -2356,6 +2372,12 @@ export async function getAnalyticsSnapshot(
   const referrerVisitMap = new Map(
     referrers.map((entry) => [entry.label ?? "Direct", Number(entry.visits)]),
   );
+  const previousReferrerVisitMap = new Map(
+    previousReferrers.map((entry) => [
+      entry.label ?? "Direct",
+      Number(entry.visits),
+    ]),
+  );
   const referrerLabels = new Set<string>([
     ...referrerVisitMap.keys(),
     ...referrerClickMap.keys(),
@@ -2474,6 +2496,10 @@ export async function getAnalyticsSnapshot(
           visits,
           clicks,
           ctr: visits > 0 ? clicks / visits : 0,
+          visitsDeltaRate: changeRate(
+            visits,
+            previousReferrerVisitMap.get(label) ?? 0,
+          ),
         };
       })
       .sort((left, right) => right.visits - left.visits || right.clicks - left.clicks)
