@@ -9,6 +9,7 @@ const mockRequireUserSession = vi.fn();
 const mockCreateSongImportDraft = vi.fn();
 const mockGetTrackingConfig = vi.fn();
 const mockUpdateSongDraft = vi.fn();
+const mockResyncEmailLeadsForOwner = vi.fn();
 const mockSaveEmailConnectorConfig = vi.fn();
 const mockSaveTrackingConfig = vi.fn();
 const mockPublishedSongPageTag = vi.fn(() => "published-tag");
@@ -35,6 +36,7 @@ vi.mock("@/lib/data", () => ({
   createSongImportDraft: mockCreateSongImportDraft,
   deleteSongById: vi.fn(),
   getTrackingConfig: mockGetTrackingConfig,
+  resyncEmailLeadsForOwner: mockResyncEmailLeadsForOwner,
   saveEmailConnectorConfig: mockSaveEmailConnectorConfig,
   publishedSongPageTag: mockPublishedSongPageTag,
   saveTrackingConfig: mockSaveTrackingConfig,
@@ -645,5 +647,34 @@ describe("saveTrackingSettingsAction validation", () => {
       apiKey: "abcd1234-us21",
       clearApiKey: false,
     });
+  });
+});
+
+describe("resyncEmailLeadsAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRequireUserSession.mockResolvedValue({
+      userId: "user_1",
+      username: "artist",
+    });
+    mockResyncEmailLeadsForOwner.mockResolvedValue({
+      attempted: 3,
+      synced: 2,
+      failed: 1,
+      skipped: 0,
+    });
+  });
+
+  test("runs the lead connector sync and refreshes settings", async () => {
+    const { resyncEmailLeadsAction } = await import("@/app/admin/actions");
+
+    const result = await resyncEmailLeadsAction();
+
+    expect(result).toEqual({
+      error: null,
+      success: "Lead sync refreshed.",
+    });
+    expect(mockResyncEmailLeadsForOwner).toHaveBeenCalledWith("user_1");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/settings");
   });
 });

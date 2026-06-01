@@ -876,4 +876,118 @@ describe("core data flow", () => {
       ],
     });
   });
+
+  test("re-syncs locally stored email leads after Mailchimp is connected", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const {
+      createAccountOwner,
+      createSongImportDraft,
+      getAdminSongPageBySongId,
+      getEmailLeadSnapshot,
+      getPublishedSongPage,
+      recordEmailCaptureSubmission,
+      resyncEmailLeadsForOwner,
+      saveEmailConnectorConfig,
+      updateSongDraft,
+    } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
+    const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
+
+    await updateSongDraft({
+      ownerUserId: USER_ID,
+      songId,
+      title: adminPage!.song.title,
+      artistName: adminPage!.song.artistName,
+      albumName: adminPage!.song.albumName,
+      artworkUrl: adminPage!.song.artworkUrl,
+      previewUrl: adminPage!.song.previewUrl,
+      headline: "Stream now",
+      slug: adminPage!.page.slug,
+      status: "published",
+      emailCapture: {
+        enabled: true,
+        title: "Download the song for free",
+        description: "Join the list and unlock the track.",
+        buttonLabel: "Get the download",
+        downloadUrl: "https://downloads.example.com/glass-hearts.mp3",
+        downloadLabel: "Download Glass Hearts",
+        tag: "glass-hearts-download",
+      },
+      links: adminPage!.links.map((link) => ({
+        service: link.service,
+        url: link.url,
+        matchStatus: link.matchStatus,
+        matchSource: link.matchSource,
+        confidence: link.confidence,
+        notes: link.notes,
+      })),
+    });
+
+    const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
+    await recordEmailCaptureSubmission({
+      page: publishedPage!,
+      email: "stored-fan@example.com",
+      lastVisitId: null,
+      context: {
+        visitorId: "visitor_stored_lead",
+        referrer: null,
+        referrerHost: null,
+        userAgent: "Mozilla/5.0",
+        browserName: "Chrome",
+        osName: "macOS",
+        deviceType: "mobile",
+        country: "NL",
+        city: "Amsterdam",
+        ipHash: "lead456",
+        source: null,
+        medium: null,
+        campaign: null,
+        term: null,
+        content: null,
+      },
+    });
+
+    expect((await getEmailLeadSnapshot(USER_ID)).localOnlyLeads).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await saveEmailConnectorConfig(USER_ID, {
+      provider: "mailchimp",
+      audienceId: "aud_123",
+      defaultTags: "smart-link,release",
+      doubleOptIn: false,
+      apiKey: "mailchimp-test-us21",
+      clearApiKey: false,
+    });
+
+    const result = await resyncEmailLeadsForOwner(USER_ID);
+    const leadSnapshot = await getEmailLeadSnapshot(USER_ID);
+
+    expect(result).toEqual({
+      attempted: 1,
+      synced: 1,
+      failed: 0,
+      skipped: 0,
+    });
+    expect(leadSnapshot.syncedLeads).toBe(1);
+    expect(leadSnapshot.localOnlyLeads).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

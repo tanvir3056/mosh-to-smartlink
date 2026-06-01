@@ -1,8 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { EmailLeadsPanel } from "@/components/admin/email-leads-panel";
 import type { EmailLeadSnapshot } from "@/lib/types";
+
+vi.mock("@/app/admin/actions", () => ({
+  resyncEmailLeadsFormAction: vi.fn(),
+}));
 
 const SNAPSHOT: EmailLeadSnapshot = {
   totalLeads: 3,
@@ -53,6 +57,7 @@ describe("EmailLeadsPanel", () => {
 
     const panel = screen.getByRole("region", { name: "Lead inbox" });
     expect(within(panel).getByRole("heading", { name: "Lead inbox" })).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "Re-sync" })).toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: "Export CSV" })).toHaveAttribute(
       "href",
       "/api/admin/email-leads/export",

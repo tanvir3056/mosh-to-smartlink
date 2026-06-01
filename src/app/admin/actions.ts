@@ -11,8 +11,9 @@ import {
   createSongImportDraft,
   deleteSongById,
   getTrackingConfig,
-  saveEmailConnectorConfig,
   publishedSongPageTag,
+  resyncEmailLeadsForOwner,
+  saveEmailConnectorConfig,
   saveTrackingConfig,
   updateSongDraft,
 } from "@/lib/data";
@@ -659,6 +660,31 @@ export async function saveGeneralSettingsAction(
     error: null,
     success: "Settings saved.",
   };
+}
+
+export async function resyncEmailLeadsAction(): Promise<ActionState> {
+  const session = await requireUserSession();
+
+  try {
+    await resyncEmailLeadsForOwner(session.userId);
+  } catch (error) {
+    console.error("Lead re-sync failed.", error);
+    return {
+      error: "Lead re-sync could not be completed. Try again in a moment.",
+      success: null,
+    };
+  }
+
+  revalidatePath("/admin/settings");
+
+  return {
+    error: null,
+    success: "Lead sync refreshed.",
+  };
+}
+
+export async function resyncEmailLeadsFormAction(): Promise<void> {
+  await resyncEmailLeadsAction();
 }
 
 export async function deleteSongAction(formData: FormData) {

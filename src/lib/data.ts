@@ -162,6 +162,19 @@ type EmailLeadListRow = EmailLeadRow & {
   slug: string;
 };
 
+type EmailLeadResyncRow = QueryResultRow & {
+  id: string;
+  email: string;
+  page_tag: string | null;
+};
+
+export interface EmailLeadResyncResult {
+  attempted: number;
+  synced: number;
+  failed: number;
+  skipped: number;
+}
+
 function mapUser(row: AppUserRow | undefined): AppUserRecord | null {
   if (!row) {
     return null;
@@ -1077,6 +1090,24 @@ async function getEmailLeadRows(ownerUserId: string, limit: number) {
     .filter((row): row is EmailLeadListItem => Boolean(row));
 }
 
+async function getEmailLeadResyncRows(ownerUserId: string, limit: number) {
+  return dbQuery<EmailLeadResyncRow>(
+    `
+      select
+        ecs.id,
+        ecs.email,
+        p.email_capture_tag as page_tag
+      from email_capture_submissions ecs
+      join song_pages p on p.id = ecs.page_id
+      where ecs.owner_user_id = $1
+        and ecs.connector_status <> 'synced'
+      order by ecs.created_at asc
+      limit $2
+    `,
+    [ownerUserId, limit],
+  );
+}
+
 export async function getEmailLeadSnapshot(ownerUserId: string): Promise<EmailLeadSnapshot> {
   const [summaryRows, items] = await Promise.all([
     dbQuery<{
@@ -1088,9 +1119,9 @@ export async function getEmailLeadSnapshot(ownerUserId: string): Promise<EmailLe
       `
         select
           count(*) as total_leads,
-          count(*) filter (where connector_status = 'synced') as synced_leads,
-          count(*) filter (where connector_status = 'failed') as failed_leads,
-          count(*) filter (where connector_status = 'not_configured') as local_only_leads
+          coalesce(sum(case when connector_status = 'synced' then 1 else 0 end), 0) as synced_leads,
+          coalesce(sum(case when connector_status = 'failed' then 1 else 0 end), 0) as failed_leads,
+          coalesce(sum(case when connector_status = 'not_configured' then 1 else 0 end), 0) as local_only_leads
         from email_capture_submissions
         where owner_user_id = $1
       `,
@@ -2385,6 +2416,85 @@ async function saveEmailLeadConnectorResult(
   );
 
   return mapEmailLead(rows[0]);
+}
+
+export async function resyncEmailLeadsForOwner(
+  ownerUserId: string,
+  limit = 100,
+): Promise<EmailLeadResyncResult> {
+  const [connector, leads] = await Promise.all([
+    getEmailConnectorRecord(ownerUserId),
+    getEmailLeadResyncRows(ownerUserId, limit),
+  ]);
+  const activeConnector =
+    connector?.audience_id && connector.encrypted_api_key
+      ? {
+          provider: connector.provider,
+          audienceId: connector.audience_id,
+          defaultTags: connector.default_tags,
+          doubleOptIn: Boolean(connector.double_opt_in),
+          encryptedApiKey: connector.encrypted_api_key,
+        }
+      : null;
+
+  if (!activeConnector) {
+    return {
+      attempted: 0,
+      synced: 0,
+      failed: 0,
+      skipped: leads.length,
+    };
+  }
+
+  const result: EmailLeadResyncResult = {
+    attempted: 0,
+    synced: 0,
+    failed: 0,
+    skipped: 0,
+  };
+
+  for (const lead of leads) {
+    result.attempted += 1;
+
+    let syncResult:
+      | Awaited<ReturnType<typeof syncEmailLeadToConnector>>
+      | {
+          provider: EmailLeadRecord["connectorProvider"];
+          status: EmailLeadRecord["connectorStatus"];
+          error: string | null;
+          syncedAt: string | null;
+        };
+
+    try {
+      syncResult = await syncEmailLeadToConnector({
+        connector: activeConnector,
+        email: lead.email,
+        pageTag: lead.page_tag,
+      });
+    } catch (error) {
+      syncResult = {
+        provider: activeConnector.provider,
+        status: "failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Lead sync failed during re-sync.",
+        syncedAt: null,
+      };
+    }
+
+    await saveEmailLeadConnectorResult(lead.id, syncResult);
+
+    if (syncResult.status === "synced") {
+      result.synced += 1;
+    } else if (syncResult.status === "failed") {
+      result.failed += 1;
+    } else {
+      result.skipped += 1;
+    }
+  }
+
+  return result;
 }
 
 export async function recordEmailCaptureSubmission(input: {

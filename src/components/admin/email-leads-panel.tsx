@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Download, Inbox } from "lucide-react";
+import { Download, Inbox, RefreshCw } from "lucide-react";
 
+import { resyncEmailLeadsFormAction } from "@/app/admin/actions";
 import type { EmailLeadSnapshot } from "@/lib/types";
 import { buildPublicSongPath, formatDateTime } from "@/lib/utils";
 
@@ -72,14 +73,25 @@ export function EmailLeadsPanel({
             </p>
           </div>
         )}
-        <Link
-          href="/api/admin/email-leads/export"
-          prefetch={false}
-          className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <form action={resyncEmailLeadsFormAction}>
+            <button
+              type="submit"
+              className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Re-sync
+            </button>
+          </form>
+          <Link
+            href="/api/admin/email-leads/export"
+            prefetch={false}
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Link>
+        </div>
       </div>
 
       {showSummary ? (
