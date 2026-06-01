@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { PublicSongPage } from "@/components/public/song-page";
-import { getPublishedSongPage } from "@/lib/data";
+import { getUserSession } from "@/lib/auth";
+import {
+  getAdminSongPageByPublicPathForOwner,
+  getPublishedSongPage,
+} from "@/lib/data";
 
 export const revalidate = 3600;
 
@@ -44,6 +48,20 @@ export default async function PublicSongRoute({
   const page = await getPublishedSongPage(username, slug);
 
   if (!page) {
+    const session = await getUserSession();
+
+    if (session) {
+      const ownedPage = await getAdminSongPageByPublicPathForOwner(
+        username,
+        slug,
+        session.userId,
+      );
+
+      if (ownedPage) {
+        redirect(`/admin/preview/${ownedPage.song.id}`);
+      }
+    }
+
     notFound();
   }
 

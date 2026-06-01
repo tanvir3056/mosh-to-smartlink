@@ -1464,6 +1464,31 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
   return mapSongPage(rows);
 }
 
+export async function getAdminSongPageByPublicPathForOwner(
+  username: string,
+  slug: string,
+  ownerUserId: string,
+) {
+  const rows = await dbQuery<{ song_id: string }>(
+    `
+      select p.song_id
+      from song_pages p
+      join app_users u on u.id = p.owner_user_id
+      where p.owner_user_id = $1
+        and u.username = $2
+        and p.slug = $3
+      limit 1
+    `,
+    [ownerUserId, normalizeUsername(username), slug],
+  );
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return getAdminSongPageBySongId(rows[0].song_id, ownerUserId);
+}
+
 export async function createSongImportDraft(
   bundle: ImportBundle,
   requestedBy: string,
