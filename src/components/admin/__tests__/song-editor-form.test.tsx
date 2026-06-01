@@ -350,6 +350,31 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByText("Artwork URL")).not.toBeInTheDocument();
   });
 
+  test("shows an imported draft confirmation before review work", () => {
+    render(
+      <SongEditorForm
+        page={PAGE}
+        showImportedDraftConfirmation
+        showMissingLinksReview={false}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Draft created - review before it goes live",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Review the imported details, confirm streaming destinations, then publish when everything looks right.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to library" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+  });
+
   test("submits release metadata needed to recover a stale local draft", () => {
     const { container } = render(
       <SongEditorForm page={PAGE} showMissingLinksReview={false} />,

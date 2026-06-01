@@ -398,6 +398,22 @@ describe("importSpotifyTrackAction", () => {
     });
   });
 
+  test("redirects imported drafts into the editor with confirmation state", async () => {
+    const { importSpotifyTrackAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("spotify_url", "https://open.spotify.com/track/track_1");
+    mockCreateSongImportDraft.mockResolvedValueOnce("song_1");
+
+    await importSpotifyTrackAction({ error: null, success: null }, formData);
+
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/analytics");
+    expect(mockRedirect).toHaveBeenCalledWith(
+      "/admin/songs/song_1?imported=1&review=missing-links",
+    );
+  });
+
   test("returns a controlled retry message when import link inserts hit a song foreign key", async () => {
     const { importSpotifyTrackAction } = await import("@/app/admin/actions");
     const formData = new FormData();

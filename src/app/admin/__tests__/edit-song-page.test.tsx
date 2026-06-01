@@ -36,9 +36,19 @@ vi.mock("@/lib/data", () => ({
 }));
 
 vi.mock("@/components/admin/song-editor-form", () => ({
-  SongEditorForm: ({ emailConnector }: { emailConnector: EmailConnectorConfig | null }) => (
+  SongEditorForm: ({
+    emailConnector,
+    showImportedDraftConfirmation,
+    showMissingLinksReview,
+  }: {
+    emailConnector: EmailConnectorConfig | null;
+    showImportedDraftConfirmation?: boolean;
+    showMissingLinksReview?: boolean;
+  }) => (
     <div>
       Editor connector: {emailConnector?.hasApiKey ? emailConnector.audienceId : "local"}
+      {showImportedDraftConfirmation ? <span>Imported draft confirmation</span> : null}
+      {showMissingLinksReview ? <span>Missing links review</span> : null}
     </div>
   ),
 }));
@@ -86,5 +96,22 @@ describe("edit song page", () => {
 
     expect(mockGetEmailConnectorConfig).toHaveBeenCalledWith("user_1");
     expect(screen.getByText("Editor connector: audience-1")).toBeInTheDocument();
+  });
+
+  test("passes imported draft and review state into the editor form", async () => {
+    const { default: EditSongPage } = await import("@/app/admin/(dashboard)/songs/[songId]/page");
+
+    render(
+      await EditSongPage({
+        params: Promise.resolve({ songId: "song_1" }),
+        searchParams: Promise.resolve({
+          imported: "1",
+          review: "missing-links",
+        }),
+      }),
+    );
+
+    expect(screen.getByText("Imported draft confirmation")).toBeInTheDocument();
+    expect(screen.getByText("Missing links review")).toBeInTheDocument();
   });
 });

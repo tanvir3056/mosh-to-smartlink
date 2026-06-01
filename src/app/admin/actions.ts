@@ -406,7 +406,7 @@ export async function importSpotifyTrackAction(
 
   revalidatePath("/admin");
   revalidatePath("/admin/analytics");
-  redirect(`/admin/songs/${songId}?review=missing-links`);
+  redirect(`/admin/songs/${songId}?imported=1&review=missing-links`);
 }
 
 export async function updateSongAction(
