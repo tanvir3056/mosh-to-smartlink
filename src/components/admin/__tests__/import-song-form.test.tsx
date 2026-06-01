@@ -20,6 +20,17 @@ describe("ImportSongForm", () => {
     expect(form).toHaveAttribute("novalidate");
   });
 
+  test("matches the Claude form hierarchy with the helper copy below the URL field", () => {
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    const input = screen.getByLabelText("Spotify track or album URL");
+    const helper = screen.getByText(/Open the song in Spotify/i);
+
+    expect(
+      input.compareDocumentPosition(helper) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   test("can fill the Claude example link affordance", async () => {
     const user = userEvent.setup();
     render(<ImportSongForm requestedBy="@warcry" />);

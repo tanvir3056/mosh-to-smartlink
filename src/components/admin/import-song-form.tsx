@@ -177,15 +177,40 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
       }}
     >
       <section className="app-card rounded-[14px] p-6">
-        <div className="grid gap-5">
+        <div className="grid gap-4">
           <input type="hidden" name="requested_by" value={requestedBy} />
-          <div className="grid gap-1.5">
+          <div className="grid gap-2">
             <label
               htmlFor="spotify-url"
               className="text-sm font-semibold text-[var(--app-text)]"
             >
               Spotify track or album URL
             </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#1ed760] text-white">
+                <Music2 className="h-3.5 w-3.5" />
+              </span>
+              <input
+                id="spotify-url"
+                name="spotify_url"
+                placeholder="https://open.spotify.com/track/..."
+                className="app-input w-full !pl-11 font-mono text-[13px]"
+                value={spotifyUrl}
+                onChange={(event) => {
+                  setSpotifyUrl(event.currentTarget.value);
+                  if (localError) {
+                    setLocalError(null);
+                  }
+                }}
+                required
+                aria-invalid={Boolean(visibleError)}
+                aria-describedby="spotify-url-help"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </div>
             <p id="spotify-url-help" className="text-sm leading-6 text-[var(--app-muted)]">
               Open the song in Spotify, tap{" "}
               <span className="font-semibold text-[var(--app-text)]">
@@ -193,31 +218,6 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
               </span>
               , and paste it here.
             </p>
-          </div>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#1ed760] text-white">
-              <Music2 className="h-3.5 w-3.5" />
-            </span>
-            <input
-              id="spotify-url"
-              name="spotify_url"
-              placeholder="https://open.spotify.com/track/..."
-              className="app-input w-full !pl-11 font-mono text-[13px]"
-              value={spotifyUrl}
-              onChange={(event) => {
-                setSpotifyUrl(event.currentTarget.value);
-                if (localError) {
-                  setLocalError(null);
-                }
-              }}
-              required
-              aria-invalid={Boolean(visibleError)}
-              aria-describedby="spotify-url-help"
-              inputMode="url"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
           </div>
           <FormStateMessage error={visibleError} success={state.success} />
           <div className="flex flex-wrap items-center gap-3">
