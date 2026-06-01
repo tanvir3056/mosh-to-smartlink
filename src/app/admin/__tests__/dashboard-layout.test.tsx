@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const { mockRequireUserSession } = vi.hoisted(() => ({
@@ -41,5 +42,27 @@ describe("admin dashboard layout", () => {
     );
 
     expect(screen.getAllByText("Release links").length).toBeGreaterThan(0);
+  });
+
+  test("uses the Claude controlled mobile navigation trigger", async () => {
+    const { default: AdminDashboardLayout } = await import("@/app/admin/(dashboard)/layout");
+    const user = userEvent.setup();
+
+    render(
+      await AdminDashboardLayout({
+        children: <div>Dashboard content</div>,
+      }),
+    );
+
+    const mobileMenuButton = screen.getByRole("button", { name: "Open navigation" });
+
+    expect(mobileMenuButton).toHaveAttribute("aria-expanded", "false");
+    expect(mobileMenuButton).toHaveAttribute("aria-controls", "admin-mobile-menu");
+
+    await user.click(mobileMenuButton);
+
+    expect(mobileMenuButton).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Close navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Mobile workspace" })).toBeInTheDocument();
   });
 });

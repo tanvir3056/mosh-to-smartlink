@@ -29,18 +29,21 @@ const navItems = [
 ];
 
 export function AdminNav() {
-  return <AdminNavLinks orientation="vertical" />;
+  return <AdminNavLinks orientation="vertical" ariaLabel="Workspace" />;
 }
 
 export function AdminNavLinks({
+  ariaLabel,
   orientation = "vertical",
 }: {
+  ariaLabel?: string;
   orientation?: "vertical" | "horizontal";
 }) {
   const pathname = usePathname();
 
   return (
     <nav
+      aria-label={ariaLabel}
       className={cn(
         "gap-1.5",
         orientation === "vertical"
