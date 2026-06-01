@@ -476,7 +476,7 @@ export default async function AdminAnalyticsPage({
     analytics.totalVisits > 0
       ? Math.max(0, (analytics.totalVisits - analytics.uniqueVisitors) / analytics.totalVisits)
       : 0;
-  const emailLeadRate = 0;
+  const emailLeadRate = analytics.emailLeadRate;
   const bounceEstimate = Math.max(0, 1 - analytics.clickThroughRate - emailLeadRate);
 
   return (

@@ -273,6 +273,8 @@ export interface AnalyticsSnapshot {
   uniqueVisitors: number;
   totalClicks: number;
   clickThroughRate: number;
+  totalEmailLeads: number;
+  emailLeadRate: number;
   serviceBreakdown: ServiceBreakdownRow[];
   referrers: ReferrerRow[];
   utms: UTMRow[];

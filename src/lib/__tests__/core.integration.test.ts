@@ -771,8 +771,10 @@ describe("core data flow", () => {
       createAccountOwner,
       createSongImportDraft,
       getAdminSongPageBySongId,
+      getAnalyticsSnapshot,
       getEmailLeadSnapshot,
       getPublishedSongPage,
+      recordVisit,
       recordEmailCaptureSubmission,
       saveEmailConnectorConfig,
       updateSongDraft,
@@ -828,10 +830,33 @@ describe("core data flow", () => {
     });
 
     const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
+    const visitId = await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: {
+        visitorId: "visitor_lead",
+        referrer: "https://instagram.com/reel/demo",
+        referrerHost: "instagram.com",
+        userAgent: "Mozilla/5.0",
+        browserName: "Chrome",
+        osName: "macOS",
+        deviceType: "mobile",
+        country: "NL",
+        city: "Amsterdam",
+        ipHash: "lead123",
+        source: "instagram",
+        medium: "organic-social",
+        campaign: "download-push",
+        term: null,
+        content: "reel-1",
+      },
+    });
     const result = await recordEmailCaptureSubmission({
       page: publishedPage!,
       email: "fan@example.com",
-      lastVisitId: null,
+      lastVisitId: visitId,
       context: {
         visitorId: "visitor_lead",
         referrer: "https://instagram.com/reel/demo",
@@ -859,6 +884,11 @@ describe("core data flow", () => {
     expect(leadSnapshot.totalLeads).toBe(1);
     expect(leadSnapshot.items[0]?.username).toBe(USERNAME);
     expect(leadSnapshot.items[0]?.slug).toBe(adminPage!.page.slug);
+
+    const analytics = await getAnalyticsSnapshot(USER_ID);
+    expect(analytics.totalVisits).toBe(1);
+    expect(analytics.totalEmailLeads).toBe(1);
+    expect(analytics.emailLeadRate).toBe(1);
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const calls = fetchMock.mock.calls as unknown as Array<

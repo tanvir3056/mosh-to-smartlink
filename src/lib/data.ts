@@ -2029,12 +2029,14 @@ export async function getAnalyticsSnapshot(
       total_visits: string | number;
       unique_visitors: string | number;
       total_clicks: string | number;
+      total_email_leads: string | number;
     }>(
       `
         select
           (select count(*) from visits where owner_user_id = $2 and created_at >= $1::timestamptz) as total_visits,
           (select count(distinct visitor_id) from visits where owner_user_id = $2 and created_at >= $1::timestamptz) as unique_visitors,
-          (select count(*) from click_events where owner_user_id = $2 and created_at >= $1::timestamptz) as total_clicks
+          (select count(*) from click_events where owner_user_id = $2 and created_at >= $1::timestamptz) as total_clicks,
+          (select count(*) from email_capture_submissions where owner_user_id = $2 and created_at >= $1::timestamptz) as total_email_leads
       `,
       [sinceIso, ownerUserId],
     ),
@@ -2271,6 +2273,7 @@ export async function getAnalyticsSnapshot(
   const row = totals[0];
   const totalVisits = Number(row?.total_visits ?? 0);
   const totalClicks = Number(row?.total_clicks ?? 0);
+  const totalEmailLeads = Number(row?.total_email_leads ?? 0);
   const uniqueVisitors = Number(row?.unique_visitors ?? 0);
 
   const referrerClickMap = new Map(
@@ -2373,6 +2376,8 @@ export async function getAnalyticsSnapshot(
     uniqueVisitors,
     totalClicks,
     clickThroughRate: totalVisits > 0 ? totalClicks / totalVisits : 0,
+    totalEmailLeads,
+    emailLeadRate: totalVisits > 0 ? totalEmailLeads / totalVisits : 0,
     serviceBreakdown: serviceBreakdown.map((entry) => ({
       service: entry.service,
       clicks: Number(entry.clicks),

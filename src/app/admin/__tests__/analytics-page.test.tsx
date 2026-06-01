@@ -22,6 +22,8 @@ const analyticsSnapshot: AnalyticsSnapshot = {
   uniqueVisitors: 890,
   totalClicks: 510,
   clickThroughRate: 0.41,
+  totalEmailLeads: 149,
+  emailLeadRate: 0.12,
   serviceBreakdown: [{ service: "spotify", clicks: 320 }],
   referrers: [{ label: "Instagram", visits: 620, clicks: 290, ctr: 0.47 }],
   utms: [
@@ -87,5 +89,14 @@ describe("admin analytics page launch copy", () => {
 
     expect(exportLink).toHaveAttribute("href", "/api/admin/analytics/export?range=90");
     expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
+
+  test("uses the backend email lead rate in conversion quality", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("Joined email list")).toBeInTheDocument();
+    expect(screen.getByText("12%")).toBeInTheDocument();
   });
 });

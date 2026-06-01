@@ -21,6 +21,8 @@ const analyticsSnapshot: AnalyticsSnapshot = {
   uniqueVisitors: 890,
   totalClicks: 510,
   clickThroughRate: 0.41,
+  totalEmailLeads: 149,
+  emailLeadRate: 0.12,
   serviceBreakdown: [{ service: "spotify", clicks: 320 }],
   referrers: [
     {
@@ -100,6 +102,8 @@ describe("GET /api/admin/analytics/export", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(body).toContain('"Summary","Range days","7"');
     expect(body).toContain('"Summary","Visits","1240"');
+    expect(body).toContain('"Summary","Email leads","149"');
+    expect(body).toContain('"Summary","Email lead rate","12%"');
     expect(body).toContain('"Streaming services","Spotify","320"');
     expect(body).toContain('"Top sources","\'=IMPORTXML(""https://bad.example"")","620","290","47%"');
     expect(body).toContain('"Campaigns","instagram","social","release, week","410","210","51%"');

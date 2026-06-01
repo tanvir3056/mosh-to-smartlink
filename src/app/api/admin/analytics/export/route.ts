@@ -44,6 +44,8 @@ function buildAnalyticsExportCsv(analytics: AnalyticsSnapshot, rangeDays: number
     buildCsvRow(["Summary", "Unique visitors", analytics.uniqueVisitors]),
     buildCsvRow(["Summary", "Service clicks", analytics.totalClicks]),
     buildCsvRow(["Summary", "Click-through rate", formatPercent(analytics.clickThroughRate)]),
+    buildCsvRow(["Summary", "Email leads", analytics.totalEmailLeads]),
+    buildCsvRow(["Summary", "Email lead rate", formatPercent(analytics.emailLeadRate)]),
     buildCsvRow([]),
     buildCsvRow(["Daily trend", "Date", "Visits", "Unique visitors", "Clicks", "CTR"]),
     ...analytics.daily.map((row) =>
