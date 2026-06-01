@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
 import type {
   DashboardSongRow,
+  EmailConnectorConfig,
   MatchStatus,
   ReviewStatus,
   SongPageWithLinks,
@@ -250,13 +251,67 @@ function MetaField({
   );
 }
 
+function LeadConnectorField({
+  connector,
+}: {
+  connector?: EmailConnectorConfig | null;
+}) {
+  const connected = Boolean(connector?.hasApiKey && connector.audienceId);
+  const value = connected
+    ? `Mailchimp · ${connector?.audienceId}`
+    : "Local lead inbox";
+
+  return (
+    <div className="grid gap-2">
+      <label htmlFor="email-capture-connector" className="text-sm font-medium text-[var(--app-text)]">
+        Connector
+      </label>
+      <div className="flex overflow-hidden rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)]">
+        <input
+          id="email-capture-connector"
+          value={value}
+          readOnly
+          className="min-h-10 min-w-0 flex-1 bg-transparent px-3 text-[13px] text-[var(--app-text)] outline-none"
+        />
+        <span
+          className={
+            connected
+              ? "inline-flex items-center border-l border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-3 text-[12px] font-semibold lowercase text-[var(--app-green-text)]"
+              : "inline-flex items-center border-l border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 text-[12px] font-semibold lowercase text-[var(--app-muted)]"
+          }
+        >
+          {connected ? "connected" : "local"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function LeadConnectorNote({
+  connector,
+}: {
+  connector?: EmailConnectorConfig | null;
+}) {
+  const connected = Boolean(connector?.hasApiKey && connector.audienceId);
+
+  return (
+    <div className="rounded-[10px] border border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--app-muted)]">
+      {connected
+        ? "Leads sync to your connected Mailchimp audience and appear in Settings -> Lead inbox."
+        : "Leads are saved in Settings -> Lead inbox. Connect Mailchimp in Settings to sync automatically."}
+    </div>
+  );
+}
+
 export function SongEditorForm({
   page,
   performance,
+  emailConnector,
   showMissingLinksReview = false,
 }: {
   page: SongPageWithLinks;
   performance?: DashboardSongRow | null;
+  emailConnector?: EmailConnectorConfig | null;
   showMissingLinksReview?: boolean;
 }) {
   const [draftState, draftAction] = useActionState<ActionState, FormData>(
@@ -1207,6 +1262,7 @@ export function SongEditorForm({
                   placeholder="Get the download"
                 />
               </MetaField>
+              <LeadConnectorField connector={emailConnector} />
             </div>
 
             <MetaField label="Offer description">
@@ -1245,6 +1301,7 @@ export function SongEditorForm({
                 placeholder="free-download"
               />
             </MetaField>
+            <LeadConnectorNote connector={emailConnector} />
           </EditorSection>
 
           <section className="overflow-hidden rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-panel)]">

@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 
 import { SongEditorForm } from "@/components/admin/song-editor-form";
 import { requireUserSession } from "@/lib/auth";
-import { getAdminSongPageBySongId, getDashboardSnapshot } from "@/lib/data";
+import {
+  getAdminSongPageBySongId,
+  getDashboardSnapshot,
+  getEmailConnectorConfig,
+} from "@/lib/data";
 
 export default async function EditSongPage({
   params,
@@ -14,9 +18,10 @@ export default async function EditSongPage({
   const session = await requireUserSession();
   const { songId } = await params;
   const resolvedSearchParams = await searchParams;
-  const [pageResult, dashboardResult] = await Promise.allSettled([
+  const [pageResult, dashboardResult, connectorResult] = await Promise.allSettled([
     getAdminSongPageBySongId(songId, session.userId),
     getDashboardSnapshot(session.userId),
+    getEmailConnectorConfig(session.userId),
   ]);
   const page = pageResult.status === "fulfilled" ? pageResult.value : null;
 
@@ -31,11 +36,14 @@ export default async function EditSongPage({
     dashboardResult.status === "fulfilled" ? dashboardResult.value : null;
   const performance =
     dashboard?.songs.find((song) => song.songId === page.song.id) ?? null;
+  const emailConnector =
+    connectorResult.status === "fulfilled" ? connectorResult.value : null;
 
   return (
     <SongEditorForm
       page={page}
       performance={performance}
+      emailConnector={emailConnector}
       showMissingLinksReview={resolvedSearchParams.review === "missing-links"}
     />
   );

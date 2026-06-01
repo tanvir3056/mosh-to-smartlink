@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SongEditorForm } from "@/components/admin/song-editor-form";
 import { STREAMING_SERVICES } from "@/lib/constants";
-import type { SongPageWithLinks } from "@/lib/types";
+import type { EmailConnectorConfig, SongPageWithLinks } from "@/lib/types";
 
 vi.mock("@/app/admin/actions", () => ({
   publishSongAction: vi.fn(),
@@ -183,6 +183,15 @@ const PUBLISHED_PAGE: SongPageWithLinks = {
     status: "published",
     publishedAt: "2026-04-30T00:00:00.000Z",
   },
+};
+
+const CONNECTED_EMAIL_CONNECTOR: EmailConnectorConfig = {
+  provider: "mailchimp",
+  audienceId: "audience-1",
+  defaultTags: "backstage, fan",
+  doubleOptIn: true,
+  hasApiKey: true,
+  updatedAt: "2026-05-31T12:00:00.000Z",
 };
 
 describe("SongEditorForm missing link review", () => {
@@ -440,5 +449,23 @@ describe("SongEditorForm missing link review", () => {
 
     expect(container.innerHTML).not.toContain("#fff");
     expect(container.innerHTML).toContain("var(--app-panel)");
+  });
+
+  test("shows the connected Mailchimp connector in the lead capture section", () => {
+    render(
+      <SongEditorForm
+        page={PAGE}
+        emailConnector={CONNECTED_EMAIL_CONNECTOR}
+        showMissingLinksReview={false}
+      />,
+    );
+
+    expect(screen.getByLabelText("Connector")).toHaveValue("Mailchimp · audience-1");
+    expect(screen.getByText("connected")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Leads sync to your connected Mailchimp audience and appear in Settings/i,
+      ),
+    ).toBeInTheDocument();
   });
 });
