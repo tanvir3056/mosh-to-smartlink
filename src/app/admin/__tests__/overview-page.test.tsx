@@ -97,6 +97,18 @@ describe("admin overview page", () => {
     expect(screen.queryByRole("link", { name: "Preview /warcry/draft-release" })).toBeNull();
   });
 
+  test("keeps release row actions compact like the Claude icon buttons", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    const previewDraftAction = screen.getByRole("link", { name: "Preview Draft Release" });
+
+    expect(previewDraftAction).toHaveAttribute("title", "Preview");
+    expect(previewDraftAction).not.toHaveTextContent("Preview");
+    expect(screen.queryByText("Preview")).not.toBeInTheDocument();
+  });
+
   test("matches the Claude release library filters and filters rows by status", async () => {
     const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
 

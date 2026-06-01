@@ -374,7 +374,7 @@ export default async function AdminOverviewPage({
             </div>
           ) : (
             <>
-              <div className="hidden grid-cols-[1fr_116px_92px_92px_220px] gap-3.5 bg-[var(--app-panel-muted)] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)] lg:grid">
+              <div className="hidden grid-cols-[1fr_116px_92px_92px_168px] gap-3.5 bg-[var(--app-panel-muted)] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)] lg:grid">
                 <span>Release</span>
                 <span>Status</span>
                 <span>Visits</span>
@@ -385,7 +385,7 @@ export default async function AdminOverviewPage({
                 {visibleSongs.map((song) => (
                   <div
                     key={song.songId}
-                    className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_220px] lg:items-center"
+                    className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_168px] lg:items-center"
                   >
                     <Link
                       href={`/admin/songs/${song.songId}`}
@@ -438,11 +438,10 @@ export default async function AdminOverviewPage({
                       <a
                         href={`/admin/preview/${song.songId}`}
                         aria-label={`Preview ${song.title}`}
-                        className={rowActionClass("px-2.5")}
+                        className={rowActionClass()}
                         title="Preview"
                       >
                         <Eye className="h-4 w-4" />
-                        <span>Preview</span>
                       </a>
                       {song.status === "published" ? (
                         <Link
