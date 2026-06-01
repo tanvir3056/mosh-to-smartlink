@@ -252,9 +252,18 @@ describe("SongEditorForm missing link review", () => {
   test("uses a dedicated action for the publish submit control", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
-    const publishButton = screen.getAllByRole("button", { name: "Publish" })[0];
+    const publishButton = screen.getAllByRole("button", {
+      name: "Publish release",
+    })[0];
 
     expect(publishButton).toHaveAttribute("type", "submit");
     expect(publishButton).not.toHaveAttribute("name", "intent");
+  });
+
+  test("renders the artwork control as a replace tile without a raw URL label", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByText("Replace")).toBeInTheDocument();
+    expect(screen.queryByText("Artwork URL")).not.toBeInTheDocument();
   });
 });

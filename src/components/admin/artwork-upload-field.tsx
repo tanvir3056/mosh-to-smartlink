@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import { ImagePlus, LoaderCircle, RotateCcw, Scissors, X, ZoomIn } from "lucide-react";
+import { LoaderCircle, RotateCcw, Scissors, Upload, X, ZoomIn } from "lucide-react";
 import { useId, useMemo, useRef, useState, type CSSProperties } from "react";
 
 async function fileToDataUrl(file: File) {
@@ -654,31 +654,25 @@ export function ArtworkUploadField({
   return (
     <>
       <div className="grid gap-3">
-        <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--app-text)]">Artwork URL</span>
-          <input
-            name="artwork_url"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            className="app-input"
-          />
-        </label>
+        <input
+          type="hidden"
+          name="artwork_url"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex">
           <label
             htmlFor={inputId}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-line)]"
           >
             {busy ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
             ) : (
-              <ImagePlus className="h-4 w-4" />
+              <Upload className="h-4 w-4" />
             )}
-            Upload artwork manually
+            Replace
           </label>
-          <span className="text-xs leading-6 text-[var(--app-muted)]">
-            Pick an image, drag the crop, and the server handles the final square export and compression.
-          </span>
         </div>
 
         <input

@@ -3,7 +3,6 @@ import { Link as LinkIcon, Plus, Sparkles } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
-import { APP_DESCRIPTION } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,11 +30,14 @@ export default async function HomePage() {
               For artists & teams
             </span>
             <h1 className="mt-5 max-w-2xl font-[var(--font-display)] text-[46px] font-semibold leading-[1.05] tracking-[-0.03em] text-[var(--app-text)]">
-              A clean home for every release.
+              A clean home for
+              <br />
+              every release.
             </h1>
             <p className="mt-5 max-w-[29rem] text-[17px] leading-7 text-[var(--app-muted)]">
-              {APP_DESCRIPTION} Create an account, import a track, review destinations,
-              and share one smart link with analytics and email capture built in.
+              Backstage gives every artist a clean home for every release{" "}
+              {"\u2014"} one smart link that points fans to every streaming service,
+              with analytics and email capture built in.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/sign-up">

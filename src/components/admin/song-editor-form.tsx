@@ -4,7 +4,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Globe2, Save } from "lucide-react";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
 import {
@@ -84,6 +84,10 @@ function reviewStatusLabel(value: ReviewStatus) {
 }
 
 function formatDestinationAttention(count: number) {
+  if (count === 0) {
+    return "All visible destinations are ready.";
+  }
+
   return `${count} destination${count === 1 ? "" : "s"} still ${
     count === 1 ? "needs" : "need"
   } attention before launch.`;
@@ -134,7 +138,8 @@ function SaveButtons({
         busy={pending}
         disabled={pending || !canPublish}
       >
-        Publish
+        <Globe2 className="h-4 w-4" />
+        Publish release
       </Button>
       <Button
         type="submit"
@@ -142,6 +147,7 @@ function SaveButtons({
         formAction={draftAction}
         busy={pending}
       >
+        <Save className="h-4 w-4" />
         Save draft
       </Button>
       <Button
@@ -150,6 +156,7 @@ function SaveButtons({
         formAction={unpublishAction}
         busy={pending}
       >
+        <EyeOff className="h-4 w-4" />
         Unpublish
       </Button>
     </div>
@@ -274,6 +281,7 @@ export function SongEditorForm({
   const visitCount = performance?.visitCount ?? 0;
   const clickCount = performance?.clickCount ?? 0;
   const publishReady = linkedServices > 0;
+  const allVisibleDestinationsReady = publishReady && manualReviewCount === 0;
   const readinessScore = publishReady
     ? Math.min(100, Math.round((linkedServices / STREAMING_SERVICES.length) * 100))
     : 0;
@@ -479,7 +487,17 @@ export function SongEditorForm({
               formAction={publishAction}
               disabled={!publishReady}
             >
-              {page.page.status === "published" ? "Save changes" : "Publish"}
+              {page.page.status === "published" ? (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save changes
+                </>
+              ) : (
+                <>
+                  <Globe2 className="h-4 w-4" />
+                  Publish release
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -503,46 +521,61 @@ export function SongEditorForm({
               </p>
             </div>
 
+            <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-start">
+              <div className="grid gap-3">
+                <img
+                  src={artworkUrl}
+                  alt={`${page.song.artistName} - ${page.song.title} artwork`}
+                  className="h-[108px] w-[108px] rounded-[12px] border border-[var(--app-line)] object-cover shadow-[0_12px_28px_rgba(20,24,34,0.12)]"
+                  loading="eager"
+                  decoding="async"
+                />
+                <ArtworkUploadField
+                  value={artworkUrl}
+                  onChange={setArtworkUrl}
+                  songId={page.song.id}
+                />
+              </div>
+
+              <div className="grid gap-4">
+                <MetaField label="Title">
+                  <input name="title" defaultValue={page.song.title} className="app-input" />
+                </MetaField>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MetaField label="Artist">
+                    <input
+                      name="artist_name"
+                      defaultValue={page.song.artistName}
+                      className="app-input"
+                    />
+                  </MetaField>
+                  <MetaField label="Album">
+                    <input
+                      name="album_name"
+                      defaultValue={page.song.albumName ?? ""}
+                      className="app-input"
+                    />
+                  </MetaField>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
-              <MetaField label="Song title">
-                <input name="title" defaultValue={page.song.title} className="app-input" />
-              </MetaField>
-              <MetaField label="Artist name">
-                <input
-                  name="artist_name"
-                  defaultValue={page.song.artistName}
-                  className="app-input"
-                />
-              </MetaField>
-              <MetaField label="Album name">
-                <input
-                  name="album_name"
-                  defaultValue={page.song.albumName ?? ""}
-                  className="app-input"
-                />
-              </MetaField>
               <MetaField label="Slug">
                 <input name="slug" defaultValue={page.page.slug} className="app-input" />
+              </MetaField>
+              <MetaField label="Preview clip URL">
+                <input
+                  name="preview_url"
+                  defaultValue={page.song.previewUrl ?? ""}
+                  className="app-input"
+                  placeholder="Optional 30-second preview"
+                />
               </MetaField>
             </div>
 
             <MetaField label="Headline">
               <input name="headline" defaultValue={page.page.headline} className="app-input" />
-            </MetaField>
-
-            <ArtworkUploadField
-              value={artworkUrl}
-              onChange={setArtworkUrl}
-              songId={page.song.id}
-            />
-
-            <MetaField label="Preview URL">
-              <input
-                name="preview_url"
-                defaultValue={page.song.previewUrl ?? ""}
-                className="app-input"
-                placeholder="Optional 30-second preview"
-              />
             </MetaField>
           </div>
 
@@ -988,7 +1021,11 @@ export function SongEditorForm({
               <div>
                 <p className="app-kicker text-[var(--app-muted)]">Publishing rail</p>
                 <h3 className="mt-2 text-base font-semibold text-[var(--app-text)]">
-                  {publishReady ? "Almost ready" : "Not ready to publish"}
+                  {allVisibleDestinationsReady
+                    ? "Ready to publish"
+                    : publishReady
+                      ? "Almost ready"
+                      : "Not ready to publish"}
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
                   {readinessMessage}
@@ -1021,7 +1058,13 @@ export function SongEditorForm({
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-[var(--app-text)]">
-                    {publishReady ? "Almost ready" : "Needs attention"}
+                    {page.page.status === "published"
+                      ? "Live & healthy"
+                      : allVisibleDestinationsReady
+                        ? "Ready to publish"
+                        : publishReady
+                          ? "Almost ready"
+                          : "Needs attention"}
                   </h3>
                   <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
                     {publishReady
