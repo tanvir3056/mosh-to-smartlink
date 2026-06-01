@@ -150,6 +150,12 @@ describe("TrackingSettingsForm", () => {
     );
     expect(screen.getByText("Pixel firing on all live pages")).toBeInTheDocument();
     expect(screen.getByText("Events: PageView, ViewContent, and Lead.")).toBeInTheDocument();
+    const connectedBadge = screen.getByText("Connected");
+    expect(connectedBadge.className).toContain("var(--app-green");
+    expect(connectedBadge.querySelector("[aria-hidden='true']")).toBeInTheDocument();
+    expect(
+      screen.getByText("Fans confirm via email before they're added."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Public defaults")).not.toBeInTheDocument();
     expect(screen.queryByText("Live page defaults")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Site name")).not.toBeInTheDocument();

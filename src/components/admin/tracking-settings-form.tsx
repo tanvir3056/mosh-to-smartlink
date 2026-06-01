@@ -24,6 +24,28 @@ function fieldDescription(...ids: Array<string | false | null | undefined>) {
   return description.length > 0 ? description : undefined;
 }
 
+function MailchimpStatusBadge({ connected }: { connected: boolean }) {
+  return (
+    <div
+      className={
+        connected
+          ? "inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-green-text)]"
+          : "inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-amber-text)]"
+      }
+    >
+      <span
+        aria-hidden="true"
+        className={
+          connected
+            ? "h-1.5 w-1.5 rounded-full bg-[var(--app-green)]"
+            : "h-1.5 w-1.5 rounded-full bg-[var(--app-amber)]"
+        }
+      />
+      {connected ? "Connected" : "Local only"}
+    </div>
+  );
+}
+
 export function TrackingSettingsForm({
   config,
   connector,
@@ -171,9 +193,7 @@ export function TrackingSettingsForm({
               </div>
             </div>
 
-            <div className="rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
-              {isMailchimpConnected ? "Connected" : "Local only"}
-            </div>
+            <MailchimpStatusBadge connected={isMailchimpConnected} />
           </div>
 
           <div className="grid gap-4 p-[18px]">
@@ -246,14 +266,19 @@ export function TrackingSettingsForm({
             </label>
 
             <div className="grid gap-3">
-              <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
+              <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
                 <input
                   name="mailchimp_double_opt_in"
                   type="checkbox"
                   defaultChecked={connector.doubleOptIn}
-                  className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
                 />
-                Require double opt-in
+                <span className="grid gap-1">
+                  <span className="font-medium">Require double opt-in</span>
+                  <span className="text-[12.5px] leading-5 text-[var(--app-muted)]">
+                    Fans confirm via email before they&apos;re added.
+                  </span>
+                </span>
               </label>
 
               {connector.hasApiKey ? (
