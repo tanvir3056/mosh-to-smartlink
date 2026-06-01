@@ -73,4 +73,19 @@ describe("admin analytics page launch copy", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/Timeline context shows/i)).not.toBeInTheDocument();
   });
+
+  test("matches the design by exposing a real export action for the selected range", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(
+      await AdminAnalyticsPage({
+        searchParams: Promise.resolve({ range: "90" }),
+      }),
+    );
+
+    const exportLink = screen.getByRole("link", { name: "Export" });
+
+    expect(exportLink).toHaveAttribute("href", "/api/admin/analytics/export?range=90");
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
 });

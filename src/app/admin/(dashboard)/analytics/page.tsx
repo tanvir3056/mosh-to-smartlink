@@ -14,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { requireUserSession } from "@/lib/auth";
 import { SERVICE_LABELS } from "@/lib/constants";
 import { getAnalyticsSnapshot } from "@/lib/data";
@@ -495,10 +494,14 @@ export default async function AdminAnalyticsPage({
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           <RangeSwitcher rangeDays={rangeDays} />
-          <Button type="button" tone="secondary" disabled title="Export is not connected yet">
+          <Link
+            href={`/api/admin/analytics/export?range=${rangeDays}`}
+            prefetch={false}
+            className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] tracking-[-0.005em] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out select-none hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] active:translate-y-px"
+          >
             <Download className="h-4 w-4" />
             Export
-          </Button>
+          </Link>
         </div>
       </header>
 
