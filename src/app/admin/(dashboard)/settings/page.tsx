@@ -48,20 +48,20 @@ export default async function AdminSettingsPage() {
   }
 
   return (
-    <section className="mx-auto grid w-full max-w-[1320px] gap-5">
-      <div className="app-card app-enter rounded-[1.85rem] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
+    <section className="mx-auto grid w-full max-w-[1180px] gap-5">
+      <div className="app-enter px-0 py-1">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="app-kicker text-[var(--app-muted)]">Settings</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)] sm:text-4xl">
-              Site settings
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-              Manage public defaults, Mailchimp sync, and lead export.
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+              Settings
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
+              Workspace defaults, integrations and collected leads.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 rounded-[1.2rem] border border-[var(--app-line)] bg-white/76 px-4 py-3 text-sm text-[var(--app-muted)]">
+          <div className="flex flex-wrap items-center gap-2 rounded-[9px] border border-[var(--app-line)] bg-white px-3 py-2 text-sm text-[var(--app-muted)] shadow-[0_1px_2px_rgba(20,24,34,0.05)]">
             <span className="app-chip">Mailchimp</span>
             <span className="app-chip">Lead inbox</span>
             <span className="app-chip">Export</span>
@@ -69,7 +69,7 @@ export default async function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="app-card app-enter app-enter-delay-1 rounded-[1.9rem] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
+      <div className="app-card app-enter app-enter-delay-1 rounded-[14px] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
         {settingsReady && trackingConfig && emailConnector ? (
           <TrackingSettingsForm config={trackingConfig} connector={emailConnector} />
         ) : (

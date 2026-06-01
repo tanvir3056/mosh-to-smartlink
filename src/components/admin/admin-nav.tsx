@@ -12,12 +12,17 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  {
+    href: "/admin",
+    label: "Overview",
+    icon: LayoutDashboard,
+    activePrefixes: ["/admin/songs/"],
+    inactivePrefixes: ["/admin/songs/new"],
+  },
   {
     href: "/admin/songs/new",
     label: "Import song",
     icon: Sparkles,
-    activePrefixes: ["/admin/songs/"],
   },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -46,11 +51,15 @@ export function AdminNavLinks({
       {navItems.map((item) => {
         const activePrefixes =
           "activePrefixes" in item ? item.activePrefixes : undefined;
+        const inactivePrefixes =
+          "inactivePrefixes" in item ? item.inactivePrefixes : undefined;
         const active =
-          item.href === "/admin"
-            ? pathname === item.href
+          (item.href === "/admin"
+            ? pathname === item.href ||
+              activePrefixes?.some((prefix) => pathname.startsWith(prefix)) === true
             : pathname.startsWith(item.href) ||
-              activePrefixes?.some((prefix) => pathname.startsWith(prefix)) === true;
+              activePrefixes?.some((prefix) => pathname.startsWith(prefix)) === true) &&
+          inactivePrefixes?.some((prefix) => pathname.startsWith(prefix)) !== true;
         const Icon = item.icon;
 
         return (
@@ -59,20 +68,19 @@ export function AdminNavLinks({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "app-interactive app-sidebar-nav-link inline-flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
-              orientation === "horizontal" && "min-w-0 justify-start px-3 py-2.5 sm:px-3.5 sm:py-3",
+              "app-sidebar-nav-link relative inline-flex h-[38px] items-center gap-3 rounded-[7px] border px-3 text-sm font-medium select-none touch-manipulation transition-[background-color,border-color,color] duration-150 ease-out",
+              orientation === "horizontal" && "min-w-0 justify-start px-3",
               active
-                ? "border-[var(--app-sidebar-line)] bg-[var(--app-sidebar-panel-strong)] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_32px_rgba(0,0,0,0.16)]"
-                : "border-transparent hover:border-[var(--app-sidebar-line)] hover:bg-white/7",
+                ? "border-transparent bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
+                : "border-transparent hover:bg-[var(--app-panel-muted)]",
             )}
           >
+            {active ? (
+              <span className="absolute bottom-2 left-[-10px] top-2 hidden w-[3px] rounded-full bg-[var(--app-accent)] lg:block" />
+            ) : null}
             <span
               className={cn(
-                "app-sidebar-nav-icon inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
-                orientation === "horizontal" && "h-8 w-8 shrink-0",
-                active
-                  ? "border-[rgba(255,255,255,0.1)] bg-white/10"
-                  : "border-transparent bg-transparent",
+                "app-sidebar-nav-icon inline-flex h-5 w-5 shrink-0 items-center justify-center transition-colors",
               )}
             >
               <Icon className="h-4 w-4" />

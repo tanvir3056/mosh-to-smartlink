@@ -105,7 +105,7 @@ function TrendChart({
   });
 
   return (
-    <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[var(--app-line)] bg-[linear-gradient(180deg,#fdfcf8_0%,#f4f1e9_100%)] p-4">
+    <div className="mt-5 overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-[linear-gradient(180deg,#fdfcf8_0%,#f4f1e9_100%)] p-4">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[16rem] w-full" role="img" aria-label="Visits and outbound clicks over time">
         <defs>
           <linearGradient id="visits-fill" x1="0" x2="0" y1="0" y2="1">
@@ -198,7 +198,7 @@ function TrendChart({
 
 function EmptyBlock({ label }: { label: string }) {
   return (
-    <div className="rounded-[1.3rem] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
+    <div className="rounded-[12px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
       {label}
     </div>
   );
@@ -231,23 +231,21 @@ export default async function AdminAnalyticsPage({
       : 0;
 
   return (
-    <div className="grid gap-6">
-      <section className="app-card rounded-[1.9rem] p-5 sm:p-6">
+    <div className="mx-auto grid w-full max-w-[1180px] gap-5">
+      <section className="grid gap-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="app-kicker text-[var(--app-muted)]">Analytics</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--app-text)]">
-              Marketing performance that actually helps decisions
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+              Analytics
             </h1>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
               Use first-party traffic, click, source, and device signals to judge
-              release-page performance. This dashboard stays focused on the smart-link
-              funnel: landing traffic, outbound clicks, service choice, campaign
-              attribution, and device mix.
+              release-page performance. How fans find and move through your release links.
             </p>
           </div>
 
-          <div className="grid w-full max-w-[18rem] grid-cols-3 rounded-full border border-[var(--app-line)] bg-white/82 p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-sm sm:w-auto">
+          <div className="grid w-full max-w-[18rem] grid-cols-3 rounded-[9px] border border-[var(--app-line)] bg-white p-[4px] shadow-[0_1px_2px_rgba(20,24,34,0.05)] sm:w-auto">
             {RANGE_OPTIONS.map((option) => {
               const active = option.days === rangeDays;
 
@@ -256,7 +254,7 @@ export default async function AdminAnalyticsPage({
                   <span
                     key={option.days}
                     aria-current="page"
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-panel-muted)] px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]"
+                    className="inline-flex h-9 items-center justify-center rounded-[7px] bg-[var(--app-accent-soft)] px-4 text-sm font-semibold"
                     style={{
                       color: "#151922",
                       WebkitTextFillColor: "#151922",
@@ -278,7 +276,7 @@ export default async function AdminAnalyticsPage({
                 <Link
                   key={option.days}
                   href={`/admin/analytics?range=${option.days}`}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,color] duration-200 ease-out hover:bg-[var(--app-panel-muted)]"
+                  className="inline-flex h-9 items-center justify-center rounded-[7px] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,color] duration-200 ease-out hover:bg-[var(--app-panel-muted)]"
                   style={{
                     color: "#151922",
                     WebkitTextFillColor: "#151922",
@@ -298,7 +296,7 @@ export default async function AdminAnalyticsPage({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-px overflow-hidden rounded-[1.5rem] border border-[var(--app-line)] bg-[var(--app-line)] md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
               label: "Page visits",
@@ -332,10 +330,10 @@ export default async function AdminAnalyticsPage({
             const Icon = card.icon;
 
             return (
-              <div key={card.label} className="flex min-h-[152px] flex-col justify-between bg-white p-5">
+              <div key={card.label} className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-5">
                 <div className="flex items-center justify-between gap-3">
                   <p className="app-kicker text-[var(--app-muted)]">{card.label}</p>
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
                     <Icon className="h-4 w-4" />
                   </span>
                 </div>
@@ -354,7 +352,7 @@ export default async function AdminAnalyticsPage({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Trend</p>
@@ -367,7 +365,7 @@ export default async function AdminAnalyticsPage({
                 release moments and campaign pushes.
               </p>
             </div>
-            <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
+            <div className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
               {bestDay
                 ? `Best day: ${format(parseISO(bestDay.date), "MMM d")} • ${bestDay.visits} visits`
                 : "No trend data yet"}
@@ -378,7 +376,7 @@ export default async function AdminAnalyticsPage({
         </div>
 
         <div className="grid gap-5">
-          <section className="app-card rounded-[1.9rem] p-5 sm:p-6">
+          <section className="app-card rounded-[14px] p-5 sm:p-6">
             <p className="app-kicker text-[var(--app-muted)]">Signal</p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
               What to pay attention to
@@ -412,7 +410,7 @@ export default async function AdminAnalyticsPage({
                     : "Campaign data will appear here",
                 },
               ].map((row) => (
-                <div key={row.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="app-kicker text-[var(--app-muted)]">{row.label}</div>
                   <div className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[var(--app-text)]">
                     {row.value}
@@ -423,7 +421,7 @@ export default async function AdminAnalyticsPage({
             </div>
           </section>
 
-          <section className="app-card rounded-[1.9rem] p-5 sm:p-6">
+          <section className="app-card rounded-[14px] p-5 sm:p-6">
             <p className="app-kicker text-[var(--app-muted)]">Quality</p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
               Conversion quality
@@ -446,7 +444,7 @@ export default async function AdminAnalyticsPage({
                       : "0x",
                 },
               ].map((row) => (
-                <div key={row.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-4">
+                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-4">
                   <div className="app-kicker text-[var(--app-muted)]">{row.label}</div>
                   <div className="mt-3 text-xl font-semibold text-[var(--app-text)]">
                     {row.value}
@@ -459,7 +457,7 @@ export default async function AdminAnalyticsPage({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Sources</p>
@@ -467,7 +465,7 @@ export default async function AdminAnalyticsPage({
                 Top traffic sources
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <Radio className="h-4 w-4" />
             </span>
           </div>
@@ -475,7 +473,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.referrers.length > 0 ? (
               analytics.referrers.map((row) => (
-                <div key={row.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <div className="font-medium text-[var(--app-text)]">{row.label}</div>
@@ -501,7 +499,7 @@ export default async function AdminAnalyticsPage({
           </div>
         </div>
 
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Campaigns</p>
@@ -509,7 +507,7 @@ export default async function AdminAnalyticsPage({
                 UTM performance
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <ArrowUpRight className="h-4 w-4" />
             </span>
           </div>
@@ -517,7 +515,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.utms.length > 0 ? (
               analytics.utms.map((row) => (
-                <div key={`${row.source}-${row.medium}-${row.campaign}`} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={`${row.source}-${row.medium}-${row.campaign}`} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-medium text-[var(--app-text)]">{row.campaign}</div>
@@ -539,7 +537,7 @@ export default async function AdminAnalyticsPage({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Services</p>
@@ -547,7 +545,7 @@ export default async function AdminAnalyticsPage({
                 Clicks by streaming destination
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <MousePointer2 className="h-4 w-4" />
             </span>
           </div>
@@ -555,7 +553,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.serviceBreakdown.length > 0 ? (
               analytics.serviceBreakdown.map((row) => (
-                <div key={row.service} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={row.service} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-medium text-[var(--app-text)]">
                       {SERVICE_LABELS[row.service]}
@@ -578,7 +576,7 @@ export default async function AdminAnalyticsPage({
           </div>
         </div>
 
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Devices</p>
@@ -586,7 +584,7 @@ export default async function AdminAnalyticsPage({
                 Device mix and conversion rate
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <Monitor className="h-4 w-4" />
             </span>
           </div>
@@ -594,7 +592,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.devices.length > 0 ? (
               analytics.devices.map((row) => (
-                <div key={row.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <div className="font-medium capitalize text-[var(--app-text)]">
@@ -624,7 +622,7 @@ export default async function AdminAnalyticsPage({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Locations</p>
@@ -632,7 +630,7 @@ export default async function AdminAnalyticsPage({
                 Country and city
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <Globe2 className="h-4 w-4" />
             </span>
           </div>
@@ -640,7 +638,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.geos.length > 0 ? (
               analytics.geos.map((row) => (
-                <div key={`${row.country}-${row.city}`} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={`${row.country}-${row.city}`} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <div className="font-medium text-[var(--app-text)]">
@@ -663,7 +661,7 @@ export default async function AdminAnalyticsPage({
           </div>
         </div>
 
-        <div className="app-card rounded-[1.9rem] p-5 sm:p-6">
+        <div className="app-card rounded-[14px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Per-song</p>
@@ -671,7 +669,7 @@ export default async function AdminAnalyticsPage({
                 Song performance
               </h2>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
               <Users className="h-4 w-4" />
             </span>
           </div>
@@ -679,7 +677,7 @@ export default async function AdminAnalyticsPage({
           <div className="mt-5 grid gap-3">
             {analytics.songs.length > 0 ? (
               analytics.songs.map((row) => (
-                <div key={row.songId} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4">
+                <div key={row.songId} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-medium text-[var(--app-text)]">{row.title}</div>

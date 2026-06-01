@@ -3,6 +3,8 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import Link from "next/link";
+import { ArrowLeft, Eye } from "lucide-react";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
 import {
@@ -114,16 +116,18 @@ function SaveButtons({
   draftAction,
   publishAction,
   unpublishAction,
+  stacked = false,
 }: {
   canPublish: boolean;
   draftAction: EditorFormAction;
   publishAction: EditorFormAction;
   unpublishAction: EditorFormAction;
+  stacked?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    <div className={`flex flex-col gap-3 ${stacked ? "" : "sm:flex-row"}`}>
       <Button
         type="submit"
         formAction={publishAction}
@@ -269,9 +273,13 @@ export function SongEditorForm({
   }).length;
   const visitCount = performance?.visitCount ?? 0;
   const clickCount = performance?.clickCount ?? 0;
-  const clickRate =
-    visitCount > 0 ? `${Math.round((clickCount / visitCount) * 100)}% CTR` : "No clicks yet";
   const publishReady = linkedServices > 0;
+  const readinessScore = publishReady
+    ? Math.min(100, Math.round((linkedServices / STREAMING_SERVICES.length) * 100))
+    : 0;
+  const readinessMessage = publishReady || manualReviewCount > 0
+    ? formatDestinationAttention(manualReviewCount)
+    : "Show at least one valid streaming destination before this page goes live.";
 
   function updateServiceDraft(
     service: StreamingService,
@@ -290,24 +298,24 @@ export function SongEditorForm({
   return (
     <>
       {showMissingLinksDialog && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[rgba(9,11,15,0.68)] px-4 py-8 backdrop-blur-sm sm:items-center">
-          <div className="app-shell-card w-full max-w-3xl rounded-[1.75rem] p-5 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[rgba(16,19,27,0.38)] px-4 py-8 backdrop-blur-sm sm:items-center">
+          <div className="app-card w-full max-w-3xl rounded-[14px] p-5 shadow-[0_20px_70px_rgba(20,24,34,0.18)] sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="app-kicker text-[var(--app-dark-muted)]">
+                <p className="app-kicker text-[var(--app-muted)]">
                   Link review
                 </p>
-                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--app-dark-text)]">
+                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
                   Some music service links were not found.
                 </h3>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-dark-muted)]">
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
                   Choose search fallback or add a link manually before you save or publish.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeMissingLinksDialog}
-                className="app-chip-dark shrink-0"
+                className="app-chip shrink-0"
               >
                 Continue
               </button>
@@ -322,13 +330,13 @@ export function SongEditorForm({
                 return (
                   <div
                     key={`review-${service}`}
-                    className="rounded-[1.4rem] border border-[var(--app-dark-line)] bg-[rgba(255,255,255,0.03)] p-4"
+                    className="rounded-[12px] border border-[var(--app-line)] bg-white p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-base font-semibold text-[var(--app-dark-text)]">
+                      <div className="text-base font-semibold text-[var(--app-text)]">
                         {SERVICE_LABELS[service]}
                       </div>
-                      <label className="inline-flex items-center gap-2 text-sm text-[var(--app-dark-muted)]">
+                      <label className="inline-flex items-center gap-2 text-sm text-[var(--app-muted)]">
                         <input
                           type="checkbox"
                           checked={draft.isVisible}
@@ -339,14 +347,14 @@ export function SongEditorForm({
                               isVisible,
                             }));
                           }}
-                          className="h-4 w-4 rounded border-white/20 bg-transparent"
+                          className="h-4 w-4 rounded border-slate-300 bg-transparent"
                         />
                         Show on page
                       </label>
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <label className="app-chip-dark flex cursor-pointer items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm">
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
                         <input
                           type="radio"
                           name={`review-${service}`}
@@ -363,7 +371,7 @@ export function SongEditorForm({
                         />
                         Use search fallback
                       </label>
-                      <label className="app-chip-dark flex cursor-pointer items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm">
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
                         <input
                           type="radio"
                           name={`review-${service}`}
@@ -388,7 +396,7 @@ export function SongEditorForm({
 
                     {draft.resolutionMode === "manual" ? (
                       <div className="mt-4 grid gap-2">
-                        <label className="app-kicker text-[var(--app-dark-muted)]">
+                        <label className="app-kicker text-[var(--app-muted)]">
                           Manual URL
                         </label>
                         <input
@@ -406,11 +414,11 @@ export function SongEditorForm({
                           aria-invalid={Boolean(manualFieldError)}
                         />
                         {manualFieldError ? (
-                          <p className="text-sm text-red-300">{manualFieldError}</p>
+                          <p className="text-sm text-red-600">{manualFieldError}</p>
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-4 text-sm leading-7 text-[var(--app-dark-muted)]">
+                      <p className="mt-4 text-sm leading-7 text-[var(--app-muted)]">
                         The public page will keep the Search button for {SERVICE_LABELS[service]}.
                       </p>
                     )}
@@ -424,112 +432,67 @@ export function SongEditorForm({
 
       <form
         action={draftAction}
-        className="grid gap-5 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start"
+        className="mx-auto grid w-full max-w-[1240px] gap-5"
       >
         <input type="hidden" name="song_id" value={page.song.id} />
         <input type="hidden" name="current_slug" value={page.page.slug} />
 
-        <aside className="order-2 grid gap-5 xl:order-1 xl:sticky xl:top-6">
-          <div className="app-card rounded-[1.75rem] p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 gap-4">
             <img
               src={artworkUrl}
               alt={`${page.song.artistName} - ${page.song.title} artwork`}
-              className="aspect-square w-full rounded-[1.5rem] object-cover shadow-[0_18px_40px_rgba(11,14,19,0.12)]"
+              className="h-14 w-14 shrink-0 rounded-[12px] object-cover shadow-[0_12px_28px_rgba(20,24,34,0.12)]"
               loading="eager"
               decoding="async"
             />
-
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <StatusPill status={page.page.status} />
-              <span className="text-sm text-[var(--app-muted)]">
-                {linkedServices}/{STREAMING_SERVICES.length} services ready
-              </span>
-              <span className="app-chip">@{page.page.username}</span>
-            </div>
-
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-              {page.song.artistName} • {page.song.title}
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-              Tighten the release details, confirm the service list, then publish when
-              the page is ready for fan traffic.
-            </p>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-              {[
-                {
-                  title: "Metadata imported",
-                  body: "Spotify title, artist, artwork, and preview came in automatically.",
-                },
-                {
-                  title: "Manual review",
-                  body: formatDestinationAttention(manualReviewCount),
-                },
-                {
-                  title: "Performance",
-                  body: `${visitCount} visits • ${clickCount} clicks • ${clickRate}`,
-                },
-              ].map((step) => (
-                <div key={step.title} className="app-card-soft rounded-[1.2rem] px-4 py-4">
-                  <div className="text-sm font-semibold text-[var(--app-text)]">
-                    {step.title}
-                  </div>
-                  <div className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-                    {step.body}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              className={`mt-5 rounded-[1.2rem] border px-4 py-4 ${
-                publishReady
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                  : "border-amber-200 bg-amber-50 text-amber-950"
-              }`}
-            >
-              <p
-                className={`app-kicker ${
-                  publishReady ? "text-emerald-700" : "text-amber-700"
-                }`}
+            <div className="min-w-0">
+              <Link
+                href="/admin"
+                className="mb-2 inline-flex items-center gap-1 text-[13px] font-medium text-[var(--app-muted)] transition hover:text-[var(--app-text)]"
               >
-                Launch readiness
-              </p>
-              <h3 className="mt-2 text-base font-semibold">
-                {publishReady ? "Ready to publish" : "Not ready to publish"}
-              </h3>
-              <p className="mt-2 text-sm leading-6">
-                {publishReady
-                  ? `${linkedServices} visible destination${
-                      linkedServices === 1 ? " is" : "s are"
-                    } ready for fan traffic.`
-                  : "Show at least one valid streaming destination before this page goes live."}
-              </p>
-            </div>
-
-            <div className="mt-6 border-t border-[var(--app-line)] pt-5">
-              <p className="app-kicker text-[var(--app-muted)]">Save state</p>
-              <div className="mt-4">
-                <SaveButtons
-                  canPublish={publishReady}
-                  draftAction={draftAction}
-                  publishAction={publishAction}
-                  unpublishAction={unpublishAction}
-                />
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Release library
+              </Link>
+              <p className="app-kicker text-[var(--app-muted)]">Review &amp; publish</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+                {page.song.title}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--app-muted)]">
+                <span>{page.song.artistName}</span>
+                <StatusPill status={page.page.status} />
+                <span className="app-chip">@{page.page.username}</span>
               </div>
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/admin/preview/${page.song.id}`}
+              className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
+            >
+              <Eye className="h-4 w-4" />
+              Preview
+            </Link>
+            <Button
+              type="submit"
+              formAction={publishAction}
+              disabled={!publishReady}
+            >
+              {page.page.status === "published" ? "Save changes" : "Publish"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_336px] xl:items-start">
+        <div className="grid gap-5">
           <PublicLinkPanel
             username={page.page.username}
             slug={page.page.slug}
             status={page.page.status}
             previewHref={`/admin/preview/${page.song.id}`}
           />
-        </aside>
-
-        <div className="order-1 grid gap-5 xl:order-2">
-          <div className="app-card grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
+          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Release details</p>
               <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
@@ -583,7 +546,7 @@ export function SongEditorForm({
             </MetaField>
           </div>
 
-          <div className="app-card grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
+          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Lead capture</p>
               <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
@@ -594,7 +557,7 @@ export function SongEditorForm({
               </p>
             </div>
 
-            <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
+            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
               <input
                 name="email_capture_enabled"
                 type="checkbox"
@@ -661,7 +624,7 @@ export function SongEditorForm({
             </MetaField>
           </div>
 
-          <div className="app-card grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
+          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
             <div>
               <p className="app-kicker text-[var(--app-muted)]">Destinations</p>
               <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
@@ -702,7 +665,7 @@ export function SongEditorForm({
                 return (
                   <div
                     key={service}
-                    className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-white p-4 lg:grid-cols-[180px_minmax(0,1fr)]"
+                    className="grid gap-3 rounded-[12px] border border-[var(--app-line)] bg-white p-4 lg:grid-cols-[180px_minmax(0,1fr)]"
                   >
                     <div className="grid gap-2">
                       <div className="text-sm font-semibold text-[var(--app-text)]">
@@ -714,7 +677,7 @@ export function SongEditorForm({
                           : "Check the destination and adjust anything that looks wrong."}
                       </div>
                       <div className="flex flex-wrap gap-2 pt-1">
-                        <span className="inline-flex min-h-11 items-center rounded-full border border-[var(--app-line)] bg-[var(--app-soft)] px-5 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--app-text)]">
+                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-soft)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
                           {needsResolution
                             ? draft.resolutionMode === "search_fallback"
                               ? "Search fallback"
@@ -723,7 +686,7 @@ export function SongEditorForm({
                                 : "Unresolved"
                             : reviewStatusLabel(reviewStatus)}
                         </span>
-                        <span className="inline-flex min-h-11 items-center rounded-full border border-[var(--app-line)] bg-white px-5 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
+                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-white px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
                           {formatConfidence(link?.confidence ?? null)}
                         </span>
                       </div>
@@ -814,7 +777,7 @@ export function SongEditorForm({
                       </label>
 
                       {needsResolution ? (
-                        <div className="grid gap-3 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
+                        <div className="grid gap-3 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
                           <div className="grid gap-3 sm:grid-cols-2">
                             <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
                               <input
@@ -955,7 +918,7 @@ export function SongEditorForm({
                         link?.matchedDurationMs ||
                         link?.matchedReleaseDate ||
                         link?.matchedIsrc) && (
-                        <div className="grid gap-2 rounded-2xl border border-[var(--app-line)] bg-[var(--app-soft)]/70 p-3">
+                        <div className="grid gap-2 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-soft)]/70 p-3">
                           {link?.confidenceReason && (
                             <div className="text-sm text-[var(--app-text)]">
                               {link.confidenceReason}
@@ -1020,12 +983,15 @@ export function SongEditorForm({
             </div>
           </div>
 
-          <div className="app-card rounded-[1.5rem] p-5 xl:hidden">
+          <div className="app-card rounded-[14px] p-5 xl:hidden">
             <div className="flex flex-col gap-4">
               <div>
                 <p className="app-kicker text-[var(--app-muted)]">Publishing rail</p>
+                <h3 className="mt-2 text-base font-semibold text-[var(--app-text)]">
+                  {publishReady ? "Almost ready" : "Not ready to publish"}
+                </h3>
                 <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-                  Save a draft while you review, or publish when everything is approved.
+                  {readinessMessage}
                 </p>
               </div>
               <SaveButtons
@@ -1039,9 +1005,91 @@ export function SongEditorForm({
 
           <FormStateMessage error={state.error} success={state.success} />
         </div>
+
+          <aside className="hidden gap-4 xl:sticky xl:top-6 xl:grid">
+            <section className="app-card overflow-hidden rounded-[14px]">
+              <div className="flex items-center gap-4 border-b border-[var(--app-line)] bg-[linear-gradient(160deg,var(--app-accent-soft),#fff)] p-5">
+                <div
+                  className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full"
+                  style={{
+                    background: `conic-gradient(var(--app-accent) ${readinessScore}%, var(--app-line) 0)`,
+                  }}
+                >
+                  <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-white text-base font-semibold text-[var(--app-text)]">
+                    {readinessScore}%
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-[var(--app-text)]">
+                    {publishReady ? "Almost ready" : "Needs attention"}
+                  </h3>
+                  <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
+                    {publishReady
+                      ? readinessMessage
+                      : "Review the destinations before publishing."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-5 py-2">
+                {[
+                  { label: "Artwork", value: artworkUrl ? "Ready" : "Missing", tone: artworkUrl ? "text-[var(--app-green-text)]" : "text-[var(--app-amber-text)]" },
+                  { label: "Metadata", value: "Complete", tone: "text-[var(--app-green-text)]" },
+                  { label: "Services ready", value: `${linkedServices} of ${STREAMING_SERVICES.length}`, tone: publishReady ? "text-[var(--app-amber-text)]" : "text-[var(--app-red-text)]" },
+                  { label: "Manual review", value: manualReviewCount ? `${manualReviewCount} link${manualReviewCount === 1 ? "" : "s"}` : "None", tone: manualReviewCount ? "text-[var(--app-amber-text)]" : "text-[var(--app-green-text)]" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between gap-3 border-b border-[var(--app-line)] py-3 text-sm last:border-b-0"
+                  >
+                    <span className="text-[var(--app-muted)]">{item.label}</span>
+                    <span className={`font-semibold ${item.tone}`}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-[var(--app-line)] p-4">
+                <SaveButtons
+                  canPublish={publishReady}
+                  draftAction={draftAction}
+                  publishAction={publishAction}
+                  unpublishAction={unpublishAction}
+                  stacked
+                />
+              </div>
+            </section>
+
+            <section className="app-card rounded-[14px] p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-[var(--app-text)]">Performance</h3>
+                <span className="app-chip">{page.page.status === "published" ? "Last 30d" : "No data yet"}</span>
+              </div>
+              {page.page.status === "published" ? (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Visits", value: visitCount },
+                    { label: "Clicks", value: clickCount },
+                    { label: "CTR", value: visitCount > 0 ? Math.round((clickCount / visitCount) * 100) : 0, suffix: "%" },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <div className="text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+                        {item.value}{item.suffix ?? ""}
+                      </div>
+                      <div className="mt-1 text-[11px] text-[var(--app-muted)]">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-[var(--app-muted)]">
+                  Publish to start collecting visits and clicks.
+                </p>
+              )}
+            </section>
+          </aside>
+        </div>
       </form>
 
-      <section className="grid gap-4 rounded-[1.75rem] border border-red-200 bg-red-50 p-5">
+      <section className="mx-auto grid w-full max-w-[1240px] gap-4 rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-red-soft)] p-5">
         <div>
           <p className="app-kicker text-red-500">Danger zone</p>
           <h2 className="mt-2 text-xl font-semibold text-red-900">Delete this song</h2>

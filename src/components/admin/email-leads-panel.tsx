@@ -20,7 +20,7 @@ function StatusBadge({
 
   return (
     <span
-      className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${styles}`}
+      className={`inline-flex w-fit items-center rounded-[7px] border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] ${styles}`}
     >
       {label}
     </span>
@@ -29,7 +29,7 @@ function StatusBadge({
 
 export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
   return (
-    <section className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6 lg:p-7">
+    <section className="app-card app-enter app-enter-delay-1 rounded-[14px] p-5 sm:p-6 lg:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
           <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
@@ -44,7 +44,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
         <Link
           href="/api/admin/email-leads/export"
           prefetch={false}
-          className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_10px_24px_rgba(11,14,19,0.04)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
+          className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:border-[var(--app-text)]/20 hover:bg-[var(--app-panel)]"
         >
           Export CSV
         </Link>
@@ -57,7 +57,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
           { label: "Local only", value: snapshot.localOnlyLeads },
           { label: "Needs attention", value: snapshot.failedLeads },
         ].map((item) => (
-          <div key={item.label} className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset]">
+          <div key={item.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset]">
             <p className="app-kicker text-[var(--app-muted)]">{item.label}</p>
             <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
               {item.value}
@@ -72,7 +72,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
             {snapshot.items.map((lead) => (
               <article
                 key={lead.id}
-                className="rounded-[1.25rem] border border-[var(--app-line)] bg-white px-4 py-4"
+                className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -112,7 +112,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
             ))}
           </div>
 
-          <div className="hidden overflow-hidden rounded-[1.35rem] border border-[var(--app-line)] bg-white lg:block">
+          <div className="hidden overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-white lg:block">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm text-[var(--app-text)]">
                 <thead className="border-b border-[var(--app-line)] bg-[var(--app-panel-muted)]/55 text-[11px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
@@ -166,7 +166,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
           </div>
         </div>
       ) : (
-        <div className="mt-6 rounded-[1.25rem] border border-dashed border-[var(--app-line)] bg-white px-4 py-5 text-sm leading-7 text-[var(--app-muted)]">
+        <div className="mt-6 rounded-[10px] border border-dashed border-[var(--app-line)] bg-white px-4 py-5 text-sm leading-7 text-[var(--app-muted)]">
           No leads yet.
         </div>
       )}
@@ -176,7 +176,7 @@ export function EmailLeadsPanel({ snapshot }: { snapshot: EmailLeadSnapshot }) {
 
 export function EmailLeadsPanelUnavailable() {
   return (
-    <section className="app-card app-enter app-enter-delay-1 rounded-[1.75rem] p-5 sm:p-6">
+    <section className="app-card app-enter app-enter-delay-1 rounded-[14px] p-5 sm:p-6">
       <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
         Lead inbox unavailable

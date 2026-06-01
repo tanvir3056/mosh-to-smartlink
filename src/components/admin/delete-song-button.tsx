@@ -17,12 +17,13 @@ function DeleteSubmitButton({
   return (
     <Button
       type="submit"
-      tone="danger"
+      tone={compact ? "ghost" : "danger"}
       busy={pending}
-      className={cn(compact && "min-h-10 px-3 text-xs")}
+      className={cn(compact && "h-8 min-h-8 px-2 text-[var(--app-red-text)] hover:bg-[var(--app-red-soft)]")}
+      title="Delete song"
     >
       <Trash2 className="h-4 w-4" />
-      Delete song
+      {compact ? <span className="sr-only">Delete song</span> : "Delete song"}
     </Button>
   );
 }
@@ -39,7 +40,7 @@ export function DeleteSongButton({
   return (
     <form
       action={deleteSongAction}
-      className={cn("grid gap-2", compact && "w-full")}
+      className={cn("grid gap-2", compact && "w-auto")}
       onSubmit={(event) => {
         const confirmed = window.confirm(
           `Delete "${songLabel}"?\n\nThis permanently removes the song page, service links, import history, and first-party analytics for that song.`,

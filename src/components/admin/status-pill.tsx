@@ -17,13 +17,13 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.12em]",
+        "inline-flex h-6 items-center rounded-full border px-2.5 text-[12.5px] font-[550] tracking-[-0.003em]",
         status === "published" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-700",
+          "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]",
         status === "draft" &&
-          "border-amber-200 bg-amber-50 text-amber-700",
+          "border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]",
         status === "unpublished" &&
-          "border-slate-200 bg-slate-50 text-slate-600",
+          "border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]",
         className,
       )}
     >

@@ -18,24 +18,21 @@ export function BrandLockup({
 }) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <BrandMark className={compact ? "h-10 w-10 rounded-2xl" : undefined} />
+      <BrandMark className={compact ? "h-8 w-8" : undefined} />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={cn(
-              "text-sm font-semibold uppercase tracking-[0.18em]",
-              tone === "dark" ? "text-white" : "text-[var(--app-text)]",
+              "text-[15.5px] font-[650] tracking-[-0.02em]",
+              tone === "dark" ? "text-[var(--app-text)]" : "text-[var(--app-text)]",
             )}
           >
-            {APP_NAME}
+            {APP_NAME[0] + APP_NAME.slice(1).toLowerCase()}
           </span>
           {includeDomain ? (
             <span
               className={cn(
-                "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
-                tone === "dark"
-                  ? "border-white/10 bg-white/6 text-white/72"
-                  : "border-[var(--app-line)] bg-white text-[var(--app-muted)]",
+                "rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 py-1 text-[11px] font-[550] uppercase tracking-[0.04em] text-[var(--app-muted)]",
               )}
             >
               {APP_DOMAIN_HINT}
@@ -45,8 +42,7 @@ export function BrandLockup({
         {tagline ? (
           <p
             className={cn(
-              "mt-1 text-sm",
-              tone === "dark" ? "text-white/60" : "text-[var(--app-muted)]",
+              "mt-0.5 text-[11.5px] text-[var(--app-muted-2)]",
             )}
           >
             {tagline}

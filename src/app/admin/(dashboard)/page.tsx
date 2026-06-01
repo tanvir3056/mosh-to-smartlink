@@ -1,12 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import type { ComponentType } from "react";
 import {
-  ArrowUpRight,
+  ArrowRight,
   BarChart3,
+  CheckCircle2,
   ChevronRight,
+  Edit3,
+  ExternalLink,
   Eye,
   Globe2,
-  Radio,
+  MousePointer2,
+  Music2,
   Sparkles,
 } from "lucide-react";
 
@@ -25,210 +30,257 @@ function ctr(clicks: number, visits: number) {
   return `${Math.round((clicks / visits) * 100)}%`;
 }
 
+function MetricCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+  accent = false,
+}: {
+  label: string;
+  value: string | number;
+  note: string;
+  icon: ComponentType<{ className?: string }>;
+  accent?: boolean;
+}) {
+  return (
+    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] font-[550] text-[var(--app-muted)]">{label}</p>
+        <span
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-[7px] ${
+            accent
+              ? "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
+              : "bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]"
+          }`}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <div>
+        <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
+          {value}
+        </div>
+        <p className="mt-2 text-[12.5px] text-[var(--app-muted-2)]">{note}</p>
+      </div>
+    </section>
+  );
+}
+
+function SummaryChip({
+  icon: Icon,
+  value,
+  label,
+  tone = "text-[var(--app-muted-2)]",
+}: {
+  icon: ComponentType<{ className?: string }>;
+  value: string | number;
+  label: string;
+  tone?: string;
+}) {
+  return (
+    <span className="inline-flex h-[30px] items-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)]">
+      <Icon className={`h-3.5 w-3.5 ${tone}`} />
+      <strong className="font-semibold text-[var(--app-text)]">{value}</strong>
+      <span className="text-[var(--app-muted-2)]">{label}</span>
+    </span>
+  );
+}
+
 export default async function AdminOverviewPage() {
   const session = await requireUserSession();
   const snapshot = await getDashboardSnapshot(session.userId);
+  const publishedSongs = snapshot.songs.filter((song) => song.status === "published");
+  const draftSongs = snapshot.songs.filter((song) => song.status === "draft");
   const liveRate =
     snapshot.totalSongs > 0
       ? `${Math.round((snapshot.publishedSongs / snapshot.totalSongs) * 100)}% live`
       : "No pages yet";
 
   return (
-    <div className="grid gap-6">
-      <section className="app-card app-enter rounded-[1.85rem] px-5 py-5 sm:px-6 sm:py-6 lg:px-7">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="app-kicker text-[var(--app-muted)]">Overview</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-[var(--app-text)] sm:text-5xl">
-              Release workspace
-            </h1>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)] sm:text-base">
-              Manage drafts, launch live pages, and keep outbound performance visible
-              in one place.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link href="/admin/songs/new">
-              <Button>
-                <Sparkles className="h-4 w-4" />
-                Import song
-              </Button>
-            </Link>
-            <Link href="/admin/analytics">
-              <Button tone="secondary">
-                <BarChart3 className="h-4 w-4" />
-                Analytics
-              </Button>
-            </Link>
-          </div>
+    <div className="app-enter mx-auto grid w-full max-w-[1180px] gap-[30px]">
+      <header className="flex flex-wrap items-start justify-between gap-5">
+        <div>
+          <h1 className="font-[var(--font-display)] text-[25px] font-semibold tracking-[-0.022em]">
+            Welcome back, {session.username}
+          </h1>
+          <p className="mt-1.5 max-w-[620px] text-[14.5px] leading-6 text-[var(--app-muted)]">
+            Your release workspace. Import a song, fine-tune its link, and publish
+            when you&apos;re ready.
+          </p>
         </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-[1.35rem] border border-[var(--app-line)] bg-white/78 px-4 py-4 text-sm text-[var(--app-muted)]">
-          <span className="app-chip">Published {snapshot.publishedSongs}</span>
-          <span className="app-chip">Drafts {snapshot.draftSongs}</span>
-          <span className="app-chip">Visits {snapshot.totalVisits}</span>
-          <span className="font-medium text-[var(--app-text)]">@{session.username}</span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link href="/admin/analytics">
+            <Button tone="secondary">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </Button>
+          </Link>
+          <Link href="/admin/songs/new">
+            <Button>
+              <Sparkles className="h-4 w-4" />
+              Import song
+            </Button>
+          </Link>
         </div>
+      </header>
+
+      <div className="flex flex-wrap gap-2.5">
+        <SummaryChip
+          icon={CheckCircle2}
+          value={snapshot.publishedSongs}
+          label="published"
+          tone="text-[var(--app-green)]"
+        />
+        <SummaryChip
+          icon={Edit3}
+          value={snapshot.draftSongs}
+          label="drafts"
+          tone="text-[var(--app-amber)]"
+        />
+        <SummaryChip
+          icon={Eye}
+          value={snapshot.totalVisits}
+          label="visits"
+          tone="text-[var(--app-accent)]"
+        />
+        <SummaryChip icon={Sparkles} value={`@${session.username}`} label="" />
+      </div>
+
+      <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-5">
+        <MetricCard
+          label="Song pages"
+          value={snapshot.totalSongs}
+          note={liveRate}
+          icon={Music2}
+          accent
+        />
+        <MetricCard
+          label="Published"
+          value={snapshot.publishedSongs}
+          note="Live & reachable"
+          icon={CheckCircle2}
+        />
+        <MetricCard
+          label="Drafts"
+          value={snapshot.draftSongs}
+          note="Not yet public"
+          icon={Edit3}
+        />
+        <MetricCard
+          label="Visits · 30d"
+          value={snapshot.totalVisits.toLocaleString()}
+          note="First-party landing views"
+          icon={Eye}
+        />
+        <MetricCard
+          label="Service clicks · 30d"
+          value={snapshot.totalClicks.toLocaleString()}
+          note="Tracked service exits"
+          icon={MousePointer2}
+        />
       </section>
 
-      <section className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[1.6rem]">
-        <div className="grid gap-px bg-[var(--app-line)] sm:grid-cols-2 xl:grid-cols-5">
-          {[
-            {
-              label: "Song pages",
-              value: snapshot.totalSongs,
-              note: liveRate,
-              icon: Sparkles,
-            },
-            {
-              label: "Published",
-              value: snapshot.publishedSongs,
-              note: "Live pages open to fans",
-              icon: Radio,
-            },
-            {
-              label: "Drafts",
-              value: snapshot.draftSongs,
-              note: "Still in private review",
-              icon: Eye,
-            },
-            {
-              label: "Visits",
-              value: snapshot.totalVisits,
-              note: "First-party landing views",
-              icon: Globe2,
-            },
-            {
-              label: "Clicks",
-              value: snapshot.totalClicks,
-              note: "Tracked service exits",
-              icon: BarChart3,
-            },
-          ].map((card) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.label}
-                className="flex min-h-[152px] flex-col justify-between bg-white p-5"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="app-kicker text-[var(--app-muted)]">{card.label}</p>
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                </div>
-
-                <div>
-                  <div className="text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-                    {card.value}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
-                    {card.note}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="app-card app-enter app-enter-delay-2 rounded-[1.6rem] p-5 sm:p-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <section>
+        <div className="mb-3.5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="app-kicker text-[var(--app-muted)]">Library</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-              Live and draft pages
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--app-muted)]">
-              Edit a draft, preview the page, jump to the live link, or remove a
-              release entirely.
+            <h2 className="text-[17px] font-semibold">Release library</h2>
+            <p className="mt-0.5 text-[13px] text-[var(--app-muted-2)]">
+              Every smart link in your workspace.
             </p>
           </div>
-
           <Link href="/admin/songs/new">
             <Button tone="secondary">Import song</Button>
           </Link>
         </div>
 
-        <div className="mt-6">
+        <div className="app-card overflow-hidden rounded-[14px] p-0">
           {snapshot.songs.length === 0 ? (
-            <div className="rounded-[1.4rem] border border-dashed border-[var(--app-line)] px-4 py-12 text-center text-sm text-[var(--app-muted)]">
-              No songs yet. Import your first Spotify release to generate a draft.
+            <div className="flex flex-col items-center px-6 py-14 text-center">
+              <span className="mb-3 flex h-13 w-13 items-center justify-center rounded-[14px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]">
+                <Music2 className="h-6 w-6" />
+              </span>
+              <h3 className="text-[15.5px] font-semibold">No releases here yet</h3>
+              <p className="mt-1 max-w-sm text-[13.5px] leading-6 text-[var(--app-muted)]">
+                Paste a Spotify link and Backstage builds a clean release page with
+                every streaming service in one place.
+              </p>
+              <Link href="/admin/songs/new" className="mt-4">
+                <Button>
+                  <Sparkles className="h-4 w-4" />
+                  Import your first song
+                </Button>
+              </Link>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[1.4rem] border border-[var(--app-line)]">
-              <div className="hidden grid-cols-[minmax(0,2.15fr)_120px_100px_100px_100px_240px] gap-4 bg-[var(--app-panel-muted)] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--app-muted)] lg:grid">
+            <>
+              <div className="hidden grid-cols-[1fr_116px_92px_92px_168px] gap-3.5 bg-[var(--app-panel-muted)] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)] lg:grid">
                 <span>Release</span>
                 <span>Status</span>
                 <span>Visits</span>
                 <span>Clicks</span>
-                <span>CTR</span>
-                <span>Actions</span>
+                <span className="text-right">Actions</span>
               </div>
-
               <div className="divide-y divide-[var(--app-line)]">
                 {snapshot.songs.map((song) => (
                   <div
                     key={song.songId}
-                    className="grid gap-4 bg-white px-4 py-4 transition-colors hover:bg-[#fcfbf8] lg:grid-cols-[minmax(0,2.15fr)_120px_100px_100px_100px_240px] lg:items-center lg:px-5"
+                    className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_168px] lg:items-center"
                   >
-                    <div className="flex min-w-0 gap-4">
+                    <Link
+                      href={`/admin/songs/${song.songId}`}
+                      className="flex min-w-0 items-center gap-3"
+                    >
                       <img
                         src={song.artworkUrl}
                         alt={`${song.artistName} - ${song.title} artwork`}
-                        className="h-[72px] w-[72px] rounded-[1rem] object-cover"
+                        className="h-[42px] w-[42px] shrink-0 rounded-[9px] object-cover"
                         loading="lazy"
                         decoding="async"
                       />
                       <div className="min-w-0">
-                        <div className="truncate text-lg font-semibold text-[var(--app-text)]">
+                        <div className="truncate text-[14.5px] font-semibold text-[var(--app-text)]">
                           {song.title}
                         </div>
-                        <div className="text-sm text-[var(--app-muted)]">{song.artistName}</div>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-[var(--app-muted)]">
+                        <div className="truncate font-mono text-xs text-[var(--app-muted-2)]">
                           <span>{buildPublicSongPath(song.username, song.slug)}</span>
-                          <span>@{song.username}</span>
-                          <span>Updated {formatDateTime(song.updatedAt)}</span>
+                          <span> · Updated {formatDateTime(song.updatedAt)}</span>
                         </div>
                       </div>
-                    </div>
-
+                    </Link>
                     <div className="flex items-center justify-between gap-3 lg:block">
-                      <span className="app-kicker text-[var(--app-muted)] lg:hidden">Status</span>
+                      <span className="app-kicker text-[var(--app-muted-2)] lg:hidden">
+                        Status
+                      </span>
                       <StatusPill status={song.status} />
                     </div>
-
                     <div className="flex items-center justify-between gap-3 text-sm text-[var(--app-text)] lg:block">
-                      <span className="app-kicker text-[var(--app-muted)] lg:hidden">Visits</span>
-                      <span>{song.visitCount}</span>
+                      <span className="app-kicker text-[var(--app-muted-2)] lg:hidden">
+                        Visits
+                      </span>
+                      <span>{song.visitCount || "—"}</span>
                     </div>
-
                     <div className="flex items-center justify-between gap-3 text-sm text-[var(--app-text)] lg:block">
-                      <span className="app-kicker text-[var(--app-muted)] lg:hidden">Clicks</span>
-                      <span>{song.clickCount}</span>
+                      <span className="app-kicker text-[var(--app-muted-2)] lg:hidden">
+                        Clicks
+                      </span>
+                      <span>{song.clickCount || "—"}</span>
                     </div>
-
-                    <div className="flex items-center justify-between gap-3 text-sm text-[var(--app-text)] lg:block">
-                      <span className="app-kicker text-[var(--app-muted)] lg:hidden">CTR</span>
-                      <span>{ctr(song.clickCount, song.visitCount)}</span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                    <div className="flex flex-wrap items-center gap-1 lg:justify-end">
                       <Link href={`/admin/songs/${song.songId}`}>
-                        <Button tone="secondary">Edit</Button>
+                        <Button tone="ghost" className="h-8 min-h-8 px-2" title="Edit">
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
                       </Link>
                       <Link href={`/admin/preview/${song.songId}`}>
-                        <Button tone="secondary">
+                        <Button tone="ghost" className="h-8 min-h-8 px-2" title="Preview">
                           <Eye className="h-4 w-4" />
-                          Preview
                         </Button>
                       </Link>
                       {song.status === "published" ? (
                         <Link href={buildPublicSongPath(song.username, song.slug)}>
-                          <Button tone="secondary">
-                            <ArrowUpRight className="h-4 w-4" />
-                            Live
+                          <Button tone="ghost" className="h-8 min-h-8 px-2" title="Open live page">
+                            <ExternalLink className="h-4 w-4" />
                           </Button>
                         </Link>
                       ) : null}
@@ -241,60 +293,116 @@ export default async function AdminOverviewPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
         </div>
       </section>
 
       {snapshot.songs.length > 0 ? (
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <div className="app-card rounded-[1.6rem] p-5 sm:p-6">
-            <p className="app-kicker text-[var(--app-muted)]">Workflow</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-              Keep the release flow simple
-            </h2>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <section className="grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
+          <div>
+            <h2 className="mb-1 text-[17px] font-semibold">How a release comes together</h2>
+            <p className="mb-4 text-[13px] text-[var(--app-muted-2)]">
+              Three steps from import to a live, shareable link.
+            </p>
+            <div className="grid gap-3.5 md:grid-cols-3">
               {[
-                "Import from one Spotify URL.",
-                "Review destinations and artwork.",
-                "Publish when the page is ready.",
-              ].map((line, index) => (
-                <div
-                  key={line}
-                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-white px-4 py-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-[var(--app-text)]">
-                      0{index + 1}
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-[var(--app-muted)]" />
+                {
+                  step: "1",
+                  icon: Sparkles,
+                  title: "Import",
+                  desc: "Paste a Spotify URL — we pull artwork, metadata and matching services.",
+                  href: "/admin/songs/new",
+                  done: true,
+                },
+                {
+                  step: "2",
+                  icon: Edit3,
+                  title: "Review",
+                  desc: "Confirm links, set your slug and tune the page before it goes live.",
+                  href: `/admin/songs/${draftSongs[0]?.songId ?? snapshot.songs[0].songId}`,
+                },
+                {
+                  step: "3",
+                  icon: Globe2,
+                  title: "Publish",
+                  desc: "Flip it live and share one link that works everywhere.",
+                  href: "/admin/analytics",
+                },
+              ].map((item) => {
+                const Icon = item.done ? CheckCircle2 : item.icon;
+
+                return (
+                  <div
+                    key={item.title}
+                    className="app-card flex flex-col overflow-hidden rounded-[14px] p-0"
+                  >
+                    <div className="flex flex-1 flex-col p-[18px]">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className={`flex h-9 w-9 items-center justify-center rounded-[9px] ${item.done ? "bg-[var(--app-green-soft)] text-[var(--app-green-text)]" : "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"}`}>
+                          <Icon className="h-4.5 w-4.5" />
+                        </span>
+                        <span className="font-mono text-xs font-semibold text-[var(--app-muted-2)]">
+                          STEP {item.step}
+                        </span>
+                      </div>
+                      <h3 className="text-[15px] font-semibold">{item.title}</h3>
+                      <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
+                        {item.desc}
+                      </p>
+                    </div>
+                    <div className="px-[18px] pb-4">
+                      <Link href={item.href}>
+                        <Button tone="subtle" className="h-8 min-h-8 px-3">
+                          {item.title === "Import" ? "Import a song" : item.title === "Review" ? "Open a draft" : "See analytics"}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">{line}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          <div className="app-card rounded-[1.6rem] p-5 sm:p-6">
-            <p className="app-kicker text-[var(--app-muted)]">Current state</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-              Quick read
-            </h2>
-            <div className="mt-5 space-y-3">
-              {[
-                `${snapshot.publishedSongs} published pages`,
-                `${snapshot.draftSongs} drafts still in review`,
-                `${snapshot.totalVisits} visits and ${snapshot.totalClicks} clicks recorded`,
-              ].map((line) => (
-                <div
-                  key={line}
-                  className="rounded-[1rem] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-text)]"
-                >
-                  {line}
-                </div>
-              ))}
+          <section className="app-card rounded-[14px] bg-[linear-gradient(165deg,var(--app-accent-soft),var(--app-panel)_75%)] p-[18px]">
+            <div className="mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
+              <h3 className="text-[15px] font-semibold">Quick read</h3>
             </div>
-          </div>
+            <div className="grid gap-3 text-[13.5px]">
+              <div className="flex justify-between gap-3">
+                <span className="text-[var(--app-muted)]">Top release</span>
+                <strong className="text-right font-semibold text-[var(--app-text)]">
+                  {publishedSongs[0]?.title ?? "—"}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-[var(--app-muted)]">Published pages</span>
+                <strong className="font-semibold text-[var(--app-text)]">
+                  {snapshot.publishedSongs}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-[var(--app-muted)]">Drafts in review</span>
+                <strong className="font-semibold text-[var(--app-text)]">
+                  {snapshot.draftSongs}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-[var(--app-muted)]">Average CTR</span>
+                <strong className="font-semibold text-[var(--app-text)]">
+                  {ctr(snapshot.totalClicks, snapshot.totalVisits)}
+                </strong>
+              </div>
+            </div>
+            <Link href="/admin/analytics" className="mt-5 block">
+              <Button tone="secondary" className="w-full justify-center">
+                Full analytics
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </section>
         </section>
       ) : null}
     </div>

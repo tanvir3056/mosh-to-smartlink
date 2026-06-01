@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   busy?: boolean;
-  tone?: "primary" | "secondary" | "ghost" | "danger";
+  tone?: "primary" | "secondary" | "ghost" | "subtle" | "danger" | "danger-ghost";
 }
 
 export function Button({
@@ -17,15 +17,19 @@ export function Button({
   return (
     <button
       className={cn(
-        "app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:-translate-y-px active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-accent)] disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border px-3.5 text-sm font-[550] tracking-[-0.005em] select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
         tone === "primary" &&
-          "border border-[rgba(6,44,40,0.06)] bg-[linear-gradient(135deg,var(--app-accent)_0%,#77e7db_100%)] text-[#062c28] shadow-[0_14px_30px_rgba(63,212,196,0.22),0_1px_0_rgba(255,255,255,0.45)_inset] hover:bg-[linear-gradient(135deg,var(--app-accent-strong)_0%,#6edfd4_100%)] hover:shadow-[0_18px_36px_rgba(63,212,196,0.28)] active:bg-[linear-gradient(135deg,var(--app-accent-strong)_0%,#65d8cc_100%)] active:text-[#062c28] active:shadow-[0_10px_20px_rgba(63,212,196,0.2)]",
+          "border-transparent bg-[var(--app-accent)] text-white shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)]",
         tone === "secondary" &&
-          "border border-[var(--app-line)] bg-[rgba(255,255,255,0.94)] text-[var(--app-text)] shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_10px_22px_rgba(11,14,19,0.04)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] hover:shadow-[0_14px_26px_rgba(11,14,19,0.07)] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]",
+          "border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]",
         tone === "ghost" &&
-          "text-[var(--app-muted)] hover:bg-black/4 hover:text-[var(--app-text)] active:bg-black/6 active:text-[var(--app-text)]",
+          "border-transparent bg-transparent text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
+        tone === "subtle" &&
+          "border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)] hover:bg-[var(--app-line)]",
         tone === "danger" &&
-          "border border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100 active:border-red-300 active:bg-red-100 active:text-red-700",
+          "border-transparent bg-[var(--app-red)] text-white hover:bg-[var(--app-red-text)]",
+        tone === "danger-ghost" &&
+          "border-[var(--app-red-line)] bg-transparent text-[var(--app-red-text)] hover:bg-[var(--app-red-soft)]",
         className,
       )}
       {...props}

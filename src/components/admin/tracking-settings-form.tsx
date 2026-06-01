@@ -58,7 +58,7 @@ export function TrackingSettingsForm({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
+        <section className="rounded-[14px] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
           <p className="app-kicker text-[var(--app-muted)]">Public defaults</p>
           <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
             Live page defaults
@@ -104,7 +104,7 @@ export function TrackingSettingsForm({
               ) : null}
             </div>
 
-            <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
+            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
               <input
                 name="meta_pixel_enabled"
                 type="checkbox"
@@ -116,7 +116,7 @@ export function TrackingSettingsForm({
           </div>
         </section>
 
-        <section className="rounded-[1.6rem] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
+        <section className="rounded-[14px] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="max-w-2xl">
               <p className="app-kicker text-[var(--app-muted)]">Mailchimp sync</p>
@@ -128,7 +128,7 @@ export function TrackingSettingsForm({
               </p>
             </div>
 
-            <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-text)]">
+            <div className="rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
               {isMailchimpConnected ? "Connected" : "Local only"}
             </div>
           </div>
@@ -203,7 +203,7 @@ export function TrackingSettingsForm({
           </div>
 
           <div className="mt-5 grid gap-3">
-            <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
+            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
               <input
                 name="mailchimp_double_opt_in"
                 type="checkbox"
@@ -214,7 +214,7 @@ export function TrackingSettingsForm({
             </label>
 
             {connector.hasApiKey ? (
-              <label className="app-card-soft flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[var(--app-text)]">
+              <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
                 <input
                   name="mailchimp_clear_api_key"
                   type="checkbox"

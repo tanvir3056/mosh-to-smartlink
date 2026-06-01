@@ -8,29 +8,33 @@ export const revalidate = 0;
 
 export default async function SignUpPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-8">
-      <section className="app-shell-card w-full max-w-lg rounded-[2rem] p-3 sm:p-4">
-        <div className="app-card rounded-[1.6rem] p-8">
+    <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)]">
+      <header className="flex items-center justify-between px-5 py-5 sm:px-6">
+        <BrandLockup tagline={null} tone="light" compact />
+      </header>
+      <div className="flex flex-1 items-center justify-center px-5 pb-16 pt-4">
+      <section className="app-enter w-full max-w-[408px]">
+        <div className="app-card overflow-hidden rounded-[14px] p-0 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]">
+          <div className="px-7 pt-7 text-center">
           <BrandLockup
-            includeDomain
-            tagline="Create a workspace in seconds and start publishing your own release links."
+            tagline={null}
             tone="light"
+            className="justify-center"
           />
-          <p className="mt-6 text-xs uppercase tracking-[0.28em] text-[var(--app-muted)]">
-            Create account
-          </p>
-          <h1 className="mt-4 font-[var(--font-display)] text-5xl font-semibold leading-none tracking-[-0.04em] text-[var(--app-text)]">
-            Start using {APP_NAME}
+          <h1 className="mt-5 font-[var(--font-display)] text-[23px] font-semibold tracking-[-0.02em] text-[var(--app-text)]">
+            Create your account
           </h1>
-          <p className="mt-4 text-sm leading-7 text-[var(--app-muted)]">
-            Choose a unique username and password. Your workspace opens right after account creation.
+          <p className="mt-1.5 text-sm text-[var(--app-muted)]">
+            Claim your {APP_NAME} link space in seconds.
           </p>
+          </div>
 
-          <div className="mt-8">
+          <div className="px-7 py-6">
             <SignUpForm modeLabel={appEnv.hasSupabaseAuth ? "Secure account creation" : "Local development mode"} />
           </div>
         </div>
       </section>
+      </div>
     </main>
   );
 }

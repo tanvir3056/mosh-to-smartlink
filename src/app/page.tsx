@@ -1,65 +1,92 @@
 import Link from "next/link";
+import { Link as LinkIcon, Plus, Sparkles } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
-import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { APP_DESCRIPTION } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
   return (
-    <main className="deathcore-field relative mx-auto flex min-h-screen w-full flex-col justify-center overflow-hidden px-5 py-8 sm:px-8 sm:py-12">
-      <div className="absolute left-1/2 top-8 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full border border-[#eee6d6]/8" />
-      <section className="deathcore-shell app-enter relative mx-auto w-full max-w-6xl rounded-[1.4rem] p-3 sm:p-4">
-        <div className="grid gap-8 rounded-[1.1rem] bg-[linear-gradient(180deg,#101012,#08080a)] p-6 sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:p-10">
-          <div className="flex flex-col justify-between">
-            <div>
-              <BrandLockup
-                includeDomain
-                tagline="Smart release links, destination review, and first-party campaign visibility for every artist account."
-              />
-              <p className="mt-8 app-kicker text-[#c9bda9]">Release links for real teams</p>
-              <h1 className="mt-3 max-w-3xl font-[var(--font-display)] text-5xl font-semibold leading-[0.92] text-[#fff9ec] sm:text-6xl">
-                {APP_NAME} gives every artist a clean home for every release.
-              </h1>
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-[#c9c0b2] sm:text-base">
-                {APP_DESCRIPTION} Create an account, import a track, review the destinations, and share a per-artist smart link like{" "}
-                <code className="rounded-full border border-[#eee6d6]/12 bg-[#eee6d6]/10 px-2.5 py-1 text-[#fff9ec]">
-                  /username/song-slug
-                </code>.
-              </p>
-            </div>
+    <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)] text-[var(--app-text)]">
+      <header className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-5 py-5 sm:px-8">
+        <BrandLockup tagline={null} tone="light" />
+        <div className="flex items-center gap-2">
+          <Link href="/sign-in">
+            <Button tone="ghost">Sign in</Button>
+          </Link>
+          <Link href="/sign-up">
+            <Button>Create account</Button>
+          </Link>
+        </div>
+      </header>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <section className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+        <div className="grid w-full max-w-[1080px] items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+          <div className="app-enter">
+            <span className="app-chip border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
+              <Sparkles className="h-3.5 w-3.5" />
+              For artists & teams
+            </span>
+            <h1 className="mt-5 max-w-2xl font-[var(--font-display)] text-[46px] font-semibold leading-[1.05] tracking-[-0.03em] text-[var(--app-text)]">
+              A clean home for every release.
+            </h1>
+            <p className="mt-5 max-w-[29rem] text-[17px] leading-7 text-[var(--app-muted)]">
+              {APP_DESCRIPTION} Create an account, import a track, review destinations,
+              and share one smart link with analytics and email capture built in.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/sign-up">
-                <Button>Create account</Button>
+                <Button className="min-h-11 px-4">
+                  <Plus className="h-4 w-4" />
+                  Create account
+                </Button>
               </Link>
               <Link href="/sign-in">
-                <Button tone="secondary" className="border-[#eee6d6]/14 bg-[#eee6d6]/8 text-[#fff9ec] hover:bg-[#eee6d6]/12">
+                <Button tone="secondary" className="min-h-11 px-4">
                   Sign in
                 </Button>
               </Link>
             </div>
+            <div className="mt-6 flex items-center gap-2 text-[13.5px] text-[var(--app-muted-2)]">
+              <LinkIcon className="h-4 w-4" />
+              <span className="font-mono">
+                backstage.fm/<span className="text-[var(--app-accent-text)]">username</span>/<span className="text-[var(--app-muted)]">song-slug</span>
+              </span>
+            </div>
           </div>
 
-          <div className="deathcore-bone-panel app-enter app-enter-delay-1 rounded-[1.05rem] border border-[#eee6d6]/24 p-5 shadow-[0_20px_48px_rgba(0,0,0,0.28)] sm:p-6">
-            <p className="app-kicker text-[#8f1420]">How it works</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.02em] text-[#111113]">
-              One app, many artists, clean release links
-            </h2>
-            <div className="mt-6 grid gap-3">
+          <div className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[14px] p-0 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]">
+            <div className="flex items-center gap-2 border-b border-[var(--app-line)] px-5 py-4">
+              <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
+              <h2 className="text-[14.5px] font-semibold">How it works</h2>
+            </div>
+            <div className="p-2">
               {[
-                "Create a username and password in seconds.",
-                "Import one released Spotify track per page.",
-                "Review links, swap artwork, then publish.",
-                "Share public pages on per-user paths instead of one global slug pool.",
-              ].map((line) => (
+                ["Paste a Spotify link", "We pull artwork, metadata and matching services."],
+                ["Review & tune", "Confirm links, set your slug, add email capture."],
+                ["Publish one link", "Share a page that works on every service."],
+              ].map(([title, body], index) => (
                 <div
-                  key={line}
-                  className="rounded-[0.55rem] border border-[#b9ac99] bg-[#f8f1e3] px-4 py-4 text-sm font-medium leading-7 text-[#111113] shadow-[0_1px_0_rgba(255,255,255,0.75)_inset]"
+                  key={title}
+                  className="flex items-center gap-3 rounded-[10px] px-3 py-3"
                 >
-                  {line}
+                  <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--app-text)]">
+                      {title}
+                    </div>
+                    <p className="mt-0.5 text-[12.5px] text-[var(--app-muted)]">
+                      {body}
+                    </p>
+                  </div>
+                  <span className="ml-auto font-mono text-xs text-[var(--app-muted-2)]">
+                    0{index + 1}
+                  </span>
                 </div>
               ))}
             </div>

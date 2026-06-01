@@ -9,8 +9,8 @@ import { buildPublicSongPath } from "@/lib/utils";
 
 function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
   return tone === "primary"
-    ? "app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--app-accent)] px-4 text-sm font-semibold text-[#062c28] shadow-[0_16px_36px_rgba(63,212,196,0.24)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-[#062c28] active:shadow-[0_8px_18px_rgba(63,212,196,0.2)]"
-    : "app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]";
+    ? "app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,75,219,0.18)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-white"
+    : "app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]";
 }
 
 export function PublicLinkPanel({
@@ -39,7 +39,7 @@ export function PublicLinkPanel({
   const publicPath = buildPublicSongPath(username, slug);
 
   return (
-    <section className="app-card grid gap-4 rounded-[1.6rem] p-5">
+    <section className="app-card grid gap-4 rounded-[14px] p-5">
       <div className="grid gap-2">
         <p className="app-kicker text-[var(--app-muted)]">
           Fan-facing page
@@ -54,7 +54,7 @@ export function PublicLinkPanel({
         </p>
       </div>
 
-      <div className="app-card-soft rounded-[1.2rem] px-4 py-4">
+      <div className="app-card-soft rounded-[10px] px-4 py-4">
         <div className="app-kicker text-[var(--app-muted)]">
           URL
         </div>
@@ -69,7 +69,13 @@ export function PublicLinkPanel({
           Open admin preview
         </Link>
         {isPublished ? (
-          <a href={publicPath} target="_blank" rel="noreferrer" className={actionLinkClass("primary")}>
+          <a
+            href={publicPath}
+            target="_blank"
+            rel="noreferrer"
+            className={actionLinkClass("primary")}
+            style={{ color: "#fff", WebkitTextFillColor: "#fff" }}
+          >
             <ExternalLink className="h-4 w-4" />
             Open live page
           </a>

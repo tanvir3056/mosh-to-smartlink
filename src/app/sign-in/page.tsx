@@ -8,29 +8,33 @@ export const revalidate = 0;
 
 export default async function SignInPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-8">
-      <section className="app-shell-card w-full max-w-lg rounded-[2rem] p-3 sm:p-4">
-        <div className="app-card rounded-[1.6rem] p-8">
+    <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)]">
+      <header className="flex items-center justify-between px-5 py-5 sm:px-6">
+        <BrandLockup tagline={null} tone="light" compact />
+      </header>
+      <div className="flex flex-1 items-center justify-center px-5 pb-16 pt-4">
+      <section className="app-enter w-full max-w-[408px]">
+        <div className="app-card overflow-hidden rounded-[14px] p-0 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]">
+          <div className="px-7 pt-7 text-center">
           <BrandLockup
-            includeDomain
-            tagline="Sign in to manage your own release pages, links, and campaign insights."
+            tagline={null}
             tone="light"
+            className="justify-center"
           />
-          <p className="mt-6 text-xs uppercase tracking-[0.28em] text-[var(--app-muted)]">
-            Creator sign-in
-          </p>
-          <h1 className="mt-4 font-[var(--font-display)] text-5xl font-semibold leading-none tracking-[-0.04em] text-[var(--app-text)]">
-            Welcome back to {APP_NAME}
+          <h1 className="mt-5 font-[var(--font-display)] text-[23px] font-semibold tracking-[-0.02em] text-[var(--app-text)]">
+            Sign in to {APP_NAME}
           </h1>
-          <p className="mt-4 text-sm leading-7 text-[var(--app-muted)]">
-            Sign in with your username and password to manage your smart-link pages.
+          <p className="mt-1.5 text-sm text-[var(--app-muted)]">
+            Manage your releases and links.
           </p>
+          </div>
 
-          <div className="mt-8">
+          <div className="px-7 py-6">
             <SignInForm modeLabel={appEnv.hasSupabaseAuth ? "Secure account access" : "Local development mode"} />
           </div>
         </div>
       </section>
+      </div>
     </main>
   );
 }
