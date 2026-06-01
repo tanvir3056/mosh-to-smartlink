@@ -1,19 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { createElement, isValidElement, type ReactElement } from "react";
-import { describe, expect, test, vi } from "vitest";
-
-vi.mock("next/font/google", () => ({
-  Hanken_Grotesk: ({ variable }: { variable: string }) => ({
-    variable: `mock-${variable}`,
-  }),
-  JetBrains_Mono: ({ variable }: { variable: string }) => ({
-    variable: `mock-${variable}`,
-  }),
-  Schibsted_Grotesk: ({ variable }: { variable: string }) => ({
-    variable: `mock-${variable}`,
-  }),
-}));
+import { describe, expect, test } from "vitest";
 
 import RootLayout, { metadata } from "@/app/layout";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/components/admin/theme-bootstrap-script";
@@ -59,17 +47,9 @@ describe("root metadata", () => {
     expect(THEME_BOOTSTRAP_SCRIPT).toContain("style.colorScheme");
   });
 
-  test("self-hosts the Claude design fonts for internal app screens", () => {
-    expect(layoutSource).toContain('from "next/font/google"');
-    expect(layoutSource).toContain("Hanken_Grotesk");
-    expect(layoutSource).toContain("Schibsted_Grotesk");
-    expect(layoutSource).toContain("JetBrains_Mono");
-    expect(layoutSource).toContain('variable: "--font-hanken"');
-    expect(layoutSource).toContain('variable: "--font-schibsted"');
-    expect(layoutSource).toContain('variable: "--font-jetbrains"');
-    expect(layoutSource).toContain("ADMIN_FONT_VARIABLES");
-    expect(layoutSource).toMatch(
-      /className=\{cn\("h-full antialiased",\s*ADMIN_FONT_VARIABLES\)\}/,
-    );
+  test("keeps internal font loading out of the shared root layout", () => {
+    expect(layoutSource).not.toContain('from "next/font/google"');
+    expect(layoutSource).not.toContain("ADMIN_FONT_VARIABLES");
+    expect(layoutSource).toContain('className="h-full antialiased"');
   });
 });

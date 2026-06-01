@@ -10,6 +10,7 @@ import {
 import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
+import { adminThemeClassName } from "@/lib/admin-fonts";
 import { APP_DOMAIN_HINT } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,11 @@ export const revalidate = 0;
 
 export default async function HomePage() {
   return (
-    <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)] text-[var(--app-text)]">
+    <main
+      className={adminThemeClassName(
+        "flex min-h-screen flex-col bg-[var(--app-bg)] text-[var(--app-text)]",
+      )}
+    >
       <header className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-5 py-5 sm:px-8">
         <BrandLockup tagline={null} tone="light" />
         <div className="flex items-center gap-2">

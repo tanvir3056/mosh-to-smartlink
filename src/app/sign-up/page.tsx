@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { SignUpForm } from "@/components/admin/sign-up-form";
+import { adminThemeClassName } from "@/lib/admin-fonts";
 import { APP_NAME } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,11 @@ export const revalidate = 0;
 
 export default async function SignUpPage() {
   return (
-    <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)]">
+    <main
+      className={adminThemeClassName(
+        "flex min-h-screen flex-col bg-[var(--app-bg)]",
+      )}
+    >
       <header className="flex items-center justify-between px-5 py-5 sm:px-6">
         <BrandLockup tagline={null} tone="light" compact />
         <ThemeToggle />
