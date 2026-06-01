@@ -236,6 +236,13 @@ function normalizeDateKey(value: string | Date) {
   return new Date(raw).toISOString().slice(0, 10);
 }
 
+function localDateKey(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function normalizeOptionalDate(value: string | Date | null | undefined) {
   if (!value) {
     return null;
@@ -1845,7 +1852,8 @@ export async function deleteSongById(songId: string, ownerUserId: string) {
 }
 
 export async function getDashboardSnapshot(ownerUserId: string): Promise<DashboardSnapshot> {
-  const [totals, songs] = await Promise.all([
+  const sinceIso = createSinceIso(30);
+  const [totals, topServiceRows, dailyVisitEvents, songs] = await Promise.all([
     dbQuery<{
       total_songs: string | number;
       published_songs: string | number;
@@ -1858,10 +1866,36 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
           (select count(*) from songs where owner_user_id = $1) as total_songs,
           (select count(*) from song_pages where owner_user_id = $1 and status = 'published') as published_songs,
           (select count(*) from song_pages where owner_user_id = $1 and status = 'draft') as draft_songs,
-          (select count(*) from visits where owner_user_id = $1) as total_visits,
-          (select count(*) from click_events where owner_user_id = $1) as total_clicks
+          (select count(*) from visits where owner_user_id = $1 and created_at >= $2::timestamptz) as total_visits,
+          (select count(*) from click_events where owner_user_id = $1 and created_at >= $2::timestamptz) as total_clicks
       `,
-      [ownerUserId],
+      [ownerUserId, sinceIso],
+    ),
+    dbQuery<{
+      service: StreamingLinkRecord["service"];
+      clicks: string | number;
+    }>(
+      `
+        select service, count(*) as clicks
+        from click_events
+        where owner_user_id = $1
+          and created_at >= $2::timestamptz
+        group by service
+        order by clicks desc
+        limit 1
+      `,
+      [ownerUserId, sinceIso],
+    ),
+    dbQuery<{
+      created_at: string | Date;
+    }>(
+      `
+        select created_at
+        from visits
+        where owner_user_id = $1
+          and created_at >= $2::timestamptz
+      `,
+      [ownerUserId, sinceIso],
     ),
     dbQuery<{
       song_id: string;
@@ -1917,6 +1951,27 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
   ]);
 
   const row = totals[0];
+  const topService = topServiceRows[0];
+  const dailyVisitMap = new Map<string, number>();
+
+  for (const entry of dailyVisitEvents) {
+    const key = localDateKey(new Date(entry.created_at));
+    dailyVisitMap.set(key, (dailyVisitMap.get(key) ?? 0) + 1);
+  }
+
+  const start = new Date(sinceIso);
+  const daily: DashboardSnapshot["daily"] = [];
+
+  for (let index = 0; index < 30; index += 1) {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    const key = localDateKey(day);
+
+    daily.push({
+      date: key,
+      visits: dailyVisitMap.get(key) ?? 0,
+    });
+  }
 
   return {
     totalSongs: Number(row?.total_songs ?? 0),
@@ -1924,6 +1979,13 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
     draftSongs: Number(row?.draft_songs ?? 0),
     totalVisits: Number(row?.total_visits ?? 0),
     totalClicks: Number(row?.total_clicks ?? 0),
+    topService: topService
+      ? {
+          service: topService.service,
+          clicks: Number(topService.clicks),
+        }
+      : null,
+    daily,
     songs: songs.map((song) => ({
       songId: song.song_id,
       ownerUserId: song.owner_user_id,

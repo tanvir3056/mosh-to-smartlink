@@ -26,6 +26,11 @@ const dashboardSnapshot: DashboardSnapshot = {
   draftSongs: 1,
   totalVisits: 250,
   totalClicks: 112,
+  topService: { service: "spotify", clicks: 72 },
+  daily: [
+    { date: "2026-05-17", visits: 80 },
+    { date: "2026-05-18", visits: 170 },
+  ],
   songs: [
     {
       songId: "song-1",
@@ -121,6 +126,8 @@ describe("admin overview page", () => {
       draftSongs: 0,
       totalVisits: 0,
       totalClicks: 0,
+      topService: null,
+      daily: [],
       songs: [],
     } satisfies DashboardSnapshot);
     const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
@@ -137,5 +144,21 @@ describe("admin overview page", () => {
       "href",
       "/admin/songs/new",
     );
+  });
+
+  test("renders the Claude quick-read service and visits trend signals", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("Avg. click-through")).toBeInTheDocument();
+    expect(screen.getByText("Best service")).toBeInTheDocument();
+    expect(screen.getByText("Spotify · 64%")).toBeInTheDocument();
+    expect(screen.getByText("Visits trend")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Visits trend over the last 30 days" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Published pages")).not.toBeInTheDocument();
+    expect(screen.queryByText("Drafts in review")).not.toBeInTheDocument();
   });
 });

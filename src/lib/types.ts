@@ -197,12 +197,19 @@ export interface DashboardSongRow {
   clickCount: number;
 }
 
+export interface DashboardDailyPoint {
+  date: string;
+  visits: number;
+}
+
 export interface DashboardSnapshot {
   totalSongs: number;
   publishedSongs: number;
   draftSongs: number;
   totalVisits: number;
   totalClicks: number;
+  topService: ServiceBreakdownRow | null;
+  daily: DashboardDailyPoint[];
   songs: DashboardSongRow[];
 }
 

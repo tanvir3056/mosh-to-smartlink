@@ -623,6 +623,14 @@ describe("core data flow", () => {
     expect(analytics.devices[0]?.label).toBe("mobile");
     expect(analytics.daily).toHaveLength(30);
 
+    const dashboardAfterAnalytics = await getDashboardSnapshot(USER_ID);
+    expect(dashboardAfterAnalytics.topService).toEqual({
+      service: "spotify",
+      clicks: 1,
+    });
+    expect(dashboardAfterAnalytics.daily).toHaveLength(30);
+    expect(dashboardAfterAnalytics.daily.some((row) => row.visits === 1)).toBe(true);
+
     const deleted = await deleteSongById(songId, USER_ID);
     expect(deleted.slug).toBe(adminPage!.page.slug);
     expect(await getAdminSongPageBySongId(songId, USER_ID)).toBeNull();

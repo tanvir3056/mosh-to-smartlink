@@ -19,7 +19,9 @@ import { DeleteSongButton } from "@/components/admin/delete-song-button";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Button } from "@/components/ui/button";
 import { requireUserSession } from "@/lib/auth";
+import { SERVICE_LABELS } from "@/lib/constants";
 import { getDashboardSnapshot } from "@/lib/data";
+import type { DashboardSnapshot } from "@/lib/types";
 import { buildPublicSongPath, cn, formatDateTime } from "@/lib/utils";
 
 type OverviewStatusFilter = "all" | "published" | "draft";
@@ -116,6 +118,77 @@ function rowActionClass(className?: string) {
     "app-interactive inline-flex h-8 min-h-8 items-center justify-center gap-1.5 rounded-[7px] border border-transparent px-2 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
     className,
   );
+}
+
+function buildSparklinePath(values: number[], width: number, height: number, padding: number) {
+  if (values.length === 0) {
+    return "";
+  }
+
+  const max = Math.max(...values, 1);
+
+  return values
+    .map((value, index) => {
+      const x =
+        values.length === 1
+          ? width / 2
+          : padding + (index * (width - padding * 2)) / (values.length - 1);
+      const y = height - padding - (value / max) * (height - padding * 2);
+
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const width = 110;
+  const height = 28;
+  const padding = 3;
+  const path = buildSparklinePath(values, width, height, padding);
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label="Visits trend over the last 30 days"
+      className="h-7 w-[110px]"
+    >
+      <path
+        d={path}
+        fill="none"
+        stroke="var(--app-accent)"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.4"
+      />
+    </svg>
+  );
+}
+
+function QuickReadRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[13px] text-[var(--app-muted)]">{label}</span>
+      <span className="text-right text-[13.5px] font-semibold text-[var(--app-text)]">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function topServiceLabel(snapshot: DashboardSnapshot) {
+  if (!snapshot.topService || snapshot.totalClicks <= 0) {
+    return "—";
+  }
+
+  const share = Math.round((snapshot.topService.clicks / snapshot.totalClicks) * 100);
+  return `${SERVICE_LABELS[snapshot.topService.service]} · ${share}%`;
 }
 
 export default async function AdminOverviewPage({
@@ -470,29 +543,18 @@ export default async function AdminOverviewPage({
             <h3 className="text-[15px] font-semibold">Quick read</h3>
           </div>
           <div className="grid gap-3 text-[13.5px]">
-            <div className="flex justify-between gap-3">
-              <span className="text-[var(--app-muted)]">Top release</span>
-              <strong className="text-right font-semibold text-[var(--app-text)]">
-                {publishedSongs[0]?.title ?? "—"}
-              </strong>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-[var(--app-muted)]">Published pages</span>
-              <strong className="font-semibold text-[var(--app-text)]">
-                {snapshot.publishedSongs}
-              </strong>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-[var(--app-muted)]">Drafts in review</span>
-              <strong className="font-semibold text-[var(--app-text)]">
-                {snapshot.draftSongs}
-              </strong>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-[var(--app-muted)]">Average CTR</span>
-              <strong className="font-semibold text-[var(--app-text)]">
-                {ctr(snapshot.totalClicks, snapshot.totalVisits)}
-              </strong>
+            <QuickReadRow label="Top release">
+              {publishedSongs[0]?.title ?? "—"}
+            </QuickReadRow>
+            <QuickReadRow label="Avg. click-through">
+              {ctr(snapshot.totalClicks, snapshot.totalVisits)}
+            </QuickReadRow>
+            <QuickReadRow label="Best service">
+              {topServiceLabel(snapshot)}
+            </QuickReadRow>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] text-[var(--app-muted)]">Visits trend</span>
+              <Sparkline values={snapshot.daily.map((row) => row.visits)} />
             </div>
           </div>
           <Link href="/admin/analytics" className="mt-5 block">
