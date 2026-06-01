@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
+import { APP_DOMAIN_HINT } from "@/lib/constants";
+
 describe("home page Claude design", () => {
   test("keeps the public entry nav aligned with the Claude theme toggle", async () => {
     const { default: HomePage } = await import("@/app/page");
@@ -27,5 +29,14 @@ describe("home page Claude design", () => {
     expect(screen.getByText("01")).toBeInTheDocument();
     expect(screen.getByText("02")).toBeInTheDocument();
     expect(screen.getByText("03")).toBeInTheDocument();
+  });
+
+  test("uses the configured app domain in the example smart-link path", async () => {
+    const { default: HomePage } = await import("@/app/page");
+
+    render(await HomePage());
+
+    expect(screen.getByText(`${APP_DOMAIN_HINT}/`, { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText("backstage.fm/", { exact: false })).not.toBeInTheDocument();
   });
 });

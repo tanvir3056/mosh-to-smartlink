@@ -8,6 +8,7 @@ import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types
 import { signUpAction } from "@/app/admin/actions";
 import { FormStateMessage } from "@/components/admin/form-state";
 import { Button } from "@/components/ui/button";
+import { APP_DOMAIN_HINT } from "@/lib/constants";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -31,7 +32,9 @@ export function SignUpForm() {
         <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
         <span className="app-input flex items-center gap-2 px-3">
           <User className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
-          <span className="font-mono text-sm text-[var(--app-muted-2)]">backstage.fm/</span>
+          <span className="font-mono text-sm text-[var(--app-muted-2)]">
+            {APP_DOMAIN_HINT}/
+          </span>
           <input
             name="username"
             autoComplete="username"

@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+import { APP_DOMAIN_HINT } from "@/lib/constants";
+
 vi.mock("@/app/admin/actions", () => ({
   signInAction: vi.fn(),
   signUpAction: vi.fn(),
@@ -46,6 +48,8 @@ describe("auth page launch copy", () => {
       screen.getByRole("button", { name: /switch to (dark|light) mode/i }),
     ).toBeInTheDocument();
     expect(screen.getByText("This becomes the root of all your links.")).toBeInTheDocument();
+    expect(screen.getByText(`${APP_DOMAIN_HINT}/`)).toBeInTheDocument();
+    expect(screen.queryByText("backstage.fm/")).not.toBeInTheDocument();
     expect(
       screen.getByText(
         "By creating an account you agree to the Terms and acknowledge the Privacy Policy.",

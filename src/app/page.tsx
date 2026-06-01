@@ -10,6 +10,7 @@ import {
 import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
+import { APP_DOMAIN_HINT } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -63,7 +64,7 @@ export default async function HomePage() {
             <div className="mt-6 flex items-center gap-2 text-[13.5px] text-[var(--app-muted-2)]">
               <LinkIcon className="h-4 w-4" />
               <span className="font-mono">
-                backstage.fm/<span className="text-[var(--app-accent-text)]">username</span>/<span className="text-[var(--app-muted)]">song-slug</span>
+                {APP_DOMAIN_HINT}/<span className="text-[var(--app-accent-text)]">username</span>/<span className="text-[var(--app-muted)]">song-slug</span>
               </span>
             </div>
           </div>
