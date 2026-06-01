@@ -1307,7 +1307,7 @@ export function SongEditorForm({
 
           <aside className="hidden gap-4 xl:sticky xl:top-6 xl:grid">
             <section className="app-card overflow-hidden rounded-[14px]">
-              <div className="flex items-center gap-4 border-b border-[var(--app-line)] bg-[linear-gradient(160deg,var(--app-accent-soft),#fff)] p-5">
+              <div className="flex items-center gap-4 border-b border-[var(--app-line)] bg-[linear-gradient(160deg,var(--app-accent-soft),var(--app-panel))] p-5">
                 <div
                   className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full"
                   style={{

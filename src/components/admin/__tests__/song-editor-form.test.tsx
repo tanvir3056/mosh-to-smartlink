@@ -432,4 +432,13 @@ describe("SongEditorForm missing link review", () => {
       ),
     ).not.toBeInTheDocument();
   });
+
+  test("keeps the publishing rail gradient theme-safe in dark mode", () => {
+    const { container } = render(
+      <SongEditorForm page={PAGE} showMissingLinksReview={false} />,
+    );
+
+    expect(container.innerHTML).not.toContain("#fff");
+    expect(container.innerHTML).toContain("var(--app-panel)");
+  });
 });
