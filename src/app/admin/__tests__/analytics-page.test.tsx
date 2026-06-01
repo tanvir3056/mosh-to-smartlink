@@ -118,4 +118,18 @@ describe("admin analytics page launch copy", () => {
     expect(screen.getByLabelText("Service clicks increased by 8%")).toBeInTheDocument();
     expect(screen.getByLabelText("Click-through rate decreased by 1%")).toBeInTheDocument();
   });
+
+  test("shows each streaming service share from backend click totals", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const streamingServicesPanel = screen
+      .getByRole("heading", { name: "Streaming services" })
+      .closest("section");
+
+    expect(streamingServicesPanel).not.toBeNull();
+    expect(within(streamingServicesPanel!).getByText("Spotify")).toBeInTheDocument();
+    expect(within(streamingServicesPanel!).getByText("320 · 63%")).toBeInTheDocument();
+  });
 });

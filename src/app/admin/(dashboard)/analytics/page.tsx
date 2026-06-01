@@ -42,6 +42,12 @@ function formatDelta(value: number) {
   return formatPercent(Math.abs(value));
 }
 
+function formatClickShare(clicks: number, totalClicks: number) {
+  const share = totalClicks > 0 ? clicks / totalClicks : 0;
+
+  return `${clicks.toLocaleString()} · ${formatPercent(share)}`;
+}
+
 function ratio(value: number, max: number) {
   if (max <= 0) {
     return 0;
@@ -647,7 +653,7 @@ export default async function AdminAnalyticsPage({
             rows={analytics.serviceBreakdown.map((row) => ({
               label: SERVICE_LABELS[row.service],
               value: row.clicks,
-              display: row.clicks.toLocaleString(),
+              display: formatClickShare(row.clicks, analytics.totalClicks),
             }))}
           />
         </Panel>
