@@ -55,6 +55,7 @@ export function ThemeToggle({
       title={title}
       aria-label={title}
       onClick={toggleTheme}
+      suppressHydrationWarning
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
         size === "sm" ? "h-8 w-8" : "h-9 w-9",
