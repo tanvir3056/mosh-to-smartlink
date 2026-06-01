@@ -684,7 +684,13 @@ export async function resyncEmailLeadsAction(): Promise<ActionState> {
 }
 
 export async function resyncEmailLeadsFormAction(): Promise<void> {
-  await resyncEmailLeadsAction();
+  const result = await resyncEmailLeadsAction();
+
+  if (result.error) {
+    redirect("/admin/settings?tab=leads&syncError=1");
+  }
+
+  redirect("/admin/settings?tab=leads&synced=1");
 }
 
 export async function deleteSongAction(formData: FormData) {

@@ -693,4 +693,12 @@ describe("resyncEmailLeadsAction", () => {
     expect(mockResyncEmailLeadsForOwner).toHaveBeenCalledWith("user_1");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/settings");
   });
+
+  test("redirects lead inbox form submissions back with sync feedback state", async () => {
+    const { resyncEmailLeadsFormAction } = await import("@/app/admin/actions");
+
+    await resyncEmailLeadsFormAction();
+
+    expect(mockRedirect).toHaveBeenCalledWith("/admin/settings?tab=leads&synced=1");
+  });
 });

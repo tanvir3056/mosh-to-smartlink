@@ -75,14 +75,16 @@ const leadSnapshot: EmailLeadSnapshot = {
   items: [],
 };
 
-async function renderSettingsPage(tab?: string) {
+async function renderSettingsPage(
+  searchParams: Record<string, string | string[] | undefined> = {},
+) {
   const { default: AdminSettingsPage } = await import("@/app/admin/(dashboard)/settings/page");
   const renderablePage = AdminSettingsPage as unknown as (props: {
     searchParams?: Promise<Record<string, string | string[] | undefined>>;
   }) => Promise<React.ReactElement>;
 
   render(await renderablePage({
-    searchParams: Promise.resolve(tab ? { tab } : {}),
+    searchParams: Promise.resolve(searchParams),
   }));
 }
 
@@ -139,7 +141,7 @@ describe("admin settings page", () => {
   });
 
   test("uses the integrations tab for the existing settings backend form", async () => {
-    await renderSettingsPage("integrations");
+    await renderSettingsPage({ tab: "integrations" });
 
     expect(screen.getByRole("link", { name: "Integrations" })).toHaveAttribute(
       "aria-current",
@@ -150,7 +152,7 @@ describe("admin settings page", () => {
   });
 
   test("uses the lead inbox tab for the existing lead snapshot", async () => {
-    await renderSettingsPage("leads");
+    await renderSettingsPage({ tab: "leads" });
 
     expect(screen.getByRole("link", { name: "Lead inbox" })).toHaveAttribute(
       "aria-current",
@@ -164,5 +166,21 @@ describe("admin settings page", () => {
     expect(screen.getByText("14%")).toBeInTheDocument();
     expect(screen.queryByText("Local only")).not.toBeInTheDocument();
     expect(screen.getByText("Lead inbox panel: 42 total leads")).toBeInTheDocument();
+  });
+
+  test("surfaces the saved settings result from the server action redirect", async () => {
+    await renderSettingsPage({ saved: "general" });
+
+    expect(screen.getByRole("status", { name: "Settings saved" })).toHaveTextContent(
+      "Settings saved.",
+    );
+  });
+
+  test("surfaces lead sync result state on the lead inbox tab", async () => {
+    await renderSettingsPage({ tab: "leads", synced: "1" });
+
+    expect(screen.getByRole("status", { name: "Lead sync refreshed" })).toHaveTextContent(
+      "Lead sync refreshed.",
+    );
   });
 });

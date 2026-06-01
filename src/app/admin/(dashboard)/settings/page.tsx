@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   CheckCircle2,
   Download,
@@ -44,6 +45,7 @@ const SETTINGS_TABS: Array<{ label: string; value: SettingsTab; href: string }> 
 async function submitGeneralSettingsForm(formData: FormData) {
   "use server";
   await saveGeneralSettingsAction(formData);
+  redirect("/admin/settings?saved=general");
 }
 
 function parseSettingsTab(value: string | string[] | undefined): SettingsTab {
@@ -54,6 +56,70 @@ function parseSettingsTab(value: string | string[] | undefined): SettingsTab {
   }
 
   return "general";
+}
+
+function getSingleParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseSettingsResult(params: Record<string, string | string[] | undefined>) {
+  const saved = getSingleParam(params.saved);
+  const synced = getSingleParam(params.synced);
+  const syncError = getSingleParam(params.syncError);
+
+  if (saved === "general" || saved === "integrations") {
+    return {
+      label: "Settings saved",
+      message: "Settings saved.",
+      tone: "success" as const,
+    };
+  }
+
+  if (synced === "1") {
+    return {
+      label: "Lead sync refreshed",
+      message: "Lead sync refreshed.",
+      tone: "success" as const,
+    };
+  }
+
+  if (syncError === "1") {
+    return {
+      label: "Lead sync failed",
+      message: "Lead sync could not be completed. Try again in a moment.",
+      tone: "error" as const,
+    };
+  }
+
+  return null;
+}
+
+function SettingsResultToast({
+  result,
+}: {
+  result: ReturnType<typeof parseSettingsResult>;
+}) {
+  if (!result) {
+    return null;
+  }
+
+  const isError = result.tone === "error";
+
+  return (
+    <div
+      role="status"
+      aria-label={result.label}
+      className={cn(
+        "fixed bottom-6 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-[18px] py-3 text-[13.5px] font-semibold shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.14),0_2px_6px_oklch(0.2_0.02_270_/_0.08)]",
+        isError
+          ? "border border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
+          : "bg-[var(--app-text)] text-[var(--app-bg)]",
+      )}
+    >
+      <CheckCircle2 className="h-4 w-4" />
+      {result.message}
+    </div>
+  );
 }
 
 function SettingsTabs({ activeTab }: { activeTab: SettingsTab }) {
@@ -426,6 +492,7 @@ export default async function AdminSettingsPage({
 }) {
   const params = (await searchParams) ?? {};
   const activeTab = parseSettingsTab(params.tab);
+  const result = parseSettingsResult(params);
   const session = await requireUserSession();
   const [trackingResult, connectorResult, leadSnapshotResult] = await Promise.allSettled([
     getTrackingConfig(session.userId),
@@ -464,6 +531,8 @@ export default async function AdminSettingsPage({
 
   return (
     <section className="app-enter mx-auto w-full max-w-[1180px] pb-20">
+      <SettingsResultToast result={result} />
+
       <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
           <h1 className="font-[var(--font-display)] text-[25px] font-semibold tracking-[-0.022em] text-[var(--app-text)]">
