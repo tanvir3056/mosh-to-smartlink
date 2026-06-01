@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { Sparkles } from "lucide-react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
@@ -12,7 +13,8 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" busy={pending} disabled={pending} className="w-full sm:w-auto">
-      {pending ? "Importing" : "Import track"}
+      {pending ? null : <Sparkles className="h-4 w-4" />}
+      {pending ? "Importing..." : "Import song"}
     </Button>
   );
 }
@@ -22,6 +24,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
     importSpotifyTrackAction,
     INITIAL_ACTION_STATE,
   );
+  const [spotifyUrl, setSpotifyUrl] = useState("");
 
   return (
     <form action={formAction} className="grid gap-5" noValidate>
@@ -31,10 +34,14 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           htmlFor="spotify-url"
           className="text-sm font-medium text-[var(--app-text)]"
         >
-          Spotify track URL
+          Spotify track or album URL
         </label>
         <p id="spotify-url-help" className="text-sm leading-6 text-[var(--app-muted)]">
-          Use the released track URL from Spotify.
+          Open the song in Spotify, tap{" "}
+          <span className="font-semibold text-[var(--app-text)]">
+            Share - Copy link
+          </span>
+          , and paste it here.
         </p>
       </div>
       <div className="grid gap-2">
@@ -43,6 +50,8 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           name="spotify_url"
           placeholder="https://open.spotify.com/track/..."
           className="app-input"
+          value={spotifyUrl}
+          onChange={(event) => setSpotifyUrl(event.currentTarget.value)}
           required
           aria-describedby="spotify-url-help"
           inputMode="url"
@@ -51,20 +60,19 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           spellCheck={false}
         />
       </div>
-      <div className="grid gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-soft)]/72 px-4 py-4 text-sm leading-6 text-[var(--app-muted)]">
-        <div className="flex flex-wrap gap-2">
-          <span className="app-chip">Metadata</span>
-          <span className="app-chip">Artwork</span>
-          <span className="app-chip">Preview</span>
-          <span className="app-chip">Links</span>
-        </div>
-        <p>
-          Import opens review immediately. Nothing goes live until you press{" "}
-          <span className="font-semibold text-[var(--app-text)]">Publish</span>.
-        </p>
-      </div>
       <FormStateMessage error={state.error} success={state.success} />
-      <SubmitButton />
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton />
+        <button
+          type="button"
+          onClick={() =>
+            setSpotifyUrl("https://open.spotify.com/track/4n2c9Jt1Fl3O7g4D2nQbXa")
+          }
+          className="text-[13px] font-semibold text-[var(--app-accent-text)] transition hover:text-[var(--app-accent-strong)]"
+        >
+          Use an example link
+        </button>
+      </div>
     </form>
   );
 }

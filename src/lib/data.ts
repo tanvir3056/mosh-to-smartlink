@@ -28,6 +28,9 @@ import {
   slugify,
 } from "@/lib/utils";
 
+const SONG_DRAFT_NOT_FOUND_MESSAGE =
+  "This song draft is out of date or no longer belongs to this account. Reload Backstage and try again.";
+
 type SongPageJoinRow = QueryResultRow & {
   owner_user_id: string;
   username: string;
@@ -1380,7 +1383,7 @@ export async function updateSongDraft(input: {
         ? desiredSlug
         : await createUniqueSlug(query, input.ownerUserId, "", desiredSlug, input.songId);
 
-    await query(
+    const songRows = await query<{ id: string }>(
       `
         update songs
         set
@@ -1393,6 +1396,7 @@ export async function updateSongDraft(input: {
           updated_at = current_timestamp
         where id = $1
           and owner_user_id = $7
+        returning id
       `,
       [
         input.songId,
@@ -1405,7 +1409,11 @@ export async function updateSongDraft(input: {
       ],
     );
 
-    await query(
+    if (songRows.length === 0) {
+      throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
+    }
+
+    const pageRows = await query<{ id: string }>(
       `
         update song_pages
         set
@@ -1424,6 +1432,7 @@ export async function updateSongDraft(input: {
           updated_at = current_timestamp
         where song_id = $1
           and owner_user_id = $12
+        returning id
       `,
       [
         input.songId,
@@ -1440,6 +1449,10 @@ export async function updateSongDraft(input: {
         input.ownerUserId,
       ],
     );
+
+    if (pageRows.length === 0) {
+      throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
+    }
 
     await upsertStreamingLinks(query, input.songId, input.links);
   });

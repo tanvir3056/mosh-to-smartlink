@@ -100,6 +100,21 @@ function validateMailchimpSettings(input: {
   return fieldErrors;
 }
 
+function getSongSaveErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "The song page could not be saved.";
+  }
+
+  if (
+    error.message.includes("streaming_links_song_id_fk") ||
+    error.message.toLowerCase().includes("foreign key constraint")
+  ) {
+    return "This song draft is out of date. Reload Backstage and try saving again.";
+  }
+
+  return error.message;
+}
+
 function deriveReviewStatus(matchStatus: MatchStatus, url: string | null): ReviewStatus {
   if (!url || matchStatus === "unresolved") {
     return "unresolved";
@@ -444,10 +459,7 @@ export async function updateSongAction(
     }
   } catch (error) {
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "The song page could not be saved.",
+      error: getSongSaveErrorMessage(error),
       success: null,
     };
   }

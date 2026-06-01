@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { ChevronDown, Globe2, LogOut, Plus, Settings } from "lucide-react";
 
 import { signOutAction } from "@/app/admin/actions";
 import { AdminNav, AdminNavLinks } from "@/components/admin/admin-nav";
@@ -59,24 +59,51 @@ export default async function AdminDashboardLayout({
               </div>
             </div>
             <div className="border-t border-[var(--app-line)] pt-2">
-              <div className="flex items-center gap-2 rounded-[10px] px-2 py-2">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white">
-                  {session.username[0]?.toUpperCase() ?? "B"}
-                </span>
-                <div className="min-w-0 flex-1 leading-tight">
-                  <div className="truncate text-[13.5px] font-semibold text-[var(--app-text)]">
-                    @{session.username}
+              <details className="group relative">
+                <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[10px] border border-transparent px-2 py-2 text-left transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] [&::-webkit-details-marker]:hidden">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white">
+                    {session.username[0]?.toUpperCase() ?? "B"}
+                  </span>
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate text-[13.5px] font-semibold text-[var(--app-text)]">
+                      @{session.username}
+                    </span>
+                    <span className="block truncate text-[11.5px] text-[var(--app-muted-2)]">
+                      {session.loginEmail}
+                    </span>
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--app-muted-2)] transition group-open:rotate-180" />
+                </summary>
+
+                <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-20 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] p-1.5 shadow-[0_16px_40px_rgba(20,24,34,0.13)]">
+                  <div className="px-2.5 py-2">
+                    <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[var(--app-text)]">
+                      <Globe2 className="h-3.5 w-3.5 text-[var(--app-accent-text)]" />
+                      Link space
+                    </div>
+                    <div className="mt-1 truncate font-mono text-[11.5px] text-[var(--app-muted-2)]">
+                      {APP_DOMAIN_HINT}/{session.username}/...
+                    </div>
                   </div>
-                  <div className="truncate text-[11.5px] text-[var(--app-muted-2)]">
-                    {session.loginEmail}
-                  </div>
+                  <div className="my-1 h-px bg-[var(--app-line)]" />
+                  <Link
+                    href="/admin/settings"
+                    className="flex h-9 items-center gap-2 rounded-[7px] px-2.5 text-[13.5px] font-medium text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
+                  >
+                    <Settings className="h-4 w-4 text-[var(--app-muted-2)]" />
+                    Account settings
+                  </Link>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="flex h-9 w-full items-center gap-2 rounded-[7px] px-2.5 text-left text-[13.5px] font-medium text-[var(--app-red-text)] transition hover:bg-[var(--app-red-soft)]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </form>
                 </div>
-              </div>
-              <form action={signOutAction} className="mt-2">
-                <Button type="submit" tone="secondary" className="w-full justify-center">
-                  Sign out
-                </Button>
-              </form>
+              </details>
             </div>
           </div>
         </aside>

@@ -317,6 +317,51 @@ describe("core data flow", () => {
     expect(analyticsAfterDelete.totalClicks).toBe(0);
   });
 
+  test("refuses stale editor saves before inserting streaming links", async () => {
+    const { createAccountOwner, updateSongDraft } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    await expect(
+      updateSongDraft({
+        ownerUserId: USER_ID,
+        songId: "song_missing",
+        title: "Missing Song",
+        artistName: "North Vale",
+        albumName: null,
+        artworkUrl: "https://images.example.com/missing.jpg",
+        previewUrl: null,
+        headline: "Stream now",
+        slug: "missing-song",
+        status: "published",
+        emailCapture: {
+          enabled: false,
+          title: null,
+          description: null,
+          buttonLabel: null,
+          downloadUrl: null,
+          downloadLabel: null,
+          tag: null,
+        },
+        links: [
+          {
+            service: "spotify",
+            url: "https://open.spotify.com/track/missing",
+            matchStatus: "matched",
+            matchSource: "spotify_track_url",
+            confidence: 1,
+            notes: null,
+          },
+        ],
+      }),
+    ).rejects.toThrow("This song draft is out of date");
+  });
+
   test("captures email leads and syncs them to Mailchimp when configured", async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ ok: true }), {

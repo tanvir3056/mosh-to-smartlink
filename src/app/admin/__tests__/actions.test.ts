@@ -305,6 +305,30 @@ describe("updateSongAction manual streaming link validation", () => {
     expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
     expect(mockRedirect).toHaveBeenCalledWith("/admin/songs/song_1?published=1");
   });
+
+  test("returns a controlled stale draft error when link inserts hit a song foreign key", async () => {
+    const { publishSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    setServiceFields(formData, "spotify", {
+      url: "https://open.spotify.com/track/track_1",
+      isVisible: true,
+      matchStatus: "matched",
+    });
+    mockUpdateSongDraft.mockRejectedValueOnce(
+      new Error(
+        'insert or update on table "streaming_links" violates foreign key constraint "streaming_links_song_id_fk"',
+      ),
+    );
+
+    const result = await publishSongAction({ error: null, success: null }, formData);
+
+    expect(result).toEqual({
+      error: "This song draft is out of date. Reload Backstage and try saving again.",
+      success: null,
+    });
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
 });
 
 describe("saveTrackingSettingsAction validation", () => {
