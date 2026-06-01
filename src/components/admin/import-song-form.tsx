@@ -68,7 +68,7 @@ function StageBadge({
   return (
     <div
       className={cn(
-        "flex items-center gap-[11px] rounded-[10px] border px-3.5 py-3 transition",
+        "flex items-center gap-[11px] rounded-[var(--r-md)] border px-3.5 py-3 transition",
         state === "done"
           ? "border-[var(--app-green-line)] bg-[var(--app-green-soft)]"
           : state === "active"
@@ -78,7 +78,7 @@ function StageBadge({
     >
       <span
         className={cn(
-          "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[var(--app-panel)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)]",
+          "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[var(--app-panel)] shadow-[var(--sh-xs)]",
           state === "done"
             ? "text-[var(--app-green-text)]"
             : state === "active"
@@ -204,7 +204,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
         setProgressStarted(true);
       }}
     >
-      <section className="app-card rounded-[14px] p-6">
+      <section className="app-card rounded-[var(--r-lg)] p-6">
         <div className="grid gap-4">
           <input type="hidden" name="requested_by" value={requestedBy} />
           <div className="grid gap-2">

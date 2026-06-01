@@ -54,6 +54,18 @@ describe("ImportSongForm", () => {
     expect(screen.getByText("Streaming links")).toBeInTheDocument();
   });
 
+  test("uses Claude primitive tokens for the import form card and stage badges", () => {
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    const input = screen.getByLabelText("Spotify track or album URL");
+    const metadataStage = screen.getByText("Metadata").parentElement?.parentElement;
+    const metadataIcon = metadataStage?.querySelector("span");
+
+    expect(input.closest("section")).toHaveClass("rounded-[var(--r-lg)]");
+    expect(metadataStage).toHaveClass("rounded-[var(--r-md)]");
+    expect(metadataIcon).toHaveClass("shadow-[var(--sh-xs)]");
+  });
+
   test("shows staged progress after a valid import submit", async () => {
     const user = userEvent.setup();
     render(<ImportSongForm requestedBy="@warcry" />);

@@ -41,4 +41,16 @@ describe("new song page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/Drafts stay private/i)).not.toBeInTheDocument();
   });
+
+  test("keeps the Claude import breadcrumb inside the page header and tokenizes the reassurance card", async () => {
+    const { default: NewSongPage } = await import("@/app/admin/(dashboard)/songs/new/page");
+
+    render(await NewSongPage());
+
+    expect(screen.getByRole("link", { name: "Overview" }).closest("header")).not.toBeNull();
+    expect(screen.getByText("Importing never publishes anything").closest("section")).toHaveClass(
+      "rounded-[var(--r-lg)]",
+      "bg-[var(--app-panel-muted)]",
+    );
+  });
 });

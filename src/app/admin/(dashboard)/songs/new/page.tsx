@@ -9,15 +9,14 @@ export default async function NewSongPage() {
 
   return (
     <section className="app-enter mx-auto grid w-full max-w-[760px] gap-[18px]">
-      <Link
-        href="/admin"
-        className="inline-flex w-fit items-center gap-1.5 text-[13px] text-[var(--app-muted-2)] transition hover:text-[var(--app-text)]"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        Overview
-      </Link>
-
       <header>
+        <Link
+          href="/admin"
+          className="mb-2 inline-flex w-fit items-center gap-1.5 text-[13px] text-[var(--app-muted-2)] transition hover:text-[var(--app-text)]"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Overview
+        </Link>
         <h1 className="font-[var(--font-display)] text-[25px] font-semibold tracking-[-0.022em]">
           Import a song
         </h1>
@@ -29,9 +28,9 @@ export default async function NewSongPage() {
 
       <ImportSongForm requestedBy={`@${session.username}`} />
 
-      <section className="app-card bg-[var(--app-panel-muted)] rounded-[14px] p-5">
+      <section className="app-card rounded-[var(--r-lg)] bg-[var(--app-panel-muted)] p-5">
         <div className="flex gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-accent-text)]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-accent-text)]">
             <ShieldCheck className="h-5 w-5" />
           </span>
           <div>
