@@ -375,6 +375,57 @@ describe("SongEditorForm missing link review", () => {
     );
   });
 
+  test("shows a publish confirmation with the live release link", () => {
+    render(
+      <SongEditorForm
+        page={PUBLISHED_PAGE}
+        showMissingLinksReview={false}
+        showPublishedConfirmation
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Release published - live link is ready",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Your smart link is live. Share it now or keep refining the release details.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", { name: "Open live page" })
+        .some((link) => link.getAttribute("href") === "/artist/artist-track"),
+    ).toBe(true);
+  });
+
+  test("shows an unpublish confirmation after a release is made private", () => {
+    render(
+      <SongEditorForm
+        page={PAGE}
+        showMissingLinksReview={false}
+        showUnpublishedConfirmation
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Release unpublished - page is private",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Fans will no longer see this release until you publish again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to library" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+  });
+
   test("submits release metadata needed to recover a stale local draft", () => {
     const { container } = render(
       <SongEditorForm page={PAGE} showMissingLinksReview={false} />,

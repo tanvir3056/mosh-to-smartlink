@@ -13,7 +13,12 @@ export default async function EditSongPage({
   searchParams,
 }: {
   params: Promise<{ songId: string }>;
-  searchParams: Promise<{ imported?: string; review?: string }>;
+  searchParams: Promise<{
+    imported?: string;
+    published?: string;
+    review?: string;
+    unpublished?: string;
+  }>;
 }) {
   const session = await requireUserSession();
   const { songId } = await params;
@@ -46,6 +51,8 @@ export default async function EditSongPage({
       emailConnector={emailConnector}
       showImportedDraftConfirmation={resolvedSearchParams.imported === "1"}
       showMissingLinksReview={resolvedSearchParams.review === "missing-links"}
+      showPublishedConfirmation={resolvedSearchParams.published === "1"}
+      showUnpublishedConfirmation={resolvedSearchParams.unpublished === "1"}
     />
   );
 }

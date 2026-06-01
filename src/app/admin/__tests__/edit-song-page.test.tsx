@@ -40,15 +40,21 @@ vi.mock("@/components/admin/song-editor-form", () => ({
     emailConnector,
     showImportedDraftConfirmation,
     showMissingLinksReview,
+    showPublishedConfirmation,
+    showUnpublishedConfirmation,
   }: {
     emailConnector: EmailConnectorConfig | null;
     showImportedDraftConfirmation?: boolean;
     showMissingLinksReview?: boolean;
+    showPublishedConfirmation?: boolean;
+    showUnpublishedConfirmation?: boolean;
   }) => (
     <div>
       Editor connector: {emailConnector?.hasApiKey ? emailConnector.audienceId : "local"}
       {showImportedDraftConfirmation ? <span>Imported draft confirmation</span> : null}
       {showMissingLinksReview ? <span>Missing links review</span> : null}
+      {showPublishedConfirmation ? <span>Published confirmation</span> : null}
+      {showUnpublishedConfirmation ? <span>Unpublished confirmation</span> : null}
     </div>
   ),
 }));
@@ -113,5 +119,33 @@ describe("edit song page", () => {
 
     expect(screen.getByText("Imported draft confirmation")).toBeInTheDocument();
     expect(screen.getByText("Missing links review")).toBeInTheDocument();
+  });
+
+  test("passes publish result state into the editor form", async () => {
+    const { default: EditSongPage } = await import("@/app/admin/(dashboard)/songs/[songId]/page");
+
+    render(
+      await EditSongPage({
+        params: Promise.resolve({ songId: "song_1" }),
+        searchParams: Promise.resolve({ published: "1" }),
+      }),
+    );
+
+    expect(screen.getByText("Published confirmation")).toBeInTheDocument();
+    expect(screen.queryByText("Unpublished confirmation")).not.toBeInTheDocument();
+  });
+
+  test("passes unpublish result state into the editor form", async () => {
+    const { default: EditSongPage } = await import("@/app/admin/(dashboard)/songs/[songId]/page");
+
+    render(
+      await EditSongPage({
+        params: Promise.resolve({ songId: "song_1" }),
+        searchParams: Promise.resolve({ unpublished: "1" }),
+      }),
+    );
+
+    expect(screen.getByText("Unpublished confirmation")).toBeInTheDocument();
+    expect(screen.queryByText("Published confirmation")).not.toBeInTheDocument();
   });
 });

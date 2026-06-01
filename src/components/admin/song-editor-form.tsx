@@ -42,7 +42,7 @@ import type {
   SongPageWithLinks,
   StreamingService,
 } from "@/lib/types";
-import { buildServiceSearchUrl } from "@/lib/utils";
+import { buildPublicSongPath, buildServiceSearchUrl } from "@/lib/utils";
 
 type ResolutionMode = "search_fallback" | "manual";
 
@@ -315,12 +315,16 @@ export function SongEditorForm({
   emailConnector,
   showImportedDraftConfirmation = false,
   showMissingLinksReview = false,
+  showPublishedConfirmation = false,
+  showUnpublishedConfirmation = false,
 }: {
   page: SongPageWithLinks;
   performance?: DashboardSongRow | null;
   emailConnector?: EmailConnectorConfig | null;
   showImportedDraftConfirmation?: boolean;
   showMissingLinksReview?: boolean;
+  showPublishedConfirmation?: boolean;
+  showUnpublishedConfirmation?: boolean;
 }) {
   const [draftState, draftAction] = useActionState<ActionState, FormData>(
     saveSongDraftAction,
@@ -438,6 +442,7 @@ export function SongEditorForm({
   const readinessMessage = publishReady || manualReviewCount > 0
     ? formatDestinationAttention(manualReviewCount)
     : "Show at least one valid streaming destination before this page goes live.";
+  const publicHref = buildPublicSongPath(page.page.username, page.page.slug);
 
   function updateServiceDraft(
     service: StreamingService,
@@ -723,6 +728,73 @@ export function SongEditorForm({
                   Back to library
                 </Link>
               </div>
+            </div>
+          </section>
+        ) : null}
+
+        {showPublishedConfirmation ? (
+          <section className="app-card-soft rounded-[14px] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 gap-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
+                  <CheckCircle2 className="h-[18px] w-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="app-kicker text-[var(--app-green-text)]">
+                    Published
+                  </p>
+                  <h2 className="mt-2 text-[16px] font-semibold tracking-[-0.015em] text-[var(--app-text)]">
+                    Release published - live link is ready
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
+                    Your smart link is live. Share it now or keep refining the release details.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <Link
+                  href={publicHref}
+                  target="_blank"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:bg-[var(--app-accent-strong)]"
+                >
+                  Open live page
+                </Link>
+                <Link
+                  href="/admin"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] transition hover:bg-[var(--app-panel-muted)]"
+                >
+                  Back to library
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {showUnpublishedConfirmation ? (
+          <section className="app-card-soft rounded-[14px] border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 gap-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-amber-line)] bg-[var(--app-panel)] text-[var(--app-amber-text)]">
+                  <EyeOff className="h-[18px] w-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="app-kicker text-[var(--app-amber-text)]">
+                    Unpublished
+                  </p>
+                  <h2 className="mt-2 text-[16px] font-semibold tracking-[-0.015em] text-[var(--app-text)]">
+                    Release unpublished - page is private
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
+                    Fans will no longer see this release until you publish again.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/admin"
+                className="inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] transition hover:bg-[var(--app-panel-muted)]"
+              >
+                Back to library
+              </Link>
             </div>
           </section>
         ) : null}
