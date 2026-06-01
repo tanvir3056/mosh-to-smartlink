@@ -296,10 +296,14 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByRole("button", { name: "Unpublish" })).not.toBeInTheDocument();
   });
 
-  test("sends draft preview actions to the protected admin preview instead of the public live page", () => {
+  test("keeps draft public-link actions aligned with the design-safe preview flow", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
-    expect(screen.queryByRole("link", { name: "Open live page" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Admin preview" })).toHaveAttribute(
+      "href",
+      "/admin/preview/song_1",
+    );
+    expect(screen.getByRole("button", { name: "Open live page" })).toBeDisabled();
 
     for (const previewLink of screen.getAllByRole("link", { name: /preview/i })) {
       expect(previewLink).toHaveAttribute("href", "/admin/preview/song_1");

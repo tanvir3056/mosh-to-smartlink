@@ -7,10 +7,19 @@ import { APP_DOMAIN_HINT } from "@/lib/constants";
 import type { PageStatus } from "@/lib/types";
 import { buildPublicSongPath } from "@/lib/utils";
 
-function actionLinkClass(tone: "primary" | "secondary" = "secondary") {
-  return tone === "primary"
-    ? "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,75,219,0.18)] select-none touch-manipulation transition-[transform,background-color,box-shadow] duration-200 ease-out hover:bg-[var(--app-accent-strong)] active:scale-[0.985] active:bg-[var(--app-accent-strong)] active:text-white sm:w-auto"
-    : "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out hover:bg-[var(--app-panel-muted)] active:scale-[0.985] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)] sm:w-auto";
+function actionLinkClass(tone: "primary" | "secondary" | "ghost" = "secondary") {
+  const base =
+    "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
+
+  if (tone === "primary") {
+    return `${base} bg-[var(--app-accent)] text-white shadow-[0_8px_18px_rgba(76,75,219,0.18)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)] active:text-white`;
+  }
+
+  if (tone === "ghost") {
+    return `${base} border border-transparent bg-transparent text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] active:text-[var(--app-text)]`;
+  }
+
+  return `${base} border border-[var(--app-line)] bg-white text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] hover:bg-[var(--app-panel-muted)] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]`;
 }
 
 export function PublicLinkPanel({
@@ -93,11 +102,10 @@ export function PublicLinkPanel({
         <div className="grid gap-3 sm:flex sm:flex-wrap">
           <a
             href={previewHref}
-            className={actionLinkClass(isPublished ? "secondary" : "primary")}
-            style={!isPublished ? { color: "#fff", WebkitTextFillColor: "#fff" } : undefined}
+            className={actionLinkClass("secondary")}
           >
             <Eye className="h-4 w-4" />
-            {isPublished ? "Admin preview" : "Preview draft"}
+            Admin preview
           </a>
           {isPublished ? (
             <a
@@ -110,7 +118,12 @@ export function PublicLinkPanel({
               <ExternalLink className="h-4 w-4" />
               Open live page
             </a>
-          ) : null}
+          ) : (
+            <button type="button" disabled className={actionLinkClass("ghost")}>
+              <ExternalLink className="h-4 w-4" />
+              Open live page
+            </button>
+          )}
         </div>
       </div>
     </section>
