@@ -31,4 +31,15 @@ describe("ImportSongForm", () => {
       "https://open.spotify.com/track/4n2c9Jt1Fl3O7g4D2nQbXa",
     );
   });
+
+  test("keeps the Claude import progress checklist with the import controls", () => {
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    expect(screen.getByText("What we pull in")).toBeInTheDocument();
+    expect(screen.getByText("Ready to import")).toBeInTheDocument();
+    expect(screen.getByText("Metadata")).toBeInTheDocument();
+    expect(screen.getByText("Artwork")).toBeInTheDocument();
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getByText("Streaming links")).toBeInTheDocument();
+  });
 });

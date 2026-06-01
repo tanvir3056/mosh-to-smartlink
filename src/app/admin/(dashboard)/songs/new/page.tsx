@@ -1,40 +1,8 @@
 import Link from "next/link";
-import {
-  Check,
-  ChevronLeft,
-  ImageIcon,
-  Link2,
-  ListMusic,
-  Play,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { Check, ChevronLeft, ShieldCheck } from "lucide-react";
 
 import { ImportSongForm } from "@/components/admin/import-song-form";
 import { requireUserSession } from "@/lib/auth";
-
-const stages = [
-  {
-    title: "Metadata",
-    body: "Title, artist, album",
-    icon: ListMusic,
-  },
-  {
-    title: "Artwork",
-    body: "Cover image",
-    icon: ImageIcon,
-  },
-  {
-    title: "Preview",
-    body: "30-second clip",
-    icon: Play,
-  },
-  {
-    title: "Streaming links",
-    body: "Matched across services",
-    icon: Link2,
-  },
-];
 
 export default async function NewSongPage() {
   const session = await requireUserSession();
@@ -59,42 +27,7 @@ export default async function NewSongPage() {
         </p>
       </header>
 
-      <section className="app-card rounded-[14px] p-6">
-        <ImportSongForm requestedBy={`@${session.username}`} />
-      </section>
-
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[14.5px] font-semibold">What we pull in</h2>
-        <span className="app-chip border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
-          <Sparkles className="h-3.5 w-3.5" />
-          Ready to import
-        </span>
-      </div>
-
-      <section className="grid gap-3 sm:grid-cols-2">
-        {stages.map((stage) => {
-          const Icon = stage.icon;
-
-          return (
-            <div
-              key={stage.title}
-              className="flex items-center gap-3 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 py-3"
-            >
-              <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[var(--app-panel)] text-[var(--app-muted-2)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)]">
-                <Icon className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <div className="text-[13.5px] font-semibold text-[var(--app-text)]">
-                  {stage.title}
-                </div>
-                <div className="text-[11.5px] text-[var(--app-muted-2)]">
-                  {stage.body}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </section>
+      <ImportSongForm requestedBy={`@${session.username}`} />
 
       <section className="app-card bg-[var(--app-panel-muted)] rounded-[14px] p-5">
         <div className="flex gap-3">
