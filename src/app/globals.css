@@ -99,6 +99,7 @@ body {
   --blue-soft: oklch(0.955 0.03 250);
   --blue-text: oklch(0.48 0.16 252);
   --glass: oklch(1 0 0 / 0.82);
+  --scrim: oklch(0.3 0.02 270 / 0.32);
   --stripe: oklch(0.93 0.004 270);
   --app-bg: var(--bg);
   --app-panel: var(--surface);
@@ -109,6 +110,7 @@ body {
   --app-muted: var(--text-2);
   --app-muted-2: var(--text-3);
   --app-line: var(--line);
+  --app-line-soft: var(--line-soft);
   --app-line-strong: var(--line-strong);
   --app-surface: var(--surface);
   --app-surface-line: var(--line);
@@ -185,6 +187,7 @@ body {
   --blue-soft: oklch(0.32 0.07 252);
   --blue-text: oklch(0.83 0.12 252);
   --glass: oklch(0.215 0.009 274 / 0.82);
+  --scrim: oklch(0.08 0.01 274 / 0.55);
   --stripe: oklch(0.30 0.012 274);
   color-scheme: dark;
 }
