@@ -26,9 +26,15 @@ function fieldDescription(...ids: Array<string | false | null | undefined>) {
 export function TrackingSettingsForm({
   config,
   connector,
+  compactHeader = false,
+  formId,
+  showFooterSubmit = true,
 }: {
   config: TrackingConfig;
   connector: EmailConnectorConfig;
+  compactHeader?: boolean;
+  formId?: string;
+  showFooterSubmit?: boolean;
 }) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     saveTrackingSettingsAction,
@@ -40,90 +46,104 @@ export function TrackingSettingsForm({
   const mailchimpApiKeyError = state.fieldErrors?.mailchimp_api_key;
 
   return (
-    <form action={formAction} className="grid gap-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-2xl">
-          <p className="app-kicker text-[var(--app-muted)]">Configuration</p>
-          <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-            Public defaults and Mailchimp
-          </h3>
-          <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
-            Keep the public brand clean, then decide whether leads should sync outward.
-          </p>
-        </div>
+    <form id={formId} action={formAction} className="grid gap-6">
+      {!compactHeader ? (
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="app-kicker text-[var(--app-muted)]">Configuration</p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+              Public defaults and Mailchimp
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-muted)]">
+              Keep the public brand clean, then decide whether leads should sync outward.
+            </p>
+          </div>
 
-        <div className="w-fit rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
-          {isMailchimpConnected ? "Mailchimp connected" : "Local lead storage"}
+          <div className="w-fit rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
+            {isMailchimpConnected ? "Mailchimp connected" : "Local lead storage"}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-[14px] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
-          <p className="app-kicker text-[var(--app-muted)]">Public defaults</p>
-          <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
-            Live page defaults
-          </h4>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-            Applied account-wide.
-          </p>
+        <section className="app-card overflow-hidden rounded-[14px] p-0">
+          <div className="border-b border-[var(--app-line)] px-[18px] py-[15px]">
+            <p className="text-[14.5px] font-semibold text-[var(--app-text)]">
+              Meta Pixel
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
+              Track conversion events for ads.
+            </p>
+          </div>
+          <div className="p-[18px]">
+            <p className="app-kicker text-[var(--app-muted)]">Public defaults</p>
+            <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
+              Live page defaults
+            </h4>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
+              Applied account-wide.
+            </p>
 
-          <div className="mt-5 grid gap-4">
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--app-text)]">Site name</span>
-              <input name="site_name" defaultValue={config.siteName} className="app-input" />
-            </label>
-
-            <div className="grid gap-2">
-              <label
-                htmlFor="meta-pixel-id"
-                className="text-sm font-medium text-[var(--app-text)]"
-              >
-                Meta Pixel ID
+            <div className="mt-5 grid gap-4">
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-[var(--app-text)]">Site name</span>
+                <input name="site_name" defaultValue={config.siteName} className="app-input" />
               </label>
-              <input
-                id="meta-pixel-id"
-                name="meta_pixel_id"
-                defaultValue={config.metaPixelId ?? ""}
-                className="app-input"
-                placeholder="123456789012345"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                aria-invalid={Boolean(metaPixelIdError)}
-                aria-describedby={fieldDescription(
-                  "meta-pixel-id-help",
-                  metaPixelIdError && "meta-pixel-id-error",
-                )}
-              />
-              <span id="meta-pixel-id-help" className="text-xs leading-5 text-[var(--app-muted)]">
-                Use digits only. Required before Meta Pixel can be enabled.
-              </span>
-              {metaPixelIdError ? (
-                <p id="meta-pixel-id-error" className="text-sm text-red-600">
-                  {metaPixelIdError}
-                </p>
-              ) : null}
-            </div>
 
-            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
-              <input
-                name="meta_pixel_enabled"
-                type="checkbox"
-                defaultChecked={config.metaPixelEnabled}
-                className="h-4 w-4 rounded border-slate-300 bg-transparent"
-              />
-              Enable Meta Pixel on published song pages
-            </label>
+              <div className="grid gap-2">
+                <label
+                  htmlFor="meta-pixel-id"
+                  className="text-sm font-medium text-[var(--app-text)]"
+                >
+                  Meta Pixel ID
+                </label>
+                <input
+                  id="meta-pixel-id"
+                  name="meta_pixel_id"
+                  defaultValue={config.metaPixelId ?? ""}
+                  className="app-input"
+                  placeholder="123456789012345"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  aria-invalid={Boolean(metaPixelIdError)}
+                  aria-describedby={fieldDescription(
+                    "meta-pixel-id-help",
+                    metaPixelIdError && "meta-pixel-id-error",
+                  )}
+                />
+                <span
+                  id="meta-pixel-id-help"
+                  className="text-xs leading-5 text-[var(--app-muted)]"
+                >
+                  Use digits only. Required before Meta Pixel can be enabled.
+                </span>
+                {metaPixelIdError ? (
+                  <p id="meta-pixel-id-error" className="text-sm text-red-600">
+                    {metaPixelIdError}
+                  </p>
+                ) : null}
+              </div>
+
+              <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
+                <input
+                  name="meta_pixel_enabled"
+                  type="checkbox"
+                  defaultChecked={config.metaPixelEnabled}
+                  className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                />
+                Enable Meta Pixel on published song pages
+              </label>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-[14px] border border-[var(--app-line)] bg-white px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] sm:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="app-card overflow-hidden rounded-[14px] p-0">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
             <div className="max-w-2xl">
-              <p className="app-kicker text-[var(--app-muted)]">Mailchimp sync</p>
-              <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
-                Optional outbound sync
+              <h4 className="text-[14.5px] font-semibold text-[var(--app-text)]">
+                Mailchimp
               </h4>
-              <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
+              <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
                 Leads store here first. Mailchimp is optional.
               </p>
             </div>
@@ -133,7 +153,7 @@ export function TrackingSettingsForm({
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4">
+          <div className="grid gap-4 p-[18px]">
             <div className="grid gap-2">
               <label
                 htmlFor="mailchimp-audience-id"
@@ -200,41 +220,43 @@ export function TrackingSettingsForm({
                 placeholder="smart-link, release-campaign"
               />
             </label>
-          </div>
 
-          <div className="mt-5 grid gap-3">
-            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
-              <input
-                name="mailchimp_double_opt_in"
-                type="checkbox"
-                defaultChecked={connector.doubleOptIn}
-                className="h-4 w-4 rounded border-slate-300 bg-transparent"
-              />
-              Use Mailchimp double opt-in for new contacts
-            </label>
-
-            {connector.hasApiKey ? (
+            <div className="grid gap-3">
               <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
                 <input
-                  name="mailchimp_clear_api_key"
+                  name="mailchimp_double_opt_in"
                   type="checkbox"
+                  defaultChecked={connector.doubleOptIn}
                   className="h-4 w-4 rounded border-slate-300 bg-transparent"
                 />
-                Clear the saved Mailchimp API key
+                Use Mailchimp double opt-in for new contacts
               </label>
-            ) : null}
+
+              {connector.hasApiKey ? (
+                <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
+                  <input
+                    name="mailchimp_clear_api_key"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                  />
+                  Clear the saved Mailchimp API key
+                </label>
+              ) : null}
+            </div>
           </div>
         </section>
       </div>
 
       <FormStateMessage error={state.error} success={state.success} />
 
-      <div className="flex flex-col gap-4 border-t border-[var(--app-line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-xl text-sm leading-7 text-[var(--app-muted)]">
-          Song-specific download offers still live inside each release editor.
-        </p>
-        <SubmitButton />
-      </div>
+      {showFooterSubmit ? (
+        <div className="flex flex-col gap-4 border-t border-[var(--app-line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-xl text-sm leading-7 text-[var(--app-muted)]">
+            Song-specific download offers still live inside each release editor.
+          </p>
+          <SubmitButton />
+        </div>
+      ) : null}
     </form>
   );
 }

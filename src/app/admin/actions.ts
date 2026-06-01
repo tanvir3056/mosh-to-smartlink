@@ -100,15 +100,42 @@ function validateMailchimpSettings(input: {
   return fieldErrors;
 }
 
+function getErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return null;
+  }
+
+  return error.message;
+}
+
+function isDatabaseConsistencyError(error: unknown) {
+  const message = getErrorMessage(error)?.toLowerCase() ?? "";
+
+  return (
+    message.includes("streaming_links_song_id_fk") ||
+    (message.includes("failed sql statement") &&
+      message.includes("insert into streaming_links")) ||
+    message.includes("foreign key constraint")
+  );
+}
+
+function getSongImportErrorMessage(error: unknown) {
+  if (isDatabaseConsistencyError(error)) {
+    return "Backstage could not finish saving that import. Reload Backstage and try again.";
+  }
+
+  return (
+    getErrorMessage(error) ??
+    "The Spotify import failed. Check the URL and try again."
+  );
+}
+
 function getSongSaveErrorMessage(error: unknown) {
   if (!(error instanceof Error)) {
     return "The song page could not be saved.";
   }
 
-  if (
-    error.message.includes("streaming_links_song_id_fk") ||
-    error.message.toLowerCase().includes("foreign key constraint")
-  ) {
+  if (isDatabaseConsistencyError(error)) {
     return "This song draft is out of date. Reload Backstage and try saving again.";
   }
 
@@ -336,10 +363,7 @@ export async function importSpotifyTrackAction(
     songId = await createSongImportDraft(bundle, requestedBy, session.userId);
   } catch (error) {
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "The Spotify import failed. Check the URL and try again.",
+      error: getSongImportErrorMessage(error),
       success: null,
     };
   }

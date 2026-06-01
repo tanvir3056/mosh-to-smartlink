@@ -6,10 +6,13 @@ const mockRevalidatePath = vi.fn();
 const mockRevalidateTag = vi.fn();
 const mockRedirect = vi.fn();
 const mockRequireUserSession = vi.fn();
+const mockCreateSongImportDraft = vi.fn();
 const mockUpdateSongDraft = vi.fn();
 const mockSaveEmailConnectorConfig = vi.fn();
 const mockSaveTrackingConfig = vi.fn();
 const mockPublishedSongPageTag = vi.fn(() => "published-tag");
+const mockFetchSpotifyTrackImport = vi.fn();
+const mockBuildImportBundle = vi.fn();
 
 vi.mock("next/cache", () => ({
   revalidatePath: mockRevalidatePath,
@@ -28,12 +31,20 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/data", () => ({
-  createSongImportDraft: vi.fn(),
+  createSongImportDraft: mockCreateSongImportDraft,
   deleteSongById: vi.fn(),
   saveEmailConnectorConfig: mockSaveEmailConnectorConfig,
   publishedSongPageTag: mockPublishedSongPageTag,
   saveTrackingConfig: mockSaveTrackingConfig,
   updateSongDraft: mockUpdateSongDraft,
+}));
+
+vi.mock("@/lib/spotify", () => ({
+  fetchSpotifyTrackImport: mockFetchSpotifyTrackImport,
+}));
+
+vi.mock("@/lib/matching", () => ({
+  buildImportBundle: mockBuildImportBundle,
 }));
 
 function buildBaseFormData() {
@@ -327,6 +338,50 @@ describe("updateSongAction manual streaming link validation", () => {
       error: "This song draft is out of date. Reload Backstage and try saving again.",
       success: null,
     });
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("importSpotifyTrackAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRequireUserSession.mockResolvedValue({
+      userId: "user_1",
+      username: "artist",
+    });
+    mockFetchSpotifyTrackImport.mockResolvedValue({
+      spotifyTrackUrl: "https://open.spotify.com/track/track_1",
+    });
+    mockBuildImportBundle.mockResolvedValue({
+      song: {
+        spotifyTrackId: "track_1",
+      },
+      links: [],
+      importStatus: "partial",
+    });
+  });
+
+  test("returns a controlled retry message when import link inserts hit a song foreign key", async () => {
+    const { importSpotifyTrackAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("spotify_url", "https://open.spotify.com/track/track_1");
+    mockCreateSongImportDraft.mockRejectedValueOnce(
+      new Error(
+        'insert or update on table "songs" violates foreign key constraint on table "streaming_links_song_id_fk": Failed SQL statement: insert into streaming_links (...)',
+      ),
+    );
+
+    const result = await importSpotifyTrackAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Backstage could not finish saving that import. Reload Backstage and try again.",
+      success: null,
+    });
+    expect(result.error).not.toContain("insert into streaming_links");
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 });

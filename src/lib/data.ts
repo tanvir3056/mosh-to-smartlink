@@ -485,7 +485,7 @@ async function upsertStreamingLinks(
       continue;
     }
 
-    await query(
+    const inserted = await query<{ id: string }>(
       `
         insert into streaming_links (
           id,
@@ -507,7 +507,31 @@ async function upsertStreamingLinks(
           position,
           is_visible
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        select
+          $1::text,
+          $2::text,
+          $3::text,
+          $4::text,
+          $5::text,
+          $6::text,
+          $7::text,
+          $8::numeric,
+          $9::text,
+          $10::text,
+          $11::text,
+          $12::text,
+          $13::text,
+          $14::integer,
+          $15::date,
+          $16::text,
+          $17::integer,
+          $18::boolean
+        where exists (
+          select 1
+          from songs
+          where id = $2
+        )
+        returning id
       `,
       [
         createId("link"),
@@ -530,6 +554,10 @@ async function upsertStreamingLinks(
         link.isVisible ?? true,
       ],
     );
+
+    if (inserted.length === 0) {
+      throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
+    }
   }
 }
 
