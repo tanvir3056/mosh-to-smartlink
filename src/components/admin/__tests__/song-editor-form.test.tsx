@@ -237,6 +237,35 @@ describe("SongEditorForm missing link review", () => {
     expect(preview.className).not.toContain("bg-white");
   });
 
+  test("uses shared editor primitives for command-center surfaces", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const releaseDetailsSection = screen
+      .getByRole("heading", { name: "Release details" })
+      .closest("section");
+    const preview = screen.getByRole("link", { name: "Preview draft" });
+    const connectorInput = screen.getByLabelText("Connector");
+    const connectorShell = connectorInput.parentElement;
+    const connectorNote = screen.getByText(/Leads are saved in Settings/i);
+    const dangerZone = screen
+      .getByRole("heading", { name: "Danger zone" })
+      .closest("section");
+    const publishingRail = screen
+      .getAllByRole("heading", { name: "Ready to publish" })
+      .map((heading) => heading.closest("section"))
+      .find(Boolean);
+
+    expect(releaseDetailsSection).toHaveClass("rounded-[var(--r-lg)]");
+    expect(preview).toHaveClass("rounded-[var(--r-sm)]", "shadow-[var(--sh-xs)]");
+    expect(connectorShell).toHaveClass(
+      "rounded-[var(--r-sm)]",
+      "shadow-[var(--sh-xs)]",
+    );
+    expect(connectorNote).toHaveClass("rounded-[var(--r-md)]");
+    expect(dangerZone).toHaveClass("rounded-[var(--r-lg)]");
+    expect(publishingRail).toHaveClass("rounded-[var(--r-lg)]");
+  });
+
   test("keeps the editor stable when hiding an unresolved service", async () => {
     const user = userEvent.setup();
 

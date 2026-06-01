@@ -151,11 +151,11 @@ function EditorSection({
   return (
     <section
       id={id}
-      className={`app-card overflow-hidden rounded-[14px] ${className ?? ""}`}
+      className={`app-card overflow-hidden rounded-[var(--r-lg)] ${className ?? ""}`}
     >
       <div className="flex items-center justify-between gap-4 border-b border-[var(--app-line)] px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
             {icon}
           </span>
           <div className="min-w-0">
@@ -272,7 +272,7 @@ function LeadConnectorField({
       <label htmlFor="email-capture-connector" className="text-sm font-medium text-[var(--app-text)]">
         Connector
       </label>
-      <div className="flex overflow-hidden rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)]">
+      <div className="flex overflow-hidden rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xs)]">
         <input
           id="email-capture-connector"
           value={value}
@@ -301,7 +301,7 @@ function LeadConnectorNote({
   const connected = Boolean(connector?.hasApiKey && connector.audienceId);
 
   return (
-    <div className="rounded-[10px] border border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--app-muted)]">
+    <div className="rounded-[var(--r-md)] border border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--app-muted)]">
       {connected
         ? "Leads sync to your connected Mailchimp audience and appear in Settings -> Lead inbox."
         : "Leads are saved in Settings -> Lead inbox. Connect Mailchimp in Settings to sync automatically."}
@@ -469,7 +469,7 @@ export function SongEditorForm({
     <>
       {showMissingLinksDialog && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-[rgba(16,19,27,0.38)] px-4 py-8 backdrop-blur-sm sm:items-center">
-          <div className="app-card w-full max-w-3xl rounded-[14px] p-5 shadow-[0_20px_70px_rgba(20,24,34,0.18)] sm:p-6">
+          <div className="app-card w-full max-w-3xl rounded-[var(--r-lg)] p-5 shadow-[var(--sh-xl)] sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="app-kicker text-[var(--app-muted)]">
@@ -500,7 +500,7 @@ export function SongEditorForm({
                 return (
                   <div
                     key={`review-${service}`}
-                    className="rounded-[12px] border border-[var(--app-line)] bg-[var(--app-panel)] p-4"
+                    className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel)] p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="text-base font-semibold text-[var(--app-text)]">
@@ -524,7 +524,7 @@ export function SongEditorForm({
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
                         <input
                           type="radio"
                           name={`review-${service}`}
@@ -541,7 +541,7 @@ export function SongEditorForm({
                         />
                         Use search fallback
                       </label>
-                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-sm font-medium text-[var(--app-text)]">
                         <input
                           type="radio"
                           name={`review-${service}`}
@@ -643,7 +643,7 @@ export function SongEditorForm({
             <img
               src={artworkUrl}
               alt={`${page.song.artistName} - ${page.song.title} artwork`}
-              className="h-14 w-14 shrink-0 rounded-[12px] object-cover shadow-[0_12px_28px_rgba(20,24,34,0.12)]"
+              className="h-14 w-14 shrink-0 rounded-[var(--r-lg)] object-cover shadow-[var(--sh-md)]"
               loading="eager"
               decoding="async"
             />
@@ -670,7 +670,7 @@ export function SongEditorForm({
           <div className="flex flex-wrap items-center gap-2">
             <a
               href={`/admin/preview/${page.song.id}`}
-              className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
+              className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
             >
               <Eye className="h-4 w-4" />
               {page.page.status === "published" ? "Preview" : "Preview draft"}
@@ -696,7 +696,7 @@ export function SongEditorForm({
         </div>
 
         {showImportedDraftConfirmation ? (
-          <section className="app-card-soft rounded-[14px] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
+          <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
                 <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
@@ -717,13 +717,13 @@ export function SongEditorForm({
               <div className="flex flex-wrap gap-2 sm:justify-end">
                 <a
                   href="#streaming-destinations"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:bg-[var(--app-accent-strong)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
                 >
                   Review &amp; publish
                 </a>
                 <Link
                   href="/admin"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] transition hover:bg-[var(--app-panel-muted)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
                 >
                   Back to library
                 </Link>
@@ -733,7 +733,7 @@ export function SongEditorForm({
         ) : null}
 
         {showPublishedConfirmation ? (
-          <section className="app-card-soft rounded-[14px] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
+          <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
                 <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
@@ -755,13 +755,13 @@ export function SongEditorForm({
                 <Link
                   href={publicHref}
                   target="_blank"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:bg-[var(--app-accent-strong)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
                 >
                   Open live page
                 </Link>
                 <Link
                   href="/admin"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] transition hover:bg-[var(--app-panel-muted)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
                 >
                   Back to library
                 </Link>
@@ -771,7 +771,7 @@ export function SongEditorForm({
         ) : null}
 
         {showUnpublishedConfirmation ? (
-          <section className="app-card-soft rounded-[14px] border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-4 py-4 sm:px-5">
+          <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
                 <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-amber-line)] bg-[var(--app-panel)] text-[var(--app-amber-text)]">
@@ -791,7 +791,7 @@ export function SongEditorForm({
               </div>
               <Link
                 href="/admin"
-                className="inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] transition hover:bg-[var(--app-panel-muted)]"
+                className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
               >
                 Back to library
               </Link>
@@ -817,7 +817,7 @@ export function SongEditorForm({
                 <img
                   src={artworkUrl}
                   alt={`${page.song.artistName} - ${page.song.title} artwork`}
-                  className="h-[108px] w-[108px] rounded-[12px] border border-[var(--app-line)] object-cover shadow-[0_12px_28px_rgba(20,24,34,0.12)]"
+                  className="h-[108px] w-[108px] rounded-[var(--r-lg)] border border-[var(--app-line)] object-cover shadow-[var(--sh-md)]"
                   loading="eager"
                   decoding="async"
                 />
@@ -918,14 +918,14 @@ export function SongEditorForm({
                 return (
                   <div
                     key={service}
-                    className={`overflow-hidden rounded-[12px] border border-[var(--app-line)] transition ${
+                    className={`overflow-hidden rounded-[var(--r-md)] border border-[var(--app-line)] transition ${
                       draft.isVisible
                         ? "bg-[var(--app-panel)]"
                         : "bg-[var(--app-panel-muted)] opacity-75"
                     }`}
                   >
                     <div className="flex flex-wrap items-center gap-3 p-3">
-                      <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
+                      <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
                         <ServiceIcon service={service} className="max-w-[22px]" />
                       </span>
                       <div className="min-w-[180px] flex-1">
@@ -945,7 +945,7 @@ export function SongEditorForm({
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-soft)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
+                        <span className="inline-flex min-h-9 items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-soft)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
                           {needsResolution
                             ? draft.resolutionMode === "search_fallback"
                               ? "Search fallback"
@@ -954,7 +954,7 @@ export function SongEditorForm({
                                 : "Unresolved"
                             : reviewStatusLabel(reviewStatus)}
                         </span>
-                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
+                        <span className="inline-flex min-h-9 items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
                           {formatConfidence(link?.confidence ?? null)}
                         </span>
                         <button
@@ -962,7 +962,7 @@ export function SongEditorForm({
                           aria-expanded={isExpanded}
                           aria-label={`${isExpanded ? "Collapse" : "Expand"} ${serviceLabel} destination details`}
                           onClick={() => toggleServiceExpanded(service)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-[7px] border border-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--r-sm)] border border-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
                         >
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -1058,7 +1058,7 @@ export function SongEditorForm({
                       />
 
                       {needsResolution ? (
-                        <div className="grid gap-3 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
+                        <div className="grid gap-3 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
                           <div className="grid gap-3 sm:grid-cols-2">
                             <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
                               <input
@@ -1199,7 +1199,7 @@ export function SongEditorForm({
                         link?.matchedDurationMs ||
                         link?.matchedReleaseDate ||
                         link?.matchedIsrc) && (
-                        <div className="grid gap-2 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-soft)]/70 p-3">
+                        <div className="grid gap-2 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-soft)]/70 p-3">
                           {link?.confidenceReason && (
                             <div className="text-sm text-[var(--app-text)]">
                               {link.confidenceReason}
@@ -1353,7 +1353,7 @@ export function SongEditorForm({
             title="Lead capture"
             subtitle="Collect emails in exchange for a reward."
           >
-            <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
+            <label className="app-card-soft flex items-center gap-3 rounded-[var(--r-md)] px-4 py-3 text-sm text-[var(--app-text)]">
               <input
                 name="email_capture_enabled"
                 type="checkbox"
@@ -1422,9 +1422,9 @@ export function SongEditorForm({
             <LeadConnectorNote connector={emailConnector} />
           </EditorSection>
 
-          <section className="overflow-hidden rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
+          <section className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
             <div className="flex items-center gap-3 border-b border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-5 py-4">
-              <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] bg-[var(--app-panel)] text-[var(--app-red-text)]">
+              <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] bg-[var(--app-panel)] text-[var(--app-red-text)]">
                 <CircleAlert className="h-4 w-4" />
               </span>
               <h3 className="text-[15.5px] font-semibold text-[var(--app-red-text)]">
@@ -1452,7 +1452,7 @@ export function SongEditorForm({
             </div>
           </section>
 
-          <div className="app-card rounded-[14px] p-5 xl:hidden">
+          <div className="app-card rounded-[var(--r-lg)] p-5 xl:hidden">
             <div className="flex flex-col gap-4">
               <div>
                 <p className="app-kicker text-[var(--app-muted)]">Publishing rail</p>
@@ -1481,7 +1481,7 @@ export function SongEditorForm({
         </div>
 
           <aside className="hidden gap-4 xl:sticky xl:top-6 xl:grid">
-            <section className="app-card overflow-hidden rounded-[14px]">
+            <section className="app-card overflow-hidden rounded-[var(--r-lg)]">
               <div className="flex items-center gap-4 border-b border-[var(--app-line)] bg-[linear-gradient(160deg,var(--app-accent-soft),var(--app-panel))] p-5">
                 <div
                   className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full"
@@ -1540,7 +1540,7 @@ export function SongEditorForm({
               </div>
             </section>
 
-            <section className="app-card rounded-[14px] p-5">
+            <section className="app-card rounded-[var(--r-lg)] p-5">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold text-[var(--app-text)]">Performance</h3>
                 <span className="app-chip">{page.page.status === "published" ? "Last 30d" : "No data yet"}</span>
