@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { CheckCircle2, Mail, Target, Trash2 } from "lucide-react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
@@ -41,12 +42,14 @@ export function TrackingSettingsForm({
     INITIAL_ACTION_STATE,
   );
   const isMailchimpConnected = connector.hasApiKey && Boolean(connector.audienceId);
+  const [metaPixelEnabled, setMetaPixelEnabled] = useState(config.metaPixelEnabled);
   const metaPixelIdError = state.fieldErrors?.meta_pixel_id;
   const mailchimpAudienceIdError = state.fieldErrors?.mailchimp_audience_id;
   const mailchimpApiKeyError = state.fieldErrors?.mailchimp_api_key;
 
   return (
     <form id={formId} action={formAction} className="grid gap-6">
+      <input type="hidden" name="site_name" value={config.siteName} />
       {!compactHeader ? (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
@@ -67,29 +70,34 @@ export function TrackingSettingsForm({
 
       <div className="grid gap-5 xl:grid-cols-2">
         <section className="app-card overflow-hidden rounded-[14px] p-0">
-          <div className="border-b border-[var(--app-line)] px-[18px] py-[15px]">
-            <p className="text-[14.5px] font-semibold text-[var(--app-text)]">
-              Meta Pixel
-            </p>
-            <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
-              Track conversion events for ads.
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <Target className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+              <div className="min-w-0">
+                <h3 className="text-[14.5px] font-semibold text-[var(--app-text)]">
+                  Meta Pixel
+                </h3>
+                <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
+                  Track conversions for ads.
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center">
+              <input
+                name="meta_pixel_enabled"
+                type="checkbox"
+                checked={metaPixelEnabled}
+                onChange={(event) => setMetaPixelEnabled(event.currentTarget.checked)}
+                className="peer sr-only"
+                aria-label="Enable Meta Pixel"
+              />
+              <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent-soft)]" />
+              <span className="absolute left-1 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[0_1px_3px_oklch(0.2_0.02_270_/_0.18)] transition peer-checked:translate-x-5 peer-checked:bg-[var(--app-accent)]" />
+            </label>
           </div>
-          <div className="p-[18px]">
-            <p className="app-kicker text-[var(--app-muted)]">Public defaults</p>
-            <h4 className="mt-2 text-xl font-semibold text-[var(--app-text)]">
-              Live page defaults
-            </h4>
-            <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-              Applied account-wide.
-            </p>
-
-            <div className="mt-5 grid gap-4">
-              <label className="grid gap-2">
-                <span className="text-sm font-medium text-[var(--app-text)]">Site name</span>
-                <input name="site_name" defaultValue={config.siteName} className="app-input" />
-              </label>
-
+          <div className="grid gap-4 p-[18px]">
+            {metaPixelEnabled ? (
+              <>
               <div className="grid gap-2">
                 <label
                   htmlFor="meta-pixel-id"
@@ -124,28 +132,43 @@ export function TrackingSettingsForm({
                 ) : null}
               </div>
 
-              <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
-                <input
-                  name="meta_pixel_enabled"
-                  type="checkbox"
-                  defaultChecked={config.metaPixelEnabled}
-                  className="h-4 w-4 rounded border-slate-300 bg-transparent"
-                />
-                Enable Meta Pixel on published song pages
-              </label>
-            </div>
+              <div className="rounded-[10px] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-3">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-green-text)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--app-green-text)]">
+                      Pixel firing on all live pages
+                    </p>
+                    <p className="mt-1 text-[13px] leading-5 text-[var(--app-muted)]">
+                      Events: PageView, ViewContent, and Lead.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              </>
+            ) : (
+              <>
+                <input type="hidden" name="meta_pixel_id" value={config.metaPixelId ?? ""} />
+                <p className="text-[13.5px] leading-6 text-[var(--app-muted)]">
+                  Enable to add your Meta Pixel to every published release page.
+                </p>
+              </>
+            )}
           </div>
         </section>
 
         <section className="app-card overflow-hidden rounded-[14px] p-0">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
-            <div className="max-w-2xl">
-              <h4 className="text-[14.5px] font-semibold text-[var(--app-text)]">
-                Mailchimp
-              </h4>
-              <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
-                Leads store here first. Mailchimp is optional.
-              </p>
+            <div className="flex min-w-0 items-start gap-2.5">
+              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+              <div className="max-w-2xl">
+                <h3 className="text-[14.5px] font-semibold text-[var(--app-text)]">
+                  Mailchimp
+                </h3>
+                <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">
+                  Sync captured emails.
+                </p>
+              </div>
             </div>
 
             <div className="rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/58 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
@@ -159,7 +182,7 @@ export function TrackingSettingsForm({
                 htmlFor="mailchimp-audience-id"
                 className="text-sm font-medium text-[var(--app-text)]"
               >
-                Mailchimp Audience ID
+                Audience ID
               </label>
               <input
                 id="mailchimp-audience-id"
@@ -184,11 +207,12 @@ export function TrackingSettingsForm({
                 htmlFor="mailchimp-api-key"
                 className="text-sm font-medium text-[var(--app-text)]"
               >
-                Mailchimp API key
+                API key
               </label>
               <input
                 id="mailchimp-api-key"
                 name="mailchimp_api_key"
+                type="password"
                 className="app-input"
                 placeholder={
                   connector.hasApiKey
@@ -229,18 +253,25 @@ export function TrackingSettingsForm({
                   defaultChecked={connector.doubleOptIn}
                   className="h-4 w-4 rounded border-slate-300 bg-transparent"
                 />
-                Use Mailchimp double opt-in for new contacts
+                Require double opt-in
               </label>
 
               {connector.hasApiKey ? (
-                <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
-                  <input
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <span className="text-[12.5px] leading-5 text-[var(--app-muted)]">
+                    Saved key is encrypted at rest.
+                  </span>
+                  <Button
+                    type="submit"
+                    tone="danger-ghost"
                     name="mailchimp_clear_api_key"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 bg-transparent"
-                  />
-                  Clear the saved Mailchimp API key
-                </label>
+                    value="on"
+                    className="min-h-8 px-3 text-[12.5px]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Clear saved key
+                  </Button>
+                </div>
               ) : null}
             </div>
           </div>

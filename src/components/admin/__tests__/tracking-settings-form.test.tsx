@@ -35,6 +35,15 @@ const CONNECTOR_CONFIG: EmailConnectorConfig = {
   updatedAt: null,
 };
 
+const CONNECTED_CONNECTOR_CONFIG: EmailConnectorConfig = {
+  provider: "mailchimp",
+  audienceId: "audience-1",
+  defaultTags: "backstage, fan",
+  doubleOptIn: true,
+  hasApiKey: true,
+  updatedAt: "2026-05-31T12:00:00.000Z",
+};
+
 describe("TrackingSettingsForm", () => {
   beforeEach(() => {
     mockUseActionState.mockReturnValue([{ error: null, success: null }, vi.fn(), false]);
@@ -43,7 +52,10 @@ describe("TrackingSettingsForm", () => {
   test("treats Meta Pixel ID as a numeric tracking identifier", () => {
     render(
       <TrackingSettingsForm
-        config={TRACKING_CONFIG}
+        config={{
+          ...TRACKING_CONFIG,
+          metaPixelEnabled: true,
+        }}
         connector={CONNECTOR_CONFIG}
       />,
     );
@@ -68,7 +80,7 @@ describe("TrackingSettingsForm", () => {
       />,
     );
 
-    const apiKeyInput = screen.getByLabelText("Mailchimp API key");
+    const apiKeyInput = screen.getByLabelText("API key");
 
     expect(apiKeyInput).toHaveAttribute("aria-describedby", "mailchimp-api-key-help");
     expect(
@@ -97,7 +109,7 @@ describe("TrackingSettingsForm", () => {
       />,
     );
 
-    const apiKeyInput = screen.getByLabelText("Mailchimp API key");
+    const apiKeyInput = screen.getByLabelText("API key");
     const error = screen.getByText(
       "Mailchimp API keys must end with a datacenter suffix like -us21.",
     );
@@ -108,5 +120,42 @@ describe("TrackingSettingsForm", () => {
       "mailchimp-api-key-help mailchimp-api-key-error",
     );
     expect(error).toHaveAttribute("id", "mailchimp-api-key-error");
+  });
+
+  test("matches the Claude integrations card layout in compact settings", () => {
+    const { container } = render(
+      <TrackingSettingsForm
+        config={{
+          ...TRACKING_CONFIG,
+          siteName: "Backstage",
+          metaPixelId: "318204957761023",
+          metaPixelEnabled: true,
+        }}
+        connector={CONNECTED_CONNECTOR_CONFIG}
+        compactHeader
+        formId="tracking-settings-form"
+        showFooterSubmit={false}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Meta Pixel" })).toBeInTheDocument();
+    expect(screen.getByText("Track conversions for ads.")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Enable Meta Pixel" })).toHaveAttribute(
+      "name",
+      "meta_pixel_enabled",
+    );
+    expect(screen.getByText("Pixel firing on all live pages")).toBeInTheDocument();
+    expect(screen.getByText("Events: PageView, ViewContent, and Lead.")).toBeInTheDocument();
+    expect(screen.queryByText("Public defaults")).not.toBeInTheDocument();
+    expect(screen.queryByText("Live page defaults")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Site name")).not.toBeInTheDocument();
+    expect(
+      container.querySelector('input[type="hidden"][name="site_name"]'),
+    ).toHaveAttribute("value", "Backstage");
+
+    const clearKeyButton = screen.getByRole("button", { name: "Clear saved key" });
+    expect(clearKeyButton).toHaveAttribute("type", "submit");
+    expect(clearKeyButton).toHaveAttribute("name", "mailchimp_clear_api_key");
+    expect(clearKeyButton).toHaveAttribute("value", "on");
   });
 });
