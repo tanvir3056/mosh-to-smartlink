@@ -30,8 +30,12 @@ export function ThemeToggle({
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    const storedTheme = getStoredTheme();
+    applyTheme(storedTheme);
+    const syncLabel = window.setTimeout(() => setTheme(storedTheme), 0);
+
+    return () => window.clearTimeout(syncLabel);
+  }, []);
 
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";

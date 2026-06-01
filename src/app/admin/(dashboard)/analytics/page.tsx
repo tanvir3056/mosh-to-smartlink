@@ -2,17 +2,24 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import {
   ArrowUpRight,
+  Download,
+  Eye,
   Globe2,
   Monitor,
   MousePointer2,
+  Music2,
   Radio,
+  Sparkles,
+  Target,
   Users,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { requireUserSession } from "@/lib/auth";
 import { SERVICE_LABELS } from "@/lib/constants";
 import { getAnalyticsSnapshot } from "@/lib/data";
-import { buildPublicSongPath } from "@/lib/utils";
+import type { AnalyticsSnapshot } from "@/lib/types";
+import { buildPublicSongPath, cn } from "@/lib/utils";
 
 const RANGE_OPTIONS = [
   { label: "7D", days: 7 },
@@ -82,7 +89,109 @@ function buildAreaPath(values: number[], width: number, height: number, padding:
   return `${line} L${endX.toFixed(2)} ${baseline.toFixed(2)} L${startX.toFixed(2)} ${baseline.toFixed(2)} Z`;
 }
 
-function TrendChart({
+function Panel({
+  title,
+  sub,
+  right,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  sub?: string;
+  right?: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="app-card overflow-hidden rounded-[14px] p-0">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
+        <div className="flex items-center gap-2.5">
+          {Icon ? <Icon className="h-4 w-4 text-[var(--app-muted-2)]" /> : null}
+          <div>
+            <h2 className="text-[14.5px] font-semibold text-[var(--app-text)]">{title}</h2>
+            {sub ? (
+              <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">{sub}</p>
+            ) : null}
+          </div>
+        </div>
+        {right}
+      </div>
+      <div className="p-[18px]">{children}</div>
+    </section>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+  accent = false,
+}: {
+  label: string;
+  value: string | number;
+  note?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent?: boolean;
+}) {
+  return (
+    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] font-[550] text-[var(--app-muted)]">{label}</p>
+        <span
+          className={cn(
+            "inline-flex h-7 w-7 items-center justify-center rounded-[7px]",
+            accent
+              ? "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
+              : "bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]",
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <div>
+        <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
+          {value}
+        </div>
+        {note ? <p className="mt-2 text-[12.5px] text-[var(--app-muted-2)]">{note}</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function RangeSwitcher({ rangeDays }: { rangeDays: number }) {
+  return (
+    <div className="inline-flex rounded-[7px] border border-[var(--app-line)] bg-[var(--bg-sunken)] p-[3px]">
+      {RANGE_OPTIONS.map((option) => {
+        const active = option.days === rangeDays;
+
+        if (active) {
+          return (
+            <span
+              key={option.days}
+              aria-current="page"
+              className="inline-flex h-[30px] items-center justify-center rounded-[5px] bg-[var(--app-panel)] px-[13px] text-[13px] font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.06)]"
+            >
+              {option.label}
+            </span>
+          );
+        }
+
+        return (
+          <Link
+            key={option.days}
+            href={`/admin/analytics?range=${option.days}`}
+            className="inline-flex h-[30px] items-center justify-center rounded-[5px] px-[13px] text-[13px] font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+          >
+            {option.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function LineChart({
   visits,
   clicks,
   labels,
@@ -92,8 +201,8 @@ function TrendChart({
   labels: string[];
 }) {
   const width = 760;
-  const height = 260;
-  const padding = 24;
+  const height = 236;
+  const padding = 22;
   const max = Math.max(...visits, ...clicks, 1);
   const visitArea = buildAreaPath(visits, width, height, padding);
   const visitLine = buildLinePath(visits, width, height, padding);
@@ -105,12 +214,12 @@ function TrendChart({
   });
 
   return (
-    <div className="mt-5 overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-[linear-gradient(180deg,#fdfcf8_0%,#f4f1e9_100%)] p-4">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[16rem] w-full" role="img" aria-label="Visits and outbound clicks over time">
+    <div className="overflow-hidden rounded-[10px] border border-[var(--app-line)] bg-[var(--bg-sunken)] p-3">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[236px] w-full" role="img" aria-label="Visits and clicks over time">
         <defs>
-          <linearGradient id="visits-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(63,212,196,0.34)" />
-            <stop offset="100%" stopColor="rgba(63,212,196,0.02)" />
+          <linearGradient id="analytics-visits-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--app-accent)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--app-accent)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
@@ -121,34 +230,29 @@ function TrendChart({
               x2={width - padding}
               y1={row.y}
               y2={row.y}
-              stroke="rgba(21,25,34,0.08)"
+              stroke="var(--app-line)"
               strokeDasharray="3 8"
             />
-            <text
-              x={padding}
-              y={row.y - 8}
-              fill="rgba(94,102,116,0.8)"
-              fontSize="11"
-            >
+            <text x={padding} y={row.y - 8} fill="var(--app-muted-2)" fontSize="11">
               {row.value}
             </text>
           </g>
         ))}
 
-        <path d={visitArea} fill="url(#visits-fill)" />
+        <path d={visitArea} fill="url(#analytics-visits-fill)" />
         <path
           d={visitLine}
           fill="none"
-          stroke="var(--app-accent-strong)"
-          strokeWidth="3.5"
+          stroke="var(--app-accent)"
+          strokeWidth="3.4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d={clickLine}
           fill="none"
-          stroke="#151922"
-          strokeWidth="2.6"
+          stroke="var(--app-green)"
+          strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -172,7 +276,7 @@ function TrendChart({
               key={label}
               x={x}
               y={height - 2}
-              fill="rgba(94,102,116,0.9)"
+              fill="var(--app-muted-2)"
               fontSize="11"
               textAnchor={index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle"}
             >
@@ -181,27 +285,177 @@ function TrendChart({
           );
         })}
       </svg>
+    </div>
+  );
+}
 
-      <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--app-muted)]">
-        <span className="inline-flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--app-accent-strong)]" />
-          Visits
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#151922]" />
-          Click-throughs
-        </span>
+function Donut({
+  value,
+  label,
+  sub,
+}: {
+  value: number;
+  label: string;
+  sub?: string;
+}) {
+  const normalized = Math.max(0, Math.min(100, value));
+
+  return (
+    <div
+      className="grid h-[120px] w-[120px] shrink-0 place-items-center rounded-full"
+      style={{
+        background: `conic-gradient(var(--app-accent) ${normalized}%, var(--app-line) 0)`,
+      }}
+    >
+      <div className="grid h-[88px] w-[88px] place-items-center rounded-full bg-[var(--app-panel)] text-center">
+        <div>
+          <div className="font-[var(--font-display)] text-[24px] font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+            {label}
+          </div>
+          {sub ? <div className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">{sub}</div> : null}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function HBar({
+  rows,
+  color = "var(--app-accent)",
+  emptyLabel,
+}: {
+  rows: Array<{
+    label: string;
+    value: number;
+    display?: string;
+    meta?: string;
+    color?: string;
+  }>;
+  color?: string;
+  emptyLabel: string;
+}) {
+  const max = Math.max(...rows.map((row) => row.value), 0);
+
+  if (rows.length === 0) {
+    return <EmptyBlock label={emptyLabel} />;
+  }
+
+  return (
+    <div className="grid gap-3">
+      {rows.map((row) => (
+        <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="truncate text-[13.5px] font-semibold text-[var(--app-text)]">
+                {row.label}
+              </div>
+              {row.meta ? (
+                <div className="mt-1 truncate text-xs text-[var(--app-muted-2)]">{row.meta}</div>
+              ) : null}
+            </div>
+            <div className="text-right text-[13px] font-semibold text-[var(--app-text)]">
+              {row.display ?? row.value.toLocaleString()}
+            </div>
+          </div>
+          <div className="mt-3 h-2 rounded-full bg-[var(--app-panel-muted)]">
+            <div
+              className="h-2 rounded-full"
+              style={{ width: `${ratio(row.value, max)}%`, background: row.color ?? color }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 function EmptyBlock({ label }: { label: string }) {
   return (
-    <div className="rounded-[12px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
+    <div className="rounded-[10px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
       {label}
     </div>
   );
+}
+
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--app-muted)]">
+      <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: color }} />
+      {label}
+    </span>
+  );
+}
+
+function Signal({
+  tone,
+  icon: Icon,
+  title,
+  desc,
+}: {
+  tone: "green" | "amber" | "accent";
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+}) {
+  const toneClasses = {
+    green: "bg-[var(--app-green-soft)] text-[var(--app-green-text)]",
+    amber: "bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]",
+    accent: "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]",
+  };
+
+  return (
+    <div className="flex gap-2.5">
+      <span className={cn("inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px]", toneClasses[tone])}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <div>
+        <div className="text-[13px] font-semibold text-[var(--app-text)]">{title}</div>
+        <p className="mt-0.5 text-[12.5px] leading-5 text-[var(--app-muted)]">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function buildSignalRows(analytics: AnalyticsSnapshot) {
+  const topReferrer = analytics.referrers[0];
+  const topService = analytics.serviceBreakdown[0];
+  const topGeo = analytics.geos[0];
+
+  return [
+    {
+      tone: "green" as const,
+      icon: ArrowUpRight,
+      title: topReferrer
+        ? `${topReferrer.label} is leading traffic`
+        : "Traffic signals are waiting",
+      desc: topReferrer
+        ? `${topReferrer.visits} visits with ${formatPercent(topReferrer.ctr)} click-through.`
+        : "Share a published link to start collecting source data.",
+    },
+    {
+      tone: analytics.clickThroughRate > 0 ? ("accent" as const) : ("amber" as const),
+      icon: Target,
+      title: `${formatPercent(analytics.clickThroughRate)} click-through rate`,
+      desc:
+        analytics.totalVisits > 0
+          ? `${analytics.totalClicks} outbound clicks from ${analytics.totalVisits} visits.`
+          : "Clicks will appear here once visitors choose a streaming service.",
+    },
+    {
+      tone: "accent" as const,
+      icon: Sparkles,
+      title: topService
+        ? `${SERVICE_LABELS[topService.service]} is the top service`
+        : topGeo
+          ? `${topGeo.country} is showing up`
+          : "No top destination yet",
+      desc: topService
+        ? `${topService.clicks} service clicks in this range.`
+        : topGeo
+          ? `${topGeo.visits} visits from ${topGeo.city !== "Unknown" ? `${topGeo.city}, ` : ""}${topGeo.country}.`
+          : "Publish and share a release to build the first signal.",
+    },
+  ];
 }
 
 export default async function AdminAnalyticsPage({
@@ -215,487 +469,253 @@ export default async function AdminAnalyticsPage({
   const analytics = await getAnalyticsSnapshot(session.userId, rangeDays);
 
   const topService = analytics.serviceBreakdown[0];
-  const topReferrer = analytics.referrers[0];
-  const topDevice = analytics.devices[0];
-  const topCampaign = analytics.utms[0];
   const bestDay = [...analytics.daily].sort((left, right) => right.visits - left.visits)[0];
   const visitSeries = analytics.daily.map((entry) => entry.visits);
   const clickSeries = analytics.daily.map((entry) => entry.clicks);
   const trendLabels = analytics.daily.map((entry) => format(parseISO(entry.date), "MMM d"));
-  const maxServiceClicks = Math.max(...analytics.serviceBreakdown.map((row) => row.clicks), 0);
-  const maxSourceVisits = Math.max(...analytics.referrers.map((row) => row.visits), 0);
-  const maxDeviceVisits = Math.max(...analytics.devices.map((row) => row.visits), 0);
   const repeatVisitRate =
     analytics.totalVisits > 0
       ? Math.max(0, (analytics.totalVisits - analytics.uniqueVisitors) / analytics.totalVisits)
       : 0;
+  const emailLeadRate = 0;
+  const bounceEstimate = Math.max(0, 1 - analytics.clickThroughRate - emailLeadRate);
 
   return (
-    <div className="mx-auto grid w-full max-w-[1180px] gap-5">
-      <section className="grid gap-5">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="app-kicker text-[var(--app-muted)]">Analytics</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
+    <div className="app-enter mx-auto w-full max-w-[1180px] pb-20">
+      <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-3xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-[var(--font-display)] text-[25px] font-semibold tracking-[-0.022em] text-[var(--app-text)]">
               Analytics
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
-              Use first-party traffic, click, source, and device signals to judge
-              release-page performance. How fans find and move through your release links.
-            </p>
           </div>
+          <p className="mt-1.5 max-w-[620px] text-[14.5px] leading-6 text-[var(--app-muted)]">
+            Use first-party traffic, click, source, and device signals to judge
+            release-page performance. How fans find and move through your release links.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <RangeSwitcher rangeDays={rangeDays} />
+          <Button type="button" tone="secondary" disabled title="Export is not connected yet">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+        </div>
+      </header>
 
-          <div className="grid w-full max-w-[18rem] grid-cols-3 rounded-[9px] border border-[var(--app-line)] bg-white p-[4px] shadow-[0_1px_2px_rgba(20,24,34,0.05)] sm:w-auto">
-            {RANGE_OPTIONS.map((option) => {
-              const active = option.days === rangeDays;
+      <div className="mb-[22px] grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Visits"
+          value={formatCount(analytics.totalVisits)}
+          note={`${rangeDays}-day landing views`}
+          icon={Eye}
+          accent
+        />
+        <MetricCard
+          label="Unique visitors"
+          value={formatCount(analytics.uniqueVisitors)}
+          note={`${formatPercent(
+            analytics.totalVisits > 0 ? analytics.uniqueVisitors / analytics.totalVisits : 0,
+          )} of total visits`}
+          icon={Users}
+        />
+        <MetricCard
+          label="Service clicks"
+          value={formatCount(analytics.totalClicks)}
+          note={topService ? `${SERVICE_LABELS[topService.service]} leads` : "No service data yet"}
+          icon={MousePointer2}
+        />
+        <MetricCard
+          label="Click-through rate"
+          value={formatPercent(analytics.clickThroughRate)}
+          note={`${formatPercent(repeatVisitRate)} repeat visits`}
+          icon={Target}
+        />
+      </div>
 
-              if (active) {
-                return (
-                  <span
-                    key={option.days}
-                    aria-current="page"
-                    className="inline-flex h-9 items-center justify-center rounded-[7px] bg-[var(--app-accent-soft)] px-4 text-sm font-semibold"
-                    style={{
-                      color: "#151922",
-                      WebkitTextFillColor: "#151922",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "#151922",
-                        WebkitTextFillColor: "#151922",
-                      }}
-                    >
-                      {option.label}
+      <section className="mb-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+        <Panel
+          title="Traffic trend"
+          sub={`Visits over the last ${rangeDays} days`}
+          icon={Radio}
+          right={
+            <div className="flex gap-3">
+              <Legend color="var(--app-accent)" label="Visits" />
+              <Legend color="var(--app-green)" label="Clicks" />
+            </div>
+          }
+        >
+          <LineChart visits={visitSeries} clicks={clickSeries} labels={trendLabels} />
+          <p className="mt-4 text-sm leading-6 text-[var(--app-muted)]">
+            Timeline context shows whether attention is turning into outbound streaming
+            action over the selected window.
+          </p>
+        </Panel>
+
+        <Panel title="Signal" sub="What changed this period" icon={Sparkles}>
+          <div className="grid gap-3">
+            {buildSignalRows(analytics).map((signal) => (
+              <Signal
+                key={signal.title}
+                tone={signal.tone}
+                icon={signal.icon}
+                title={signal.title}
+                desc={signal.desc}
+              />
+            ))}
+          </div>
+          <div className="mt-4 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-[12.5px] leading-5 text-[var(--app-muted)]">
+            {bestDay
+              ? `Best day: ${format(parseISO(bestDay.date), "MMM d")} with ${bestDay.visits} visits.`
+              : "No trend data yet."}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="mb-4 grid gap-4 lg:grid-cols-[1fr_1.7fr]">
+        <Panel title="Conversion quality" sub="Visits that clicked through" icon={Target}>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <Donut
+              value={Math.round(analytics.clickThroughRate * 100)}
+              label={formatPercent(analytics.clickThroughRate)}
+              sub="CTR"
+            />
+            <div className="grid flex-1 gap-3">
+              {[
+                {
+                  label: "Clicked a service",
+                  value: formatPercent(analytics.clickThroughRate),
+                  color: "var(--app-accent)",
+                },
+                {
+                  label: "Joined email list",
+                  value: formatPercent(emailLeadRate),
+                  color: "var(--app-green)",
+                },
+                {
+                  label: "No outbound action",
+                  value: formatPercent(bounceEstimate),
+                  color: "var(--app-muted-2)",
+                },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-[13px] text-[var(--app-muted)]">
+                    <span className="h-2 w-2 rounded-[3px]" style={{ background: row.color }} />
+                    {row.label}
+                  </span>
+                  <span className="font-mono text-[13px] font-semibold text-[var(--app-text)]">
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Streaming services" sub="Where clicks go" icon={MousePointer2}>
+          <HBar
+            emptyLabel="Service click distribution will appear after the first outbound clicks."
+            rows={analytics.serviceBreakdown.map((row) => ({
+              label: SERVICE_LABELS[row.service],
+              value: row.clicks,
+              display: row.clicks.toLocaleString(),
+            }))}
+          />
+        </Panel>
+      </section>
+
+      <section className="mb-4 grid gap-4 lg:grid-cols-3">
+        <Panel title="Top sources" icon={Globe2}>
+          <HBar
+            emptyLabel="Referrer data will appear after the first tracked visits."
+            color="var(--app-accent)"
+            rows={analytics.referrers.map((row) => ({
+              label: row.label,
+              value: row.visits,
+              display: `${row.visits} visits`,
+              meta: `${row.clicks} clicks · ${formatPercent(row.ctr)} CTR`,
+            }))}
+          />
+        </Panel>
+        <Panel title="Campaigns" sub="utm_campaign" icon={ArrowUpRight}>
+          <HBar
+            emptyLabel="UTM-tagged campaign traffic will appear here."
+            color="oklch(0.6 0.16 320)"
+            rows={analytics.utms.map((row) => ({
+              label: row.campaign,
+              value: row.visits,
+              display: `${row.visits} visits`,
+              meta: `${row.source} / ${row.medium} · ${row.clicks} clicks`,
+            }))}
+          />
+        </Panel>
+        <Panel title="Devices" icon={Monitor}>
+          <HBar
+            emptyLabel="Device breakdown will appear after tracked visits land."
+            color="var(--app-green)"
+            rows={analytics.devices.map((row) => ({
+              label: row.label,
+              value: row.visits,
+              display: `${row.visits} visits`,
+              meta: `${row.clicks} clicks · ${formatPercent(row.ctr)} CTR`,
+            }))}
+          />
+        </Panel>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+        <Panel title="Locations" sub="Top countries and cities" icon={Globe2}>
+          <HBar
+            emptyLabel="Geo data will appear where privacy-safe country or city signals are available."
+            color="oklch(0.6 0.13 200)"
+            rows={analytics.geos.map((row) => ({
+              label: row.city !== "Unknown" ? `${row.country} · ${row.city}` : row.country,
+              value: row.visits,
+              display: `${row.visits} visits`,
+              meta: `${row.clicks} clicks · ${formatPercent(row.ctr)} CTR`,
+            }))}
+          />
+        </Panel>
+
+        <Panel title="Per-song performance" sub="Published releases" icon={Music2}>
+          {analytics.songs.length > 0 ? (
+            <div className="grid gap-0">
+              <div className="grid grid-cols-[1fr_76px_76px_56px] gap-3 border-b border-[var(--app-line)] pb-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)]">
+                <span>Release</span>
+                <span className="text-right">Visits</span>
+                <span className="text-right">Clicks</span>
+                <span className="text-right">CTR</span>
+              </div>
+              {analytics.songs.map((row) => (
+                <Link
+                  key={row.songId}
+                  href={`/admin/songs/${row.songId}`}
+                  className="grid grid-cols-[1fr_76px_76px_56px] items-center gap-3 border-b border-[var(--app-line)] py-3 last:border-b-0"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] font-semibold text-[var(--app-text)]">
+                      {row.title}
+                    </span>
+                    <span className="block truncate font-mono text-xs text-[var(--app-muted-2)]">
+                      {buildPublicSongPath(row.username, row.slug)}
                     </span>
                   </span>
-                );
-              }
-
-              return (
-                <Link
-                  key={option.days}
-                  href={`/admin/analytics?range=${option.days}`}
-                  className="inline-flex h-9 items-center justify-center rounded-[7px] bg-white px-4 text-sm font-semibold text-[var(--app-text)] select-none touch-manipulation transition-[background-color,color] duration-200 ease-out hover:bg-[var(--app-panel-muted)]"
-                  style={{
-                    color: "#151922",
-                    WebkitTextFillColor: "#151922",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: "#151922",
-                      WebkitTextFillColor: "#151922",
-                    }}
-                  >
-                    {option.label}
+                  <span className="text-right font-mono text-[13px] text-[var(--app-text)]">
+                    {row.visits.toLocaleString()}
+                  </span>
+                  <span className="text-right font-mono text-[13px] text-[var(--app-text)]">
+                    {row.clicks.toLocaleString()}
+                  </span>
+                  <span className="text-right font-mono text-[13px] font-semibold text-[var(--app-green-text)]">
+                    {formatPercent(row.ctr)}
                   </span>
                 </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              label: "Page visits",
-              value: formatCount(analytics.totalVisits),
-              note: `${rangeDays}-day landing-page traffic`,
-              icon: Globe2,
-            },
-            {
-              label: "Unique visitors",
-              value: formatCount(analytics.uniqueVisitors),
-              note: `${formatPercent(
-                analytics.totalVisits > 0 ? analytics.uniqueVisitors / analytics.totalVisits : 0,
-              )} of visits were first-time sessions`,
-              icon: Users,
-            },
-            {
-              label: "Outbound clicks",
-              value: formatCount(analytics.totalClicks),
-              note: topService
-                ? `${SERVICE_LABELS[topService.service]} is leading destination choice`
-                : "No service clicks recorded yet",
-              icon: MousePointer2,
-            },
-            {
-              label: "CTR",
-              value: formatPercent(analytics.clickThroughRate),
-              note: `${formatPercent(repeatVisitRate)} repeat-visit rate`,
-              icon: ArrowUpRight,
-            },
-          ].map((card) => {
-            const Icon = card.icon;
-
-            return (
-              <div key={card.label} className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="app-kicker text-[var(--app-muted)]">{card.label}</p>
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                </div>
-                <div>
-                  <div className="text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
-                    {card.value}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
-                    {card.note}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Trend</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Visits and click-throughs over time
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-                Timeline context shows whether attention is turning into outbound streaming
-                action over the selected window, so traffic spikes are easier to connect to
-                release moments and campaign pushes.
-              </p>
-            </div>
-            <div className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-3 text-sm text-[var(--app-muted)]">
-              {bestDay
-                ? `Best day: ${format(parseISO(bestDay.date), "MMM d")} • ${bestDay.visits} visits`
-                : "No trend data yet"}
-            </div>
-          </div>
-
-          <TrendChart visits={visitSeries} clicks={clickSeries} labels={trendLabels} />
-        </div>
-
-        <div className="grid gap-5">
-          <section className="app-card rounded-[14px] p-5 sm:p-6">
-            <p className="app-kicker text-[var(--app-muted)]">Signal</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-              What to pay attention to
-            </h2>
-            <div className="mt-5 grid gap-3">
-              {[
-                {
-                  label: "Top referrer",
-                  value: topReferrer?.label ?? "Direct",
-                  note: topReferrer
-                    ? `${topReferrer.visits} visits • ${formatPercent(topReferrer.ctr)} CTR`
-                    : "No referrer data yet",
-                },
-                {
-                  label: "Top service",
-                  value: topService ? SERVICE_LABELS[topService.service] : "No service data",
-                  note: topService ? `${topService.clicks} clicks` : "Clicks will appear here",
-                },
-                {
-                  label: "Top device",
-                  value: topDevice?.label ?? "Unknown",
-                  note: topDevice
-                    ? `${topDevice.visits} visits • ${formatPercent(topDevice.ctr)} CTR`
-                    : "Device data will appear here",
-                },
-                {
-                  label: "Top campaign",
-                  value: topCampaign?.campaign ?? "(none)",
-                  note: topCampaign
-                    ? `${topCampaign.source} / ${topCampaign.medium} • ${topCampaign.visits} visits`
-                    : "Campaign data will appear here",
-                },
-              ].map((row) => (
-                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="app-kicker text-[var(--app-muted)]">{row.label}</div>
-                  <div className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-                    {row.value}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">{row.note}</p>
-                </div>
               ))}
             </div>
-          </section>
-
-          <section className="app-card rounded-[14px] p-5 sm:p-6">
-            <p className="app-kicker text-[var(--app-muted)]">Quality</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-              Conversion quality
-            </h2>
-            <div className="mt-5 grid gap-3">
-              {[
-                {
-                  label: "Visitor-to-click rate",
-                  value: formatPercent(analytics.clickThroughRate),
-                },
-                {
-                  label: "Repeat visits",
-                  value: formatPercent(repeatVisitRate),
-                },
-                {
-                  label: "Clicks per visitor",
-                  value:
-                    analytics.uniqueVisitors > 0
-                      ? `${(analytics.totalClicks / analytics.uniqueVisitors).toFixed(1)}x`
-                      : "0x",
-                },
-              ].map((row) => (
-                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-4">
-                  <div className="app-kicker text-[var(--app-muted)]">{row.label}</div>
-                  <div className="mt-3 text-xl font-semibold text-[var(--app-text)]">
-                    {row.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Sources</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Top traffic sources
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <Radio className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.referrers.length > 0 ? (
-              analytics.referrers.map((row) => (
-                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium text-[var(--app-text)]">{row.label}</div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">
-                        {row.clicks} clicks • {formatPercent(row.ctr)} CTR
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--app-text)]">
-                      {row.visits} visits
-                    </div>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-[var(--app-panel-muted)]">
-                    <div
-                      className="h-2 rounded-full bg-[#151922]"
-                      style={{ width: `${ratio(row.visits, maxSourceVisits)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="Referrer data will appear after the first tracked visits." />
-            )}
-          </div>
-        </div>
-
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Campaigns</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                UTM performance
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <ArrowUpRight className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.utms.length > 0 ? (
-              analytics.utms.map((row) => (
-                <div key={`${row.source}-${row.medium}-${row.campaign}`} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="font-medium text-[var(--app-text)]">{row.campaign}</div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">
-                        {row.source} • {row.medium}
-                      </div>
-                    </div>
-                    <div className="text-sm text-[var(--app-text)]">
-                      {row.visits} visits • {row.clicks} clicks • {formatPercent(row.ctr)} CTR
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="UTM-tagged campaign traffic will appear here." />
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Services</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Clicks by streaming destination
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <MousePointer2 className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.serviceBreakdown.length > 0 ? (
-              analytics.serviceBreakdown.map((row) => (
-                <div key={row.service} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-medium text-[var(--app-text)]">
-                      {SERVICE_LABELS[row.service]}
-                    </span>
-                    <span className="text-sm font-semibold text-[var(--app-text)]">
-                      {row.clicks}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-[var(--app-panel-muted)]">
-                    <div
-                      className="h-2 rounded-full bg-[var(--app-accent)]"
-                      style={{ width: `${ratio(row.clicks, maxServiceClicks)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="Service click distribution will appear after the first outbound clicks." />
-            )}
-          </div>
-        </div>
-
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Devices</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Device mix and conversion rate
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <Monitor className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.devices.length > 0 ? (
-              analytics.devices.map((row) => (
-                <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium capitalize text-[var(--app-text)]">
-                        {row.label}
-                      </div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">
-                        {row.clicks} clicks • {formatPercent(row.ctr)} CTR
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--app-text)]">
-                      {row.visits} visits
-                    </div>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-[var(--app-panel-muted)]">
-                    <div
-                      className="h-2 rounded-full bg-[#151922]"
-                      style={{ width: `${ratio(row.visits, maxDeviceVisits)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="Device breakdown will appear after tracked visits land." />
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Locations</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Country and city
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <Globe2 className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.geos.length > 0 ? (
-              analytics.geos.map((row) => (
-                <div key={`${row.country}-${row.city}`} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium text-[var(--app-text)]">
-                        {row.country}
-                        {row.city !== "Unknown" ? ` • ${row.city}` : ""}
-                      </div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">
-                        {row.clicks} clicks • {formatPercent(row.ctr)} CTR
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--app-text)]">
-                      {row.visits} visits
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="Geo data will appear where privacy-safe country or city signals are available." />
-            )}
-          </div>
-        </div>
-
-        <div className="app-card rounded-[14px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Per-song</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
-                Song performance
-              </h2>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]">
-              <Users className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {analytics.songs.length > 0 ? (
-              analytics.songs.map((row) => (
-                <div key={row.songId} className="rounded-[10px] border border-[var(--app-line)] bg-white px-4 py-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="font-medium text-[var(--app-text)]">{row.title}</div>
-                      <div className="mt-1 text-sm text-[var(--app-muted)]">
-                        {buildPublicSongPath(row.username, row.slug)}
-                      </div>
-                    </div>
-                    <div className="text-sm text-[var(--app-text)]">
-                      {row.visits} visits • {row.clicks} clicks • {formatPercent(row.ctr)} CTR
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyBlock label="Song-level performance will appear after traffic starts landing." />
-            )}
-          </div>
-        </div>
+          ) : (
+            <EmptyBlock label="Song-level performance will appear after traffic starts landing." />
+          )}
+        </Panel>
       </section>
     </div>
   );
