@@ -576,13 +576,13 @@ export function SongEditorForm({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Link
+            <a
               href={`/admin/preview/${page.song.id}`}
               className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
             >
               <Eye className="h-4 w-4" />
-              Preview
-            </Link>
+              {page.page.status === "published" ? "Preview" : "Preview draft"}
+            </a>
             <Button
               type="submit"
               formAction={publishAction}

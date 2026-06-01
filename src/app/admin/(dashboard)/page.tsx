@@ -352,11 +352,11 @@ export default async function AdminOverviewPage({
                           <Edit3 className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link href={`/admin/preview/${song.songId}`}>
+                      <a href={`/admin/preview/${song.songId}`}>
                         <Button tone="ghost" className="h-8 min-h-8 px-2" title="Preview">
                           <Eye className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </a>
                       {song.status === "published" ? (
                         <Link href={buildPublicSongPath(song.username, song.slug)}>
                           <Button tone="ghost" className="h-8 min-h-8 px-2" title="Open live page">

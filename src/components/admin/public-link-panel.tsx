@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Copy, ExternalLink, Eye, Link2 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { APP_DOMAIN_HINT } from "@/lib/constants";
@@ -92,25 +91,26 @@ export function PublicLinkPanel({
         </div>
 
         <div className="grid gap-3 sm:flex sm:flex-wrap">
-          <Link href={previewHref} className={actionLinkClass()}>
-            <Eye className="h-4 w-4" />
-            Admin preview
-          </Link>
           <a
-            href={publicPath}
-            target="_blank"
-            rel="noreferrer"
-            aria-disabled={!isPublished}
-            className={actionLinkClass(isPublished ? "primary" : "secondary")}
-            style={
-              isPublished
-                ? { color: "#fff", WebkitTextFillColor: "#fff" }
-                : { pointerEvents: "none", opacity: 0.48 }
-            }
+            href={previewHref}
+            className={actionLinkClass(isPublished ? "secondary" : "primary")}
+            style={!isPublished ? { color: "#fff", WebkitTextFillColor: "#fff" } : undefined}
           >
-            <ExternalLink className="h-4 w-4" />
-            Open live page
+            <Eye className="h-4 w-4" />
+            {isPublished ? "Admin preview" : "Preview draft"}
           </a>
+          {isPublished ? (
+            <a
+              href={publicPath}
+              target="_blank"
+              rel="noreferrer"
+              className={actionLinkClass("primary")}
+              style={{ color: "#fff", WebkitTextFillColor: "#fff" }}
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open live page
+            </a>
+          ) : null}
         </div>
       </div>
     </section>

@@ -296,6 +296,16 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByRole("button", { name: "Unpublish" })).not.toBeInTheDocument();
   });
 
+  test("sends draft preview actions to the protected admin preview instead of the public live page", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.queryByRole("link", { name: "Open live page" })).not.toBeInTheDocument();
+
+    for (const previewLink of screen.getAllByRole("link", { name: /preview/i })) {
+      expect(previewLink).toHaveAttribute("href", "/admin/preview/song_1");
+    }
+  });
+
   test("renders the artwork control as a replace tile without a raw URL label", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
