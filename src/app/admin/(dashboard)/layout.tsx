@@ -25,7 +25,7 @@ export default async function AdminDashboardLayout({
           <div className="flex items-center justify-between px-1 pb-[18px]">
             <BrandLockup
               compact
-              tagline={null}
+              tagline="Release links"
               tone="light"
               className="items-start"
             />
