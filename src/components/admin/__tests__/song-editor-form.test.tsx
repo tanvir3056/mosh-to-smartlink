@@ -280,6 +280,18 @@ describe("SongEditorForm missing link review", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("keeps draft release actions focused on publishing and saving", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(
+      screen.getAllByRole("button", { name: "Publish release" }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Save draft" }).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.queryByRole("button", { name: "Unpublish" })).not.toBeInTheDocument();
+  });
+
   test("renders the artwork control as a replace tile without a raw URL label", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
@@ -290,26 +302,48 @@ describe("SongEditorForm missing link review", () => {
   test("matches the Claude command-center section structure", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
-    expect(screen.getByRole("heading", { name: "Public link" })).toBeInTheDocument();
+    const publicLinkHeading = screen.getByRole("heading", { name: "Public link" });
+    const releaseDetailsHeading = screen.getByRole("heading", { name: "Release details" });
+    const streamingDestinationsHeading = screen.getByRole("heading", {
+      name: "Streaming destinations",
+    });
+    const leadCaptureHeading = screen.getByRole("heading", { name: "Lead capture" });
+    const dangerZoneHeading = screen.getByRole("heading", { name: "Danger zone" });
+
+    expect(publicLinkHeading).toBeInTheDocument();
     expect(
       screen.getByText("Reserved - goes live when you publish."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Fan-facing page")).not.toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Release details" })).toBeInTheDocument();
+    expect(releaseDetailsHeading).toBeInTheDocument();
     expect(
       screen.getByText("The basics fans see on the page."),
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByRole("heading", { name: "Streaming destinations" }),
-    ).toBeInTheDocument();
+    expect(streamingDestinationsHeading).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Fix missing links" }),
     ).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Lead capture" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Danger zone" })).toBeInTheDocument();
+    expect(leadCaptureHeading).toBeInTheDocument();
+    expect(dangerZoneHeading).toBeInTheDocument();
+    expect(
+      publicLinkHeading.compareDocumentPosition(releaseDetailsHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      releaseDetailsHeading.compareDocumentPosition(streamingDestinationsHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      streamingDestinationsHeading.compareDocumentPosition(leadCaptureHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      leadCaptureHeading.compareDocumentPosition(dangerZoneHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getByText("Delete this release")).toBeInTheDocument();
     expect(screen.queryByText("Delete this song")).not.toBeInTheDocument();
   });

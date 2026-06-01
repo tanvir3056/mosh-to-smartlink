@@ -25,19 +25,19 @@ test("editing a song keeps the admin stable when toggling service visibility", a
   await page.waitForURL(/\/admin$/, { timeout: 15000 });
 
   await page.goto(`/admin/songs/${seeded.songId}`);
-  await expect(page.getByText("Streaming links")).toBeVisible();
+  await expect(page.getByText("Streaming destinations")).toBeVisible();
 
   const spotifyToggle = page.getByLabel("Show on public page").first();
   await expect(spotifyToggle).toBeChecked();
 
   await spotifyToggle.uncheck();
   await expect(spotifyToggle).not.toBeChecked();
-  await expect(page.getByText("Streaming links")).toBeVisible();
+  await expect(page.getByText("Streaming destinations")).toBeVisible();
   await expect(page.getByText("This page hit a temporary problem.")).toHaveCount(0);
 
   await spotifyToggle.check();
   await expect(spotifyToggle).toBeChecked();
-  await expect(page.getByText("Streaming links")).toBeVisible();
+  await expect(page.getByText("Streaming destinations")).toBeVisible();
   await expect(page.getByText("This page hit a temporary problem.")).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 });
