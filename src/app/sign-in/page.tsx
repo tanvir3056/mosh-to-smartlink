@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { SignInForm } from "@/components/admin/sign-in-form";
 import { APP_NAME } from "@/lib/constants";
@@ -11,9 +10,8 @@ export const revalidate = 0;
 export default async function SignInPage() {
   return (
     <main className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)]">
-      <header className="flex items-center justify-between px-5 py-5 sm:px-6">
+      <header className="flex items-center px-5 py-5 sm:px-6">
         <BrandLockup tagline={null} tone="light" compact />
-        <ThemeToggle />
       </header>
       <div className="flex flex-1 items-center justify-center px-5 pb-16 pt-4">
         <section className="app-enter w-full max-w-[408px]">

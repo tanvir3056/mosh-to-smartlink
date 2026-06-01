@@ -19,6 +19,7 @@ describe("auth page launch copy", () => {
     render(await SignInPage());
 
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /switch to (dark|light) mode/i })).not.toBeInTheDocument();
     expect(screen.getByText("Secure session · username + password")).toBeInTheDocument();
     expect(screen.getByTestId("auth-card-footer")).toHaveTextContent(
       "New here? Create an account",
@@ -39,6 +40,7 @@ describe("auth page launch copy", () => {
 
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/first version/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /switch to (dark|light) mode/i })).not.toBeInTheDocument();
     expect(screen.getByText("This becomes the root of all your links.")).toBeInTheDocument();
     expect(
       screen.getByText(
