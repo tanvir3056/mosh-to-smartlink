@@ -204,6 +204,30 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.getByText("Streaming destinations")).toBeInTheDocument();
   });
 
+  test("starts matched streaming destinations as compact rows until expanded", async () => {
+    const user = userEvent.setup();
+
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByText("High confidence match")).toBeInTheDocument();
+    expect(screen.queryByText("Destination URL")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Expand Spotify destination details" }),
+    );
+
+    expect(screen.getByText("Destination URL")).toBeInTheDocument();
+  });
+
+  test("uses theme-safe editor action surfaces", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const preview = screen.getByRole("link", { name: "Preview draft" });
+
+    expect(preview.className).toContain("bg-[var(--app-panel)]");
+    expect(preview.className).not.toContain("bg-white");
+  });
+
   test("keeps the editor stable when hiding an unresolved service", async () => {
     const user = userEvent.setup();
 

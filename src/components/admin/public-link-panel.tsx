@@ -19,7 +19,7 @@ function actionLinkClass(tone: "primary" | "secondary" | "ghost" = "secondary") 
     return `${base} border border-transparent bg-transparent text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] active:text-[var(--app-text)]`;
   }
 
-  return `${base} border border-[var(--app-line)] bg-white text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] hover:bg-[var(--app-panel-muted)] active:border-[var(--app-line-strong)] active:bg-[#ece8df] active:text-[var(--app-text)]`;
+  return `${base} border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] hover:bg-[var(--app-panel-muted)] active:border-[var(--app-line-strong)] active:bg-[var(--app-panel-muted)] active:text-[var(--app-text)]`;
 }
 
 export function PublicLinkPanel({
@@ -92,7 +92,7 @@ export function PublicLinkPanel({
               await navigator.clipboard.writeText(publicUrl);
               setCopied(true);
             }}
-            className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1.5 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] font-[550] text-[var(--app-muted)] transition hover:bg-white hover:text-[var(--app-text)]"
+            className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1.5 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-strong)] hover:text-[var(--app-text)]"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copied" : "Copy"}

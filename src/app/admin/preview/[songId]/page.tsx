@@ -86,7 +86,7 @@ export default async function AdminPreviewPage({
           <Link
             href={publicHref}
             target="_blank"
-            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-3 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
           >
             <ExternalLink className="h-4 w-4" />
             Open live
@@ -96,7 +96,7 @@ export default async function AdminPreviewPage({
             type="button"
             aria-disabled="true"
             disabled
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-3 text-sm font-semibold text-[var(--app-muted)] opacity-55"
+            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-muted)] opacity-55"
           >
             <ExternalLink className="h-4 w-4" />
             Open live

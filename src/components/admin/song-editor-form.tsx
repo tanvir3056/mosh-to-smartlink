@@ -6,6 +6,8 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ChevronDown,
+  ChevronRight,
   CircleAlert,
   Eye,
   EyeOff,
@@ -306,6 +308,21 @@ export function SongEditorForm({
       }),
     ) as Record<StreamingService, ServiceDraft>,
   );
+  const [expandedServices, setExpandedServices] = useState<
+    Record<StreamingService, boolean>
+  >(() =>
+    Object.fromEntries(
+      STREAMING_SERVICES.map((service) => {
+        const link = page.links.find((entry) => entry.service === service);
+        const needsAttention =
+          !link?.url ||
+          link.matchStatus !== "matched" ||
+          deriveReviewStatus(link.matchStatus, link.url) !== "approved";
+
+        return [service, needsAttention];
+      }),
+    ) as Record<StreamingService, boolean>,
+  );
   const importedMissingServices = useMemo(
     () =>
       STREAMING_SERVICES.filter((service) => {
@@ -373,6 +390,13 @@ export function SongEditorForm({
     setShowMissingLinksDialog(false);
   }
 
+  function toggleServiceExpanded(service: StreamingService) {
+    setExpandedServices((current) => ({
+      ...current,
+      [service]: !current[service],
+    }));
+  }
+
   return (
     <>
       {showMissingLinksDialog && (
@@ -408,7 +432,7 @@ export function SongEditorForm({
                 return (
                   <div
                     key={`review-${service}`}
-                    className="rounded-[12px] border border-[var(--app-line)] bg-white p-4"
+                    className="rounded-[12px] border border-[var(--app-line)] bg-[var(--app-panel)] p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="text-base font-semibold text-[var(--app-text)]">
@@ -578,7 +602,7 @@ export function SongEditorForm({
           <div className="flex flex-wrap items-center gap-2">
             <a
               href={`/admin/preview/${page.song.id}`}
-              className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-white px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
+              className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
             >
               <Eye className="h-4 w-4" />
               {page.page.status === "published" ? "Preview" : "Preview draft"}
@@ -715,44 +739,39 @@ export function SongEditorForm({
                   : link
                     ? link.reviewStatus ?? deriveReviewStatus(effectiveMatchStatus, draft.url || null)
                     : deriveReviewStatus(effectiveMatchStatus, draft.url || null);
+                const isExpanded = expandedServices[service] ?? needsResolution;
+                const serviceLabel = SERVICE_LABELS[service];
 
                 return (
                   <div
                     key={service}
-                    className={`grid gap-3 overflow-hidden rounded-[12px] border border-[var(--app-line)] p-4 transition ${
+                    className={`overflow-hidden rounded-[12px] border border-[var(--app-line)] transition ${
                       draft.isVisible
                         ? "bg-[var(--app-panel)]"
                         : "bg-[var(--app-panel-muted)] opacity-75"
-                    } lg:grid-cols-[230px_minmax(0,1fr)]`}
+                    }`}
                   >
-                    <div className="grid content-start gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
-                          <ServiceIcon service={service} className="max-w-[22px]" />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold text-[var(--app-text)]">
-                            {SERVICE_LABELS[service]}
-                          </div>
-                          <div className="text-[11.5px] text-[var(--app-muted)]">
-                            {needsResolution
-                              ? draft.resolutionMode === "search_fallback"
-                                ? "Search fallback selected"
-                                : draft.url
-                                  ? "Manual destination"
-                                  : "No automatic match"
-                              : reviewStatus === "approved"
-                                ? "High confidence match"
-                                : "Found - please confirm"}
-                          </div>
+                    <div className="flex flex-wrap items-center gap-3 p-3">
+                      <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
+                        <ServiceIcon service={service} className="max-w-[22px]" />
+                      </span>
+                      <div className="min-w-[180px] flex-1">
+                        <div className="truncate text-sm font-semibold text-[var(--app-text)]">
+                          {serviceLabel}
+                        </div>
+                        <div className="text-[11.5px] text-[var(--app-muted)]">
+                          {needsResolution
+                            ? draft.resolutionMode === "search_fallback"
+                              ? "Search fallback selected"
+                              : draft.url
+                                ? "Manual destination"
+                                : "No automatic match"
+                            : reviewStatus === "approved"
+                              ? "High confidence match"
+                              : "Found - please confirm"}
                         </div>
                       </div>
-                      <div className="text-xs leading-6 text-[var(--app-muted)]">
-                        {needsResolution
-                          ? "Choose search fallback or add a manual destination."
-                          : "Check the destination and adjust anything that looks wrong."}
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-soft)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
                           {needsResolution
                             ? draft.resolutionMode === "search_fallback"
@@ -762,13 +781,43 @@ export function SongEditorForm({
                                 : "Unresolved"
                             : reviewStatusLabel(reviewStatus)}
                         </span>
-                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-white px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
+                        <span className="inline-flex min-h-9 items-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
                           {formatConfidence(link?.confidence ?? null)}
                         </span>
+                        <button
+                          type="button"
+                          aria-expanded={isExpanded}
+                          aria-label={`${isExpanded ? "Collapse" : "Expand"} ${serviceLabel} destination details`}
+                          onClick={() => toggleServiceExpanded(service)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[7px] border border-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+                        <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
+                          <input
+                            name={`${service}_is_visible`}
+                            type="checkbox"
+                            checked={draft.isVisible}
+                            onChange={(event) => {
+                              const isVisible = event.currentTarget.checked;
+                              updateServiceDraft(service, (current) => ({
+                                ...current,
+                                isVisible,
+                              }));
+                            }}
+                            className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                          />
+                          Show on public page
+                        </label>
                       </div>
                     </div>
 
-                    <div className="grid gap-3">
+                    {isExpanded ? (
+                    <div className="grid gap-3 border-t border-[var(--app-line)] p-3 sm:p-4">
                       <input
                         type="hidden"
                         name={`${service}_original_url`}
@@ -834,23 +883,6 @@ export function SongEditorForm({
                         name={`${service}_resolution_mode`}
                         value={needsResolution ? draft.resolutionMode : ""}
                       />
-
-                      <label className="inline-flex items-center gap-3 text-sm text-[var(--app-text)]">
-                        <input
-                          name={`${service}_is_visible`}
-                          type="checkbox"
-                          checked={draft.isVisible}
-                          onChange={(event) => {
-                            const isVisible = event.currentTarget.checked;
-                            updateServiceDraft(service, (current) => ({
-                              ...current,
-                              isVisible,
-                            }));
-                          }}
-                          className="h-4 w-4 rounded border-slate-300 bg-transparent"
-                        />
-                        Show on public page
-                      </label>
 
                       {needsResolution ? (
                         <div className="grid gap-3 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-soft)]/55 p-3">
@@ -1053,6 +1085,90 @@ export function SongEditorForm({
                         />
                       )}
                     </div>
+                    ) : (
+                      <div className="hidden">
+                        <input
+                          type="hidden"
+                          name={`${service}_original_url`}
+                          value={link?.url ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_review_status`}
+                          value={reviewStatus}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_match_source`}
+                          value={link?.matchSource ?? "manual_review"}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_confidence_reason`}
+                          value={link?.confidenceReason ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_title`}
+                          value={link?.matchedTitle ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_artist`}
+                          value={link?.matchedArtist ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_album`}
+                          value={link?.matchedAlbum ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_duration_ms`}
+                          value={link?.matchedDurationMs ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_release_date`}
+                          value={link?.matchedReleaseDate ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_matched_isrc`}
+                          value={link?.matchedIsrc ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_confidence`}
+                          value={link?.confidence ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_notes`}
+                          value={link?.notes ?? ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_resolution_mode`}
+                          value={needsResolution ? draft.resolutionMode : ""}
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_url`}
+                          value={
+                            needsResolution &&
+                            draft.resolutionMode === "search_fallback"
+                              ? draft.url || fallbackUrl
+                              : draft.url
+                          }
+                        />
+                        <input
+                          type="hidden"
+                          name={`${service}_match_status`}
+                          value={effectiveMatchStatus}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1198,7 +1314,7 @@ export function SongEditorForm({
                     background: `conic-gradient(var(--app-accent) ${readinessScore}%, var(--app-line) 0)`,
                   }}
                 >
-                  <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-white text-base font-semibold text-[var(--app-text)]">
+                  <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-[var(--app-panel)] text-base font-semibold text-[var(--app-text)]">
                     {readinessScore}%
                   </div>
                 </div>
