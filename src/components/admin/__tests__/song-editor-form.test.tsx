@@ -172,6 +172,15 @@ const PAGE_WITH_INVALID_VISIBLE_DESTINATION: SongPageWithLinks = {
   ),
 };
 
+const PUBLISHED_PAGE: SongPageWithLinks = {
+  ...PAGE,
+  page: {
+    ...PAGE.page,
+    status: "published",
+    publishedAt: "2026-04-30T00:00:00.000Z",
+  },
+};
+
 describe("SongEditorForm missing link review", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -188,7 +197,7 @@ describe("SongEditorForm missing link review", () => {
     await user.click(showOnPage);
 
     expect(showOnPage).not.toBeChecked();
-    expect(screen.getByText("Streaming links")).toBeInTheDocument();
+    expect(screen.getByText("Streaming destinations")).toBeInTheDocument();
   });
 
   test("keeps the editor stable when hiding an unresolved service", async () => {
@@ -202,7 +211,7 @@ describe("SongEditorForm missing link review", () => {
     await user.click(showOnPage);
 
     expect(showOnPage).not.toBeChecked();
-    expect(screen.getByText("Streaming links")).toBeInTheDocument();
+    expect(screen.getByText("Streaming destinations")).toBeInTheDocument();
   });
 
   test("keeps the review popup stable when hiding an unresolved service", async () => {
@@ -260,10 +269,48 @@ describe("SongEditorForm missing link review", () => {
     expect(publishButton).not.toHaveAttribute("name", "intent");
   });
 
+  test("labels published release actions as save changes instead of publish again", () => {
+    render(<SongEditorForm page={PUBLISHED_PAGE} showMissingLinksReview={false} />);
+
+    expect(
+      screen.getAllByRole("button", { name: "Save changes" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: "Publish release" }),
+    ).not.toBeInTheDocument();
+  });
+
   test("renders the artwork control as a replace tile without a raw URL label", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
     expect(screen.getByText("Replace")).toBeInTheDocument();
     expect(screen.queryByText("Artwork URL")).not.toBeInTheDocument();
+  });
+
+  test("matches the Claude command-center section structure", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByRole("heading", { name: "Public link" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Reserved - goes live when you publish."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Fan-facing page")).not.toBeInTheDocument();
+
+    expect(screen.getByRole("heading", { name: "Release details" })).toBeInTheDocument();
+    expect(
+      screen.getByText("The basics fans see on the page."),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("heading", { name: "Streaming destinations" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Fix missing links" }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole("heading", { name: "Lead capture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Danger zone" })).toBeInTheDocument();
+    expect(screen.getByText("Delete this release")).toBeInTheDocument();
+    expect(screen.queryByText("Delete this song")).not.toBeInTheDocument();
   });
 });

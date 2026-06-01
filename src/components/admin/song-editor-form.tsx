@@ -4,7 +4,18 @@
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Globe2, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  Globe2,
+  Link2,
+  ListMusic,
+  Mail,
+  Save,
+  Search,
+} from "lucide-react";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
 import {
@@ -17,6 +28,7 @@ import { DeleteSongButton } from "@/components/admin/delete-song-button";
 import { FormStateMessage } from "@/components/admin/form-state";
 import { PublicLinkPanel } from "@/components/admin/public-link-panel";
 import { StatusPill } from "@/components/admin/status-pill";
+import { ServiceIcon } from "@/components/service-icon";
 import { Button } from "@/components/ui/button";
 import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
 import type {
@@ -115,14 +127,56 @@ function isValidHttpUrl(value: string | null) {
 
 type EditorFormAction = (payload: FormData) => void;
 
+function EditorSection({
+  icon,
+  title,
+  subtitle,
+  right,
+  children,
+  className,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`app-card overflow-hidden rounded-[14px] ${className ?? ""}`}>
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--app-line)] px-5 py-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-[15.5px] font-semibold text-[var(--app-text)]">
+              {title}
+            </h3>
+            {subtitle ? (
+              <p className="mt-0.5 text-[12.5px] text-[var(--app-muted)]">
+                {subtitle}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {right ? <div className="shrink-0">{right}</div> : null}
+      </div>
+      <div className="p-5 sm:p-6">{children}</div>
+    </section>
+  );
+}
+
 function SaveButtons({
   canPublish,
+  isPublished,
   draftAction,
   publishAction,
   unpublishAction,
   stacked = false,
 }: {
   canPublish: boolean;
+  isPublished: boolean;
   draftAction: EditorFormAction;
   publishAction: EditorFormAction;
   unpublishAction: EditorFormAction;
@@ -132,6 +186,29 @@ function SaveButtons({
 
   return (
     <div className={`flex flex-col gap-3 ${stacked ? "" : "sm:flex-row"}`}>
+      {isPublished ? (
+        <>
+          <Button
+            type="submit"
+            formAction={publishAction}
+            busy={pending}
+            disabled={pending || !canPublish}
+          >
+            <Save className="h-4 w-4" />
+            Save changes
+          </Button>
+          <Button
+            type="submit"
+            tone="ghost"
+            formAction={unpublishAction}
+            busy={pending}
+          >
+            <EyeOff className="h-4 w-4" />
+            Unpublish
+          </Button>
+        </>
+      ) : (
+        <>
       <Button
         type="submit"
         formAction={publishAction}
@@ -159,6 +236,8 @@ function SaveButtons({
         <EyeOff className="h-4 w-4" />
         Unpublish
       </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -510,17 +589,11 @@ export function SongEditorForm({
             status={page.page.status}
             previewHref={`/admin/preview/${page.song.id}`}
           />
-          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Release details</p>
-              <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
-                Song page details
-              </h3>
-              <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Tune the public title, slug, headline, preview, and artwork before the page goes live.
-              </p>
-            </div>
-
+          <EditorSection
+            icon={<ListMusic className="h-4 w-4" />}
+            title="Release details"
+            subtitle="The basics fans see on the page."
+          >
             <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)] md:items-start">
               <div className="grid gap-3">
                 <img
@@ -577,19 +650,13 @@ export function SongEditorForm({
             <MetaField label="Headline">
               <input name="headline" defaultValue={page.page.headline} className="app-input" />
             </MetaField>
-          </div>
+          </EditorSection>
 
-          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Lead capture</p>
-              <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
-                Email offer on the song page
-              </h3>
-              <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Turn this release page into a lightweight fan capture page. If a download URL is set, fans get the reward right after they submit.
-              </p>
-            </div>
-
+          <EditorSection
+            icon={<Mail className="h-4 w-4" />}
+            title="Lead capture"
+            subtitle="Collect emails in exchange for a reward."
+          >
             <label className="app-card-soft flex items-center gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
               <input
                 name="email_capture_enabled"
@@ -655,19 +722,23 @@ export function SongEditorForm({
                 placeholder="free-download"
               />
             </MetaField>
-          </div>
+          </EditorSection>
 
-          <div className="app-card grid gap-4 overflow-hidden rounded-[14px] p-5 sm:p-6">
-            <div>
-              <p className="app-kicker text-[var(--app-muted)]">Destinations</p>
-              <h3 className="mt-3 text-xl font-semibold text-[var(--app-text)]">
-                Streaming links
-              </h3>
-              <p className="mt-1 text-sm text-[var(--app-muted)]">
-                Review each destination before publishing. Search fallbacks can stay live, or you can replace or hide them here.
-              </p>
-            </div>
-
+          <EditorSection
+            icon={<Link2 className="h-4 w-4" />}
+            title="Streaming destinations"
+            subtitle="Where fans land when they pick a service."
+            right={
+              <Button
+                type="button"
+                tone="subtle"
+                onClick={() => setShowMissingLinksDialog(true)}
+              >
+                <Search className="h-4 w-4" />
+                Fix missing links
+              </Button>
+            }
+          >
             <div className="grid gap-4">
               {STREAMING_SERVICES.map((service) => {
                 const link = serviceLookup.get(service);
@@ -698,11 +769,33 @@ export function SongEditorForm({
                 return (
                   <div
                     key={service}
-                    className="grid gap-3 rounded-[12px] border border-[var(--app-line)] bg-white p-4 lg:grid-cols-[180px_minmax(0,1fr)]"
+                    className={`grid gap-3 overflow-hidden rounded-[12px] border border-[var(--app-line)] p-4 transition ${
+                      draft.isVisible
+                        ? "bg-[var(--app-panel)]"
+                        : "bg-[var(--app-panel-muted)] opacity-75"
+                    } lg:grid-cols-[230px_minmax(0,1fr)]`}
                   >
-                    <div className="grid gap-2">
-                      <div className="text-sm font-semibold text-[var(--app-text)]">
-                        {SERVICE_LABELS[service]}
+                    <div className="grid content-start gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
+                          <ServiceIcon service={service} className="max-w-[22px]" />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold text-[var(--app-text)]">
+                            {SERVICE_LABELS[service]}
+                          </div>
+                          <div className="text-[11.5px] text-[var(--app-muted)]">
+                            {needsResolution
+                              ? draft.resolutionMode === "search_fallback"
+                                ? "Search fallback selected"
+                                : draft.url
+                                  ? "Manual destination"
+                                  : "No automatic match"
+                              : reviewStatus === "approved"
+                                ? "High confidence match"
+                                : "Found - please confirm"}
+                          </div>
+                        </div>
                       </div>
                       <div className="text-xs leading-6 text-[var(--app-muted)]">
                         {needsResolution
@@ -1014,7 +1107,7 @@ export function SongEditorForm({
                 );
               })}
             </div>
-          </div>
+          </EditorSection>
 
           <div className="app-card rounded-[14px] p-5 xl:hidden">
             <div className="flex flex-col gap-4">
@@ -1033,6 +1126,7 @@ export function SongEditorForm({
               </div>
               <SaveButtons
                 canPublish={publishReady}
+                isPublished={page.page.status === "published"}
                 draftAction={draftAction}
                 publishAction={publishAction}
                 unpublishAction={unpublishAction}
@@ -1094,6 +1188,7 @@ export function SongEditorForm({
               <div className="border-t border-[var(--app-line)] p-4">
                 <SaveButtons
                   canPublish={publishReady}
+                  isPublished={page.page.status === "published"}
                   draftAction={draftAction}
                   publishAction={publishAction}
                   unpublishAction={unpublishAction}
@@ -1132,20 +1227,32 @@ export function SongEditorForm({
         </div>
       </form>
 
-      <section className="mx-auto grid w-full max-w-[1240px] gap-4 rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-red-soft)] p-5">
-        <div>
-          <p className="app-kicker text-red-500">Danger zone</p>
-          <h2 className="mt-2 text-xl font-semibold text-red-900">Delete this song</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-red-700">
-            This permanently removes the song, public page, service links, import
-            attempts, visits, and outbound click analytics for this record.
-          </p>
+      <section className="mx-auto w-full max-w-[1240px] overflow-hidden rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
+        <div className="flex items-center gap-3 border-b border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-5 py-4">
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] bg-[var(--app-panel)] text-[var(--app-red-text)]">
+            <CircleAlert className="h-4 w-4" />
+          </span>
+          <h3 className="text-[15.5px] font-semibold text-[var(--app-red-text)]">
+            Danger zone
+          </h3>
         </div>
-
-        <DeleteSongButton
-          songId={page.song.id}
-          songLabel={`${page.song.artistName} - ${page.song.title}`}
-        />
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div>
+            <div className="text-sm font-semibold text-[var(--app-text)]">
+              Delete this release
+            </div>
+            <p className="mt-1 max-w-xl text-[13px] leading-6 text-[var(--app-muted)]">
+              Permanently removes the page and its link. Visitors will hit a 404.
+              Analytics history is also deleted. This cannot be undone.
+            </p>
+          </div>
+          <div className="shrink-0">
+            <DeleteSongButton
+              songId={page.song.id}
+              songLabel={`${page.song.artistName} - ${page.song.title}`}
+            />
+          </div>
+        </div>
       </section>
     </>
   );
