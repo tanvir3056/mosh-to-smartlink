@@ -135,6 +135,26 @@ describe("core data flow", () => {
     expect(order).toEqual(["first started", "first finished", "second started"]);
   });
 
+  test("retries local transactions after stale streaming link foreign key errors", async () => {
+    const { dbTransaction } = await import("@/lib/db/driver");
+    let attempts = 0;
+
+    await expect(
+      dbTransaction(async () => {
+        attempts += 1;
+
+        if (attempts === 1) {
+          throw new Error(
+            'insert or update on table "songs" violates foreign key constraint on table "streaming_links_song_id_fk": Failed SQL statement: insert into streaming_links (...)',
+          );
+        }
+
+        return "recovered";
+      }),
+    ).resolves.toBe("recovered");
+    expect(attempts).toBe(2);
+  });
+
   test("hydrates local fallback accounts from Blob persistence after a cold start", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
 
@@ -344,6 +364,7 @@ describe("core data flow", () => {
       recordVisit,
       recordClickBySlug,
       getAnalyticsSnapshot,
+      saveTrackingConfig,
     } = await import("@/lib/data");
 
     await createAccountOwner({
@@ -353,10 +374,23 @@ describe("core data flow", () => {
       passwordHash: "salt:hash",
     });
 
+    await saveTrackingConfig(USER_ID, {
+      siteName: "Backstage",
+      metaPixelId: null,
+      metaPixelEnabled: false,
+      metaTestEventCode: null,
+      defaultHeadline: "Out now - stream everywhere.",
+      showArtistName: true,
+      previewPlayerDefaultEnabled: true,
+      leadCaptureDefaultEnabled: true,
+    });
+
     const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
     const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
 
     expect(adminPage).not.toBeNull();
+    expect(adminPage!.page.headline).toBe("Out now - stream everywhere.");
+    expect(adminPage!.emailCapture.enabled).toBe(true);
     expect(adminPage!.song.releaseDate).toBe("2026-03-14");
     expect(
       adminPage!.links.find((link) => link.service === "spotify")?.matchedReleaseDate,

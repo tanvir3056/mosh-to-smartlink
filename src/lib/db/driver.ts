@@ -286,6 +286,25 @@ function shouldRetryDatabaseError(error: unknown) {
   );
 }
 
+function shouldRetryLocalConsistencyError(error: unknown) {
+  if (!appEnv.isLocalDatabase) {
+    return false;
+  }
+
+  const message = normalizeErrorMessage(error);
+
+  return (
+    message.includes("pg-mem") ||
+    message.includes("streaming_links_song_id_fk") ||
+    (message.includes("failed sql statement") &&
+      message.includes("insert into streaming_links"))
+  );
+}
+
+function shouldRetryRuntimeError(error: unknown) {
+  return shouldRetryDatabaseError(error) || shouldRetryLocalConsistencyError(error);
+}
+
 async function resetDatabaseRuntime() {
   if (!runtimePromise) {
     globalThis.__ffmDatabaseRuntimePromise = undefined;
@@ -570,7 +589,7 @@ export async function dbQuery<T extends QueryResultRow = QueryResultRow>(
     } catch (error) {
       lastError = error;
 
-      if (attempt === 1 || !shouldRetryDatabaseError(error)) {
+      if (attempt === 1 || !shouldRetryRuntimeError(error)) {
         throw error;
       }
 
@@ -589,8 +608,24 @@ export async function dbTransaction<T>(
     ) => Promise<R[]>,
   ) => Promise<T>,
 ) {
-  const runtime = await getDatabaseRuntime();
-  return runtime.withTransaction(callback);
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const runtime = await getDatabaseRuntime();
+      return await runtime.withTransaction(callback);
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === 1 || !shouldRetryRuntimeError(error)) {
+        throw error;
+      }
+
+      await resetDatabaseRuntime();
+    }
+  }
+
+  throw lastError;
 }
 
 export async function getDatabaseMode() {

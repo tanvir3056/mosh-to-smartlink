@@ -5,11 +5,16 @@ import {
   Globe2,
   Inbox,
   Mail,
+  Save,
   Settings2,
   ShieldCheck,
+  Upload,
   User,
 } from "lucide-react";
 
+import {
+  saveGeneralSettingsAction,
+} from "@/app/admin/actions";
 import {
   EmailLeadsPanel,
   EmailLeadsPanelUnavailable,
@@ -33,6 +38,11 @@ const SETTINGS_TABS: Array<{ label: string; value: SettingsTab; href: string }> 
   { label: "Integrations", value: "integrations", href: "/admin/settings?tab=integrations" },
   { label: "Lead inbox", value: "leads", href: "/admin/settings?tab=leads" },
 ];
+
+async function submitGeneralSettingsForm(formData: FormData) {
+  "use server";
+  await saveGeneralSettingsAction(formData);
+}
 
 function parseSettingsTab(value: string | string[] | undefined): SettingsTab {
   const tab = Array.isArray(value) ? value[0] : value;
@@ -103,56 +113,6 @@ function SectionCard({
   );
 }
 
-function InfoRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--app-muted-2)]">
-        {label}
-      </div>
-      <div
-        className={cn(
-          "mt-1 truncate text-[13.5px] font-semibold text-[var(--app-text)]",
-          mono && "font-mono",
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function StatusLine({
-  label,
-  value,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  tone?: "green" | "amber" | "neutral";
-}) {
-  const toneClass =
-    tone === "green"
-      ? "text-[var(--app-green-text)]"
-      : tone === "amber"
-        ? "text-[var(--app-amber-text)]"
-        : "text-[var(--app-text)]";
-
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-[var(--app-line)] py-3 last:border-b-0">
-      <span className="text-[13.5px] text-[var(--app-muted)]">{label}</span>
-      <span className={cn("text-right text-[13.5px] font-semibold", toneClass)}>{value}</span>
-    </div>
-  );
-}
-
 function Metric({
   label,
   value,
@@ -193,6 +153,15 @@ function TopAction({
   activeTab: SettingsTab;
   settingsReady: boolean;
 }) {
+  if (activeTab === "general" && settingsReady) {
+    return (
+      <Button type="submit" form="general-settings-form" className="shrink-0">
+        <Save className="h-4 w-4" />
+        Save settings
+      </Button>
+    );
+  }
+
   if (activeTab === "integrations" && settingsReady) {
     return (
       <Button type="submit" form="tracking-settings-form" className="shrink-0">
@@ -224,66 +193,136 @@ function TopAction({
 function GeneralSettings({
   session,
   trackingConfig,
-  emailConnector,
-  leadSnapshot,
 }: {
   session: { username: string; loginEmail: string };
   trackingConfig: TrackingConfig | null;
-  emailConnector: EmailConnectorConfig | null;
-  leadSnapshot: EmailLeadSnapshot | null;
 }) {
-  const mailchimpConnected = emailConnector?.hasApiKey && Boolean(emailConnector.audienceId);
-  const publicPath = `${APP_DOMAIN_HINT}/${session.username}/...`;
+  const defaults = trackingConfig ?? {
+    siteName: "Backstage",
+    defaultHeadline: "Stream now",
+    showArtistName: true,
+    previewPlayerDefaultEnabled: true,
+    leadCaptureDefaultEnabled: false,
+  };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <form
+      id="general-settings-form"
+      action={submitGeneralSettingsForm}
+      className="grid gap-4 lg:grid-cols-2"
+    >
       <SectionCard icon={User} title="Site settings" sub="Your public link space.">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white">
               {session.username[0]?.toUpperCase() ?? "B"}
             </span>
-            <div className="min-w-0">
-              <div className="text-[15px] font-semibold text-[var(--app-text)]">
-                @{session.username}
-              </div>
-              <div className="truncate text-[13px] text-[var(--app-muted)]">
-                {session.loginEmail}
-              </div>
-            </div>
+            <Button type="button" tone="subtle" disabled>
+              <Upload className="h-4 w-4" />
+              Upload avatar
+            </Button>
           </div>
 
-          <InfoRow label="Username" value={`@${session.username}`} />
-          <InfoRow label="Contact email" value={session.loginEmail} />
-          <InfoRow label="Live URL pattern" value={publicPath} mono />
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-[var(--app-text)]">Display name</span>
+            <input
+              name="site_name"
+              defaultValue={defaults.siteName}
+              className="app-input"
+            />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
+            <div className="flex overflow-hidden rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] focus-within:border-[var(--app-accent-line)] focus-within:ring-4 focus-within:ring-[var(--app-accent-soft)]">
+              <span className="inline-flex items-center border-r border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 font-mono text-[12px] text-[var(--app-muted-2)]">
+                {APP_DOMAIN_HINT}/
+              </span>
+              <input
+                value={session.username}
+                readOnly
+                aria-label="Username"
+                className="min-h-10 min-w-0 flex-1 bg-transparent px-3 font-mono text-[13px] text-[var(--app-text)] outline-none"
+              />
+            </div>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-[var(--app-text)]">Contact email</span>
+            <input
+              value={session.loginEmail}
+              readOnly
+              aria-label="Contact email"
+              className="app-input"
+            />
+          </label>
         </div>
       </SectionCard>
 
       <SectionCard icon={Globe2} title="Public defaults" sub="Applied to new releases.">
-        <div className="grid gap-1">
-          <StatusLine label="Workspace name" value={trackingConfig?.siteName ?? "Backstage"} />
-          <StatusLine
-            label="Meta Pixel"
-            value={trackingConfig?.metaPixelEnabled ? "Enabled" : "Off"}
-            tone={trackingConfig?.metaPixelEnabled ? "green" : "neutral"}
-          />
-          <StatusLine
-            label="Mailchimp"
-            value={mailchimpConnected ? "Connected" : "Local lead storage"}
-            tone={mailchimpConnected ? "green" : "amber"}
-          />
-          <StatusLine
-            label="Captured leads"
-            value={leadSnapshot ? leadSnapshot.totalLeads.toLocaleString() : "Unavailable"}
-          />
-        </div>
-
-        <div className="mt-4 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-[13px] leading-5 text-[var(--app-muted)]">
-          Song-specific download offers, headlines, and destination reviews still live inside each
-          release editor.
+        <div className="flex flex-col gap-4">
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-[var(--app-text)]">Default headline</span>
+            <input
+              name="default_headline"
+              defaultValue={defaults.defaultHeadline}
+              className="app-input"
+            />
+          </label>
+          <div className="flex flex-col gap-3">
+            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+              <input
+                name="show_artist_name"
+                type="checkbox"
+                aria-label="Show artist name on every page"
+                defaultChecked={defaults.showArtistName}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[var(--app-text)]">
+                  Show artist name on every page
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-5 text-[var(--app-muted)]">
+                  Display the artist above the title.
+                </span>
+              </span>
+            </label>
+            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+              <input
+                name="preview_player_default_enabled"
+                type="checkbox"
+                aria-label="Enable preview player by default"
+                defaultChecked={defaults.previewPlayerDefaultEnabled}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[var(--app-text)]">
+                  Enable preview player by default
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-5 text-[var(--app-muted)]">
+                  Adds the 30-second clip when available.
+                </span>
+              </span>
+            </label>
+            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+              <input
+                name="lead_capture_default_enabled"
+                type="checkbox"
+                aria-label="Lead capture on by default"
+                defaultChecked={defaults.leadCaptureDefaultEnabled}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[var(--app-text)]">
+                  Lead capture on by default
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-5 text-[var(--app-muted)]">
+                  New releases start with the email form enabled.
+                </span>
+              </span>
+            </label>
+          </div>
         </div>
       </SectionCard>
-    </div>
+    </form>
   );
 }
 
@@ -403,8 +442,6 @@ export default async function AdminSettingsPage({
         <GeneralSettings
           session={session}
           trackingConfig={trackingConfig}
-          emailConnector={emailConnector}
-          leadSnapshot={leadSnapshot}
         />
       ) : null}
 

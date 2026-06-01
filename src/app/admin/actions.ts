@@ -10,6 +10,7 @@ import { requireUserSession, signInUser, signOutUser, signUpUser } from "@/lib/a
 import {
   createSongImportDraft,
   deleteSongById,
+  getTrackingConfig,
   saveEmailConnectorConfig,
   publishedSongPageTag,
   saveTrackingConfig,
@@ -563,6 +564,7 @@ export async function saveTrackingSettingsAction(
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireUserSession();
+  const existingTrackingConfig = await getTrackingConfig(session.userId);
   const metaPixelId = getNullableStringValue(formData, "meta_pixel_id");
   const metaPixelEnabled = getStringValue(formData, "meta_pixel_enabled") === "on";
   const metaPixelIdError = validateMetaPixelId(metaPixelId, metaPixelEnabled);
@@ -596,6 +598,10 @@ export async function saveTrackingSettingsAction(
     metaPixelId,
     metaPixelEnabled,
     metaTestEventCode: getNullableStringValue(formData, "meta_test_event_code"),
+    defaultHeadline: existingTrackingConfig.defaultHeadline,
+    showArtistName: existingTrackingConfig.showArtistName,
+    previewPlayerDefaultEnabled: existingTrackingConfig.previewPlayerDefaultEnabled,
+    leadCaptureDefaultEnabled: existingTrackingConfig.leadCaptureDefaultEnabled,
   };
 
   await saveTrackingConfig(session.userId, input);
@@ -606,6 +612,34 @@ export async function saveTrackingSettingsAction(
     doubleOptIn: getStringValue(formData, "mailchimp_double_opt_in") === "on",
     apiKey: mailchimpApiKey,
     clearApiKey: getStringValue(formData, "mailchimp_clear_api_key") === "on",
+  });
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
+
+  return {
+    error: null,
+    success: "Settings saved.",
+  };
+}
+
+export async function saveGeneralSettingsAction(
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await requireUserSession();
+  const existingTrackingConfig = await getTrackingConfig(session.userId);
+  const siteName = getStringValue(formData, "site_name") || APP_NAME;
+  const defaultHeadline = getStringValue(formData, "default_headline") || "Stream now";
+
+  await saveTrackingConfig(session.userId, {
+    ...existingTrackingConfig,
+    siteName,
+    defaultHeadline,
+    showArtistName: getStringValue(formData, "show_artist_name") === "on",
+    previewPlayerDefaultEnabled:
+      getStringValue(formData, "preview_player_default_enabled") === "on",
+    leadCaptureDefaultEnabled:
+      getStringValue(formData, "lead_capture_default_enabled") === "on",
   });
 
   revalidatePath("/admin/settings");

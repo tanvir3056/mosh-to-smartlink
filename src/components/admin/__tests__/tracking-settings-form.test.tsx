@@ -24,6 +24,10 @@ const TRACKING_CONFIG: TrackingConfig = {
   metaPixelId: null,
   metaPixelEnabled: false,
   metaTestEventCode: null,
+  defaultHeadline: "Stream now",
+  showArtistName: true,
+  previewPlayerDefaultEnabled: true,
+  leadCaptureDefaultEnabled: false,
 };
 
 const CONNECTOR_CONFIG: EmailConnectorConfig = {

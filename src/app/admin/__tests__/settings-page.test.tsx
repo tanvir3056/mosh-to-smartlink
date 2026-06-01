@@ -49,6 +49,10 @@ const trackingConfig: TrackingConfig = {
   metaPixelId: "123456789012345",
   metaPixelEnabled: true,
   metaTestEventCode: null,
+  defaultHeadline: "Out now - stream everywhere.",
+  showArtistName: true,
+  previewPlayerDefaultEnabled: true,
+  leadCaptureDefaultEnabled: false,
 };
 
 const connectorConfig: EmailConnectorConfig = {
@@ -111,9 +115,19 @@ describe("admin settings page", () => {
       "/admin/settings?tab=leads",
     );
     expect(screen.getByText("Site settings")).toBeInTheDocument();
-    expect(screen.getAllByText("@warcry").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("warcry@example.com").length).toBeGreaterThan(0);
-    expect(screen.getByText("backstage.to/warcry/...")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display name")).toHaveValue("Backstage");
+    expect(screen.getByLabelText("Username")).toHaveValue("warcry");
+    expect(screen.getByLabelText("Contact email")).toHaveValue("warcry@example.com");
+    expect(screen.getByLabelText("Default headline")).toHaveValue(
+      "Out now - stream everywhere.",
+    );
+    expect(screen.getByLabelText("Show artist name on every page")).toBeChecked();
+    expect(screen.getByLabelText("Enable preview player by default")).toBeChecked();
+    expect(screen.getByLabelText("Lead capture on by default")).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Save settings" })).toHaveAttribute(
+      "form",
+      "general-settings-form",
+    );
     expect(screen.queryByText(/Integrations form/i)).not.toBeInTheDocument();
   });
 

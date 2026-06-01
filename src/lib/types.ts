@@ -21,6 +21,10 @@ export interface TrackingConfig {
   metaPixelId: string | null;
   metaPixelEnabled: boolean;
   metaTestEventCode: string | null;
+  defaultHeadline?: string;
+  showArtistName?: boolean;
+  previewPlayerDefaultEnabled?: boolean;
+  leadCaptureDefaultEnabled?: boolean;
 }
 
 export type EmailConnectorProvider = "mailchimp";

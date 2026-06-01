@@ -1,3 +1,25 @@
+const DATABASE_ERROR_PATTERNS = [
+  "failed sql statement",
+  "foreign key constraint",
+  "pg-mem",
+  "streaming_links_song_id_fk",
+  "insert into streaming_links",
+];
+
+function getDisplayError(error: string | null | undefined) {
+  if (!error) {
+    return null;
+  }
+
+  const normalized = error.toLowerCase();
+
+  if (DATABASE_ERROR_PATTERNS.some((pattern) => normalized.includes(pattern))) {
+    return "Backstage could not finish saving that change. Reload Backstage and try again.";
+  }
+
+  return error;
+}
+
 export function FormStateMessage({
   error,
   success,
@@ -5,11 +27,13 @@ export function FormStateMessage({
   error?: string | null;
   success?: string | null;
 }) {
-  if (!error && !success) {
+  const displayError = getDisplayError(error);
+
+  if (!displayError && !success) {
     return null;
   }
 
-  const isError = Boolean(error);
+  const isError = Boolean(displayError);
 
   return (
     <div
@@ -21,7 +45,7 @@ export function FormStateMessage({
           : "border-emerald-200 bg-emerald-50 text-emerald-700"
       }`}
     >
-      {error ?? success}
+      {displayError ?? success}
     </div>
   );
 }

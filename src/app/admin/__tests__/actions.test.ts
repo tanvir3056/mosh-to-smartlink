@@ -7,6 +7,7 @@ const mockRevalidateTag = vi.fn();
 const mockRedirect = vi.fn();
 const mockRequireUserSession = vi.fn();
 const mockCreateSongImportDraft = vi.fn();
+const mockGetTrackingConfig = vi.fn();
 const mockUpdateSongDraft = vi.fn();
 const mockSaveEmailConnectorConfig = vi.fn();
 const mockSaveTrackingConfig = vi.fn();
@@ -33,6 +34,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/data", () => ({
   createSongImportDraft: mockCreateSongImportDraft,
   deleteSongById: vi.fn(),
+  getTrackingConfig: mockGetTrackingConfig,
   saveEmailConnectorConfig: mockSaveEmailConnectorConfig,
   publishedSongPageTag: mockPublishedSongPageTag,
   saveTrackingConfig: mockSaveTrackingConfig,
@@ -426,8 +428,47 @@ describe("saveTrackingSettingsAction validation", () => {
       userId: "user_1",
       username: "artist",
     });
+    mockGetTrackingConfig.mockResolvedValue({
+      siteName: "Backstage",
+      metaPixelId: null,
+      metaPixelEnabled: false,
+      metaTestEventCode: null,
+      defaultHeadline: "Stream now",
+      showArtistName: true,
+      previewPlayerDefaultEnabled: true,
+      leadCaptureDefaultEnabled: false,
+    });
     mockSaveTrackingConfig.mockResolvedValue(undefined);
     mockSaveEmailConnectorConfig.mockResolvedValue(undefined);
+  });
+
+  test("saves Claude general settings defaults without touching Mailchimp", async () => {
+    const { saveGeneralSettingsAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("site_name", "Hana Vale");
+    formData.set("default_headline", "Out now - stream everywhere.");
+    formData.set("show_artist_name", "on");
+    formData.set("preview_player_default_enabled", "on");
+    formData.set("lead_capture_default_enabled", "on");
+
+    const result = await saveGeneralSettingsAction(formData);
+
+    expect(result).toEqual({
+      error: null,
+      success: "Settings saved.",
+    });
+    expect(mockSaveTrackingConfig).toHaveBeenCalledWith("user_1", {
+      siteName: "Hana Vale",
+      metaPixelId: null,
+      metaPixelEnabled: false,
+      metaTestEventCode: null,
+      defaultHeadline: "Out now - stream everywhere.",
+      showArtistName: true,
+      previewPlayerDefaultEnabled: true,
+      leadCaptureDefaultEnabled: true,
+    });
+    expect(mockSaveEmailConnectorConfig).not.toHaveBeenCalled();
   });
 
   test("rejects enabling Meta Pixel without a pixel id", async () => {
@@ -499,6 +540,10 @@ describe("saveTrackingSettingsAction validation", () => {
       metaPixelId: "123456789012345",
       metaPixelEnabled: true,
       metaTestEventCode: null,
+      defaultHeadline: "Stream now",
+      showArtistName: true,
+      previewPlayerDefaultEnabled: true,
+      leadCaptureDefaultEnabled: false,
     });
     expect(mockSaveEmailConnectorConfig).toHaveBeenCalledTimes(1);
   });

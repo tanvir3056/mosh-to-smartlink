@@ -119,6 +119,10 @@ const PAGE: SongPageWithLinks = {
     metaPixelId: null,
     metaPixelEnabled: false,
     metaTestEventCode: null,
+    defaultHeadline: "Stream now",
+    showArtistName: true,
+    previewPlayerDefaultEnabled: true,
+    leadCaptureDefaultEnabled: false,
   },
   emailCapture: {
     enabled: false,

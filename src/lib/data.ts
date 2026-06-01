@@ -96,6 +96,10 @@ type SongPageJoinRow = QueryResultRow & {
   meta_pixel_enabled: boolean | null;
   meta_test_event_code: string | null;
   site_name: string | null;
+  default_headline: string | null;
+  show_artist_name: boolean | null;
+  preview_player_default_enabled: boolean | null;
+  lead_capture_default_enabled: boolean | null;
 };
 
 type AppUserRow = QueryResultRow & {
@@ -180,6 +184,10 @@ function defaultTrackingConfig(): TrackingConfig {
     metaPixelId: null,
     metaPixelEnabled: false,
     metaTestEventCode: null,
+    defaultHeadline: "Stream now",
+    showArtistName: true,
+    previewPlayerDefaultEnabled: true,
+    leadCaptureDefaultEnabled: false,
   };
 }
 
@@ -302,6 +310,10 @@ function mapSongPage(rows: SongPageJoinRow[]): SongPageWithLinks | null {
       metaPixelId: firstRow.meta_pixel_id,
       metaPixelEnabled: Boolean(firstRow.meta_pixel_enabled),
       metaTestEventCode: firstRow.meta_test_event_code,
+      defaultHeadline: firstRow.default_headline ?? "Stream now",
+      showArtistName: firstRow.show_artist_name !== false,
+      previewPlayerDefaultEnabled: firstRow.preview_player_default_enabled !== false,
+      leadCaptureDefaultEnabled: Boolean(firstRow.lead_capture_default_enabled),
     },
     emailCapture: {
       enabled: Boolean(firstRow.email_capture_enabled),
@@ -885,9 +897,21 @@ export async function getTrackingConfig(ownerUserId: string) {
     meta_pixel_id: string | null;
     meta_pixel_enabled: boolean;
     meta_test_event_code: string | null;
+    default_headline: string;
+    show_artist_name: boolean;
+    preview_player_default_enabled: boolean;
+    lead_capture_default_enabled: boolean;
   }>(
     `
-      select site_name, meta_pixel_id, meta_pixel_enabled, meta_test_event_code
+      select
+        site_name,
+        meta_pixel_id,
+        meta_pixel_enabled,
+        meta_test_event_code,
+        default_headline,
+        show_artist_name,
+        preview_player_default_enabled,
+        lead_capture_default_enabled
       from tracking_config
       where owner_user_id = $1
       limit 1
@@ -906,6 +930,10 @@ export async function getTrackingConfig(ownerUserId: string) {
     metaPixelId: row.meta_pixel_id,
     metaPixelEnabled: Boolean(row.meta_pixel_enabled),
     metaTestEventCode: row.meta_test_event_code,
+    defaultHeadline: row.default_headline,
+    showArtistName: Boolean(row.show_artist_name),
+    previewPlayerDefaultEnabled: Boolean(row.preview_player_default_enabled),
+    leadCaptureDefaultEnabled: Boolean(row.lead_capture_default_enabled),
   } satisfies TrackingConfig;
 }
 
@@ -917,6 +945,10 @@ export async function saveTrackingConfig(ownerUserId: string, input: TrackingCon
           meta_pixel_id = $3,
           meta_pixel_enabled = $4,
           meta_test_event_code = $5,
+          default_headline = $6,
+          show_artist_name = $7,
+          preview_player_default_enabled = $8,
+          lead_capture_default_enabled = $9,
           updated_at = current_timestamp
       where owner_user_id = $1
       returning id
@@ -927,6 +959,10 @@ export async function saveTrackingConfig(ownerUserId: string, input: TrackingCon
       input.metaPixelId,
       input.metaPixelEnabled,
       input.metaTestEventCode,
+      input.defaultHeadline ?? "Stream now",
+      input.showArtistName ?? true,
+      input.previewPlayerDefaultEnabled ?? true,
+      input.leadCaptureDefaultEnabled ?? false,
     ],
   );
 
@@ -942,9 +978,13 @@ export async function saveTrackingConfig(ownerUserId: string, input: TrackingCon
         site_name,
         meta_pixel_id,
         meta_pixel_enabled,
-        meta_test_event_code
+        meta_test_event_code,
+        default_headline,
+        show_artist_name,
+        preview_player_default_enabled,
+        lead_capture_default_enabled
       )
-      values ($1, $2, $3, $4, $5, $6)
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `,
     [
       createId("tracking"),
@@ -953,6 +993,10 @@ export async function saveTrackingConfig(ownerUserId: string, input: TrackingCon
       input.metaPixelId,
       input.metaPixelEnabled,
       input.metaTestEventCode,
+      input.defaultHeadline ?? "Stream now",
+      input.showArtistName ?? true,
+      input.previewPlayerDefaultEnabled ?? true,
+      input.leadCaptureDefaultEnabled ?? false,
     ],
   );
 }
@@ -1243,7 +1287,11 @@ async function getPublishedSongPageUncached(username: string, slug: string) {
         tc.site_name,
         tc.meta_pixel_id,
         tc.meta_pixel_enabled,
-        tc.meta_test_event_code
+        tc.meta_test_event_code,
+        tc.default_headline,
+        tc.show_artist_name,
+        tc.preview_player_default_enabled,
+        tc.lead_capture_default_enabled
       from song_pages p
       join songs s on s.id = p.song_id
       join app_users u on u.id = s.owner_user_id
@@ -1365,7 +1413,11 @@ export async function getAdminSongPageBySongId(songId: string, ownerUserId: stri
         tc.site_name,
         tc.meta_pixel_id,
         tc.meta_pixel_enabled,
-        tc.meta_test_event_code
+        tc.meta_test_event_code,
+        tc.default_headline,
+        tc.show_artist_name,
+        tc.preview_player_default_enabled,
+        tc.lead_capture_default_enabled
       from songs s
       join song_pages p on p.song_id = s.id
       join app_users u on u.id = s.owner_user_id
@@ -1408,6 +1460,22 @@ export async function createSongImportDraft(
       bundle.song.artistName,
       bundle.song.title,
       songId,
+    );
+    const trackingRows = await query<{
+      default_headline: string | null;
+      lead_capture_default_enabled: boolean | null;
+    }>(
+      `
+        select default_headline, lead_capture_default_enabled
+        from tracking_config
+        where owner_user_id = $1
+        limit 1
+      `,
+      [ownerUserId],
+    );
+    const defaultHeadline = trackingRows[0]?.default_headline || "Stream now";
+    const leadCaptureDefaultEnabled = Boolean(
+      trackingRows[0]?.lead_capture_default_enabled,
     );
 
     if (existingSong[0]) {
@@ -1505,20 +1573,35 @@ export async function createSongImportDraft(
           update song_pages
           set
             slug = $2,
-            headline = 'Stream now',
+            headline = $4,
             updated_at = current_timestamp
           where song_id = $1
             and owner_user_id = $3
         `,
-        [songId, slug, ownerUserId],
+        [songId, slug, ownerUserId, defaultHeadline],
       );
     } else {
       await query(
         `
-          insert into song_pages (id, owner_user_id, song_id, slug, headline, status)
-          values ($1, $2, $3, $4, 'Stream now', 'draft')
+          insert into song_pages (
+            id,
+            owner_user_id,
+            song_id,
+            slug,
+            headline,
+            status,
+            email_capture_enabled
+          )
+          values ($1, $2, $3, $4, $5, 'draft', $6)
         `,
-        [createId("page"), ownerUserId, songId, slug],
+        [
+          createId("page"),
+          ownerUserId,
+          songId,
+          slug,
+          defaultHeadline,
+          leadCaptureDefaultEnabled,
+        ],
       );
     }
 
