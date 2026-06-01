@@ -299,6 +299,27 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByText("Artwork URL")).not.toBeInTheDocument();
   });
 
+  test("submits release metadata needed to recover a stale local draft", () => {
+    const { container } = render(
+      <SongEditorForm page={PAGE} showMissingLinksReview={false} />,
+    );
+
+    expect(container.querySelector('input[name="spotify_track_id"]')).toHaveValue(
+      "track_1",
+    );
+    expect(container.querySelector('input[name="spotify_track_url"]')).toHaveValue(
+      "https://open.spotify.com/track/track_1",
+    );
+    expect(container.querySelector('input[name="release_year"]')).toHaveValue("2026");
+    expect(container.querySelector('input[name="release_date"]')).toHaveValue(
+      "2026-04-30",
+    );
+    expect(container.querySelector('input[name="isrc"]')).toHaveValue("ABC123456789");
+    expect(container.querySelector('input[name="duration_ms"]')).toHaveValue(
+      "180000",
+    );
+  });
+
   test("matches the Claude command-center section structure", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 

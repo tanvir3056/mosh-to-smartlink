@@ -514,6 +514,37 @@ export function SongEditorForm({
       >
         <input type="hidden" name="song_id" value={page.song.id} />
         <input type="hidden" name="current_slug" value={page.page.slug} />
+        <input
+          type="hidden"
+          name="spotify_track_id"
+          value={page.song.spotifyTrackId}
+        />
+        <input
+          type="hidden"
+          name="spotify_track_url"
+          value={page.song.spotifyTrackUrl}
+        />
+        <input
+          type="hidden"
+          name="release_year"
+          value={page.song.releaseYear ?? ""}
+        />
+        <input
+          type="hidden"
+          name="release_date"
+          value={page.song.releaseDate ?? ""}
+        />
+        <input type="hidden" name="isrc" value={page.song.isrc ?? ""} />
+        <input
+          type="hidden"
+          name="explicit"
+          value={page.song.explicit ? "true" : "false"}
+        />
+        <input
+          type="hidden"
+          name="duration_ms"
+          value={page.song.durationMs ?? ""}
+        />
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 gap-4">

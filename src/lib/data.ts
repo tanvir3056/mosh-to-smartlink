@@ -31,6 +31,16 @@ import {
 const SONG_DRAFT_NOT_FOUND_MESSAGE =
   "This song draft is out of date or no longer belongs to this account. Reload Backstage and try again.";
 
+interface SongDraftRecoveryInput {
+  spotifyTrackId: string;
+  spotifyTrackUrl: string;
+  releaseYear: number | null;
+  releaseDate: string | null;
+  isrc: string | null;
+  explicit: boolean;
+  durationMs: number | null;
+}
+
 type SongPageJoinRow = QueryResultRow & {
   owner_user_id: string;
   username: string;
@@ -559,6 +569,171 @@ async function upsertStreamingLinks(
       throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
     }
   }
+}
+
+function canRecoverSongDraft(input: {
+  songId: string;
+  recovery?: SongDraftRecoveryInput | null;
+}) {
+  if (!input.songId.startsWith("song_") || !input.recovery) {
+    return false;
+  }
+
+  try {
+    const url = new URL(input.recovery.spotifyTrackUrl);
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      Boolean(url.hostname) &&
+      input.recovery.spotifyTrackId.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function recoverMissingSongDraft(
+  query: <T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    params?: unknown[],
+  ) => Promise<T[]>,
+  input: {
+    ownerUserId: string;
+    songId: string;
+    title: string;
+    artistName: string;
+    albumName: string | null;
+    artworkUrl: string;
+    previewUrl: string | null;
+    slug: string;
+    headline: string;
+    status: "draft" | "published" | "unpublished";
+    emailCapture: SongPageWithLinks["emailCapture"];
+    recovery?: SongDraftRecoveryInput | null;
+  },
+) {
+  if (!canRecoverSongDraft(input)) {
+    return false;
+  }
+
+  const ownershipRows = await query<{ owner_user_id: string }>(
+    `
+      select owner_user_id
+      from songs
+      where id = $1
+      limit 1
+    `,
+    [input.songId],
+  );
+
+  if (
+    ownershipRows[0] &&
+    ownershipRows[0].owner_user_id !== input.ownerUserId
+  ) {
+    return false;
+  }
+
+  const songRows = await query<{ id: string }>(
+    `
+      insert into songs (
+        id,
+        owner_user_id,
+        spotify_track_id,
+        spotify_track_url,
+        title,
+        artist_name,
+        album_name,
+        artwork_url,
+        preview_url,
+        preview_source,
+        release_year,
+        release_date,
+        isrc,
+        explicit,
+        duration_ms
+      )
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      on conflict (id) do nothing
+      returning id
+    `,
+    [
+      input.songId,
+      input.ownerUserId,
+      input.recovery!.spotifyTrackId,
+      input.recovery!.spotifyTrackUrl,
+      input.title,
+      input.artistName,
+      input.albumName,
+      input.artworkUrl,
+      input.previewUrl,
+      input.previewUrl ? "manual" : null,
+      input.recovery!.releaseYear,
+      input.recovery!.releaseDate,
+      input.recovery!.isrc,
+      input.recovery!.explicit,
+      input.recovery!.durationMs,
+    ],
+  );
+
+  if (songRows.length === 0 && ownershipRows.length === 0) {
+    return false;
+  }
+
+  await query(
+    `
+      insert into song_pages (
+        id,
+        owner_user_id,
+        song_id,
+        slug,
+        headline,
+        status,
+        email_capture_enabled,
+        email_capture_title,
+        email_capture_description,
+        email_capture_button_label,
+        email_capture_download_url,
+        email_capture_download_label,
+        email_capture_tag,
+        published_at,
+        unpublished_at
+      )
+      values (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        case when $6 = 'published' then current_timestamp else null end,
+        case when $6 = 'unpublished' then current_timestamp else null end
+      )
+      on conflict (song_id) do nothing
+    `,
+    [
+      createId("page"),
+      input.ownerUserId,
+      input.songId,
+      input.slug,
+      input.headline,
+      input.status,
+      input.emailCapture.enabled,
+      input.emailCapture.title,
+      input.emailCapture.description,
+      input.emailCapture.buttonLabel,
+      input.emailCapture.downloadUrl,
+      input.emailCapture.downloadLabel,
+      input.emailCapture.tag,
+    ],
+  );
+
+  return true;
 }
 
 export async function ensureAppData() {
@@ -1396,6 +1571,7 @@ export async function updateSongDraft(input: {
   status: "draft" | "published" | "unpublished";
   emailCapture: SongPageWithLinks["emailCapture"];
   links: MatchCandidate[];
+  recovery?: SongDraftRecoveryInput | null;
 }) {
   return dbTransaction(async (query) => {
     const uniqueSlug = await createUniqueSlug(
@@ -1438,7 +1614,14 @@ export async function updateSongDraft(input: {
     );
 
     if (songRows.length === 0) {
-      throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
+      const recovered = await recoverMissingSongDraft(query, {
+        ...input,
+        slug: finalSlug,
+      });
+
+      if (!recovered) {
+        throw new Error(SONG_DRAFT_NOT_FOUND_MESSAGE);
+      }
     }
 
     const pageRows = await query<{ id: string }>(

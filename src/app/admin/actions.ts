@@ -60,6 +60,30 @@ function getNullableNumberValue(formData: FormData, key: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function getBooleanValue(formData: FormData, key: string) {
+  const value = getStringValue(formData, key).toLowerCase();
+  return value === "true" || value === "on" || value === "1";
+}
+
+function parseSongRecoveryFromFormData(formData: FormData) {
+  const spotifyTrackId = getStringValue(formData, "spotify_track_id");
+  const spotifyTrackUrl = getStringValue(formData, "spotify_track_url");
+
+  if (!spotifyTrackId || !spotifyTrackUrl) {
+    return null;
+  }
+
+  return {
+    spotifyTrackId,
+    spotifyTrackUrl,
+    releaseYear: getNullableNumberValue(formData, "release_year"),
+    releaseDate: getNullableStringValue(formData, "release_date"),
+    isrc: getNullableStringValue(formData, "isrc"),
+    explicit: getBooleanValue(formData, "explicit"),
+    durationMs: getNullableNumberValue(formData, "duration_ms"),
+  };
+}
+
 function isValidHttpStreamingLink(value: string) {
   try {
     const url = new URL(value);
@@ -469,6 +493,7 @@ export async function updateSongAction(
       status,
       emailCapture,
       links,
+      recovery: parseSongRecoveryFromFormData(formData),
     });
 
     revalidatePath("/admin");

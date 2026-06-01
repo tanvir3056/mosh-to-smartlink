@@ -529,6 +529,75 @@ describe("core data flow", () => {
     ).rejects.toThrow("This song draft is out of date");
   });
 
+  test("repairs a stale local editor save when recovery metadata is present", async () => {
+    const { createAccountOwner, getAdminSongPageBySongId, updateSongDraft } =
+      await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    await updateSongDraft({
+      ownerUserId: USER_ID,
+      songId: "song_recovered",
+      title: "Recovered Song",
+      artistName: "North Vale",
+      albumName: "Recovered Album",
+      artworkUrl: "https://images.example.com/recovered.jpg",
+      previewUrl: null,
+      headline: "Stream now",
+      slug: "recovered-song",
+      status: "published",
+      emailCapture: {
+        enabled: false,
+        title: null,
+        description: null,
+        buttonLabel: null,
+        downloadUrl: null,
+        downloadLabel: null,
+        tag: null,
+      },
+      links: [
+        {
+          service: "spotify",
+          url: "https://open.spotify.com/track/recovered",
+          matchStatus: "matched",
+          matchSource: "spotify_track_url",
+          confidence: 1,
+          notes: null,
+        },
+      ],
+      recovery: {
+        spotifyTrackId: "recovered",
+        spotifyTrackUrl: "https://open.spotify.com/track/recovered",
+        releaseYear: 2026,
+        releaseDate: "2026-06-01",
+        isrc: "RECOVERED1234",
+        explicit: false,
+        durationMs: 180000,
+      },
+    });
+
+    const recoveredPage = await getAdminSongPageBySongId("song_recovered", USER_ID);
+
+    expect(recoveredPage).toMatchObject({
+      song: {
+        title: "Recovered Song",
+        spotifyTrackId: "recovered",
+      },
+      page: {
+        slug: "recovered-song",
+        status: "published",
+      },
+    });
+    expect(recoveredPage?.links.find((link) => link.service === "spotify")).toMatchObject({
+      url: "https://open.spotify.com/track/recovered",
+    });
+  });
+
   test("captures email leads and syncs them to Mailchimp when configured", async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ ok: true }), {

@@ -52,7 +52,13 @@ function buildBaseFormData() {
   formData.set("song_id", "song_1");
   formData.set("title", "Track");
   formData.set("artist_name", "Artist");
+  formData.set("spotify_track_id", "track_1");
+  formData.set("spotify_track_url", "https://open.spotify.com/track/track_1");
   formData.set("artwork_url", "https://images.example.com/track.jpg");
+  formData.set("release_year", "2026");
+  formData.set("release_date", "2026-04-30");
+  formData.set("isrc", "ABC123456789");
+  formData.set("duration_ms", "180000");
   formData.set("headline", "Stream now");
   formData.set("slug", "artist-track");
   formData.set("intent", "draft");
@@ -152,6 +158,33 @@ describe("updateSongAction manual streaming link validation", () => {
       success: "Draft saved.",
     });
     expect(mockUpdateSongDraft).toHaveBeenCalledTimes(1);
+  });
+
+  test("passes recovery metadata from the editor form into the save action", async () => {
+    const { updateSongAction } = await import("@/app/admin/actions");
+    const formData = buildBaseFormData();
+
+    setServiceFields(formData, "spotify", {
+      url: "https://open.spotify.com/track/track_1",
+      isVisible: true,
+      matchStatus: "matched",
+    });
+
+    await updateSongAction({ error: null, success: null }, formData);
+
+    expect(mockUpdateSongDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recovery: {
+          spotifyTrackId: "track_1",
+          spotifyTrackUrl: "https://open.spotify.com/track/track_1",
+          releaseYear: 2026,
+          releaseDate: "2026-04-30",
+          isrc: "ABC123456789",
+          explicit: false,
+          durationMs: 180000,
+        },
+      }),
+    );
   });
 
   test("rejects a visible manual link with an invalid string", async () => {
