@@ -142,10 +142,10 @@ body {
   --app-red-text: var(--red-text);
   --app-blue-soft: var(--blue-soft);
   --app-blue-text: var(--blue-text);
-  --font-display: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
-  --font-body: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-body: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
   --font-sans: var(--font-body);
-  --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --font-display: var(--font-schibsted), "Schibsted Grotesk", var(--font-sans);
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
   min-height: 100vh;
   background: var(--app-bg);
   color: var(--app-text);
