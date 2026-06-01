@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ChevronLeft, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ShieldCheck } from "lucide-react";
 
 import { ImportSongForm } from "@/components/admin/import-song-form";
 import { requireUserSession } from "@/lib/auth";
@@ -39,11 +39,8 @@ export default async function NewSongPage() {
             <p className="mt-1 text-[13px] leading-6 text-[var(--app-muted)]">
               We create a private draft you can edit freely. You choose the slug,
               confirm each streaming link, and decide exactly when it goes live.
+              Nothing is shared until you hit publish.
             </p>
-            <div className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--app-green-text)]">
-              <Check className="h-3.5 w-3.5" />
-              Drafts stay private for @{session.username}
-            </div>
           </div>
         </div>
       </section>
