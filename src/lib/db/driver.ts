@@ -47,6 +47,7 @@ const persistedLocalTables = [
 ] as const;
 
 type LocalTableName = (typeof persistedLocalTables)[number];
+const localTablesInDeleteOrder = [...persistedLocalTables].reverse();
 
 interface LocalTableSnapshot {
   columns: string[];
@@ -97,6 +98,13 @@ async function restoreLocalSnapshot(pool: Pool) {
     return;
   }
 
+  await insertLocalSnapshotRows(pool, snapshot);
+}
+
+async function insertLocalSnapshotRows(
+  pool: Pool,
+  snapshot: LocalDatabaseSnapshot,
+) {
   for (const tableName of persistedLocalTables) {
     const table = snapshot.tables[tableName];
 
@@ -120,6 +128,53 @@ async function restoreLocalSnapshot(pool: Pool) {
       );
     }
   }
+}
+
+async function replaceLocalSnapshotRows(
+  pool: Pool,
+  snapshot: LocalDatabaseSnapshot,
+) {
+  await pool.query("begin");
+
+  try {
+    for (const tableName of localTablesInDeleteOrder) {
+      await pool.query(`delete from ${quoteIdentifier(tableName)}`);
+    }
+
+    await insertLocalSnapshotRows(pool, snapshot);
+    await pool.query("commit");
+  } catch (error) {
+    await pool.query("rollback");
+    throw error;
+  }
+}
+
+function createLocalSnapshotRefresher(pool: Pool) {
+  let refreshQueue = Promise.resolve();
+
+  return async function refreshLocalSnapshot() {
+    if (!canPersistLocalRuntime()) {
+      return;
+    }
+
+    refreshQueue = refreshQueue
+      .catch(() => {
+        // A later refresh should still be able to run after a transient failure.
+      })
+      .then(async () => {
+        try {
+          const snapshot = await readLocalSnapshotFromBlob();
+
+          if (snapshot?.version === 1) {
+            await replaceLocalSnapshotRows(pool, snapshot);
+          }
+        } catch (error) {
+          console.warn("Failed to refresh local database snapshot.", error);
+        }
+      });
+
+    await refreshQueue;
+  };
 }
 
 async function buildLocalSnapshot(pool: Pool): Promise<LocalDatabaseSnapshot> {
@@ -422,6 +477,7 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
   const LocalPool = adapter.Pool as typeof Pool;
   const pool = new LocalPool();
   await restoreLocalSnapshot(pool);
+  const refreshLocalSnapshot = createLocalSnapshotRefresher(pool);
   const persistLocalSnapshot = createLocalSnapshotPersister(pool);
 
   return {
@@ -433,6 +489,10 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
       text: string,
       params?: unknown[],
     ) {
+      if (isLocalMutationQuery(text)) {
+        await refreshLocalSnapshot();
+      }
+
       const result = await pool.query<T>(text, params);
       if (isLocalMutationQuery(text)) {
         await persistLocalSnapshot();
@@ -447,6 +507,7 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
         ) => Promise<R[]>,
       ) => Promise<T>,
     ) {
+      await refreshLocalSnapshot();
       const client = await pool.connect();
 
       try {

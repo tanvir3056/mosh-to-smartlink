@@ -165,6 +165,133 @@ describe("core data flow", () => {
     });
   }, 10_000);
 
+  test("refreshes Blob-backed local data before write transactions", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
+
+    let savedSnapshot: string | null = null;
+    const putMock = vi.fn(async (_pathname: string, body: string) => {
+      savedSnapshot = body;
+      return {
+        url: "https://blob.example/backstage/local-database-snapshot.json",
+        downloadUrl: "https://blob.example/backstage/local-database-snapshot.json",
+        pathname: "backstage/local-database-snapshot.json",
+        contentType: "application/json",
+        contentDisposition: "inline",
+      };
+    });
+    const getMock = vi.fn(async () => {
+      if (!savedSnapshot) {
+        return null;
+      }
+
+      return {
+        statusCode: 200,
+        stream: new Response(savedSnapshot).body,
+        headers: new Headers(),
+        blob: {
+          url: "https://blob.example/backstage/local-database-snapshot.json",
+          downloadUrl: "https://blob.example/backstage/local-database-snapshot.json",
+          pathname: "backstage/local-database-snapshot.json",
+          contentDisposition: "inline",
+          cacheControl: "no-cache",
+          uploadedAt: new Date(),
+          etag: "snapshot-etag",
+          contentType: "application/json",
+          size: savedSnapshot.length,
+        },
+      };
+    });
+
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const staleDataRuntime = await import("@/lib/data");
+
+    await staleDataRuntime.createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    const staleUpdateSongDraft = staleDataRuntime.updateSongDraft;
+
+    Object.assign(globalThis, {
+      __ffmDatabaseRuntimePromise: undefined,
+    });
+    vi.resetModules();
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const freshDataRuntime = await import("@/lib/data");
+    const songId = await freshDataRuntime.createSongImportDraft(
+      IMPORT_BUNDLE,
+      USERNAME,
+      USER_ID,
+    );
+    const adminPage = await freshDataRuntime.getAdminSongPageBySongId(
+      songId,
+      USER_ID,
+    );
+
+    expect(adminPage).not.toBeNull();
+
+    await expect(
+      staleUpdateSongDraft({
+        ownerUserId: USER_ID,
+        songId,
+        title: "Glass Hearts Updated",
+        artistName: adminPage!.song.artistName,
+        albumName: adminPage!.song.albumName,
+        artworkUrl: adminPage!.song.artworkUrl,
+        previewUrl: adminPage!.song.previewUrl,
+        headline: "Stream now",
+        slug: adminPage!.page.slug,
+        status: "published",
+        emailCapture: {
+          enabled: false,
+          title: null,
+          description: null,
+          buttonLabel: null,
+          downloadUrl: null,
+          downloadLabel: null,
+          tag: null,
+        },
+        links: adminPage!.links.map((link) => ({
+          service: link.service,
+          url: link.url,
+          isVisible: link.isVisible,
+          matchStatus: link.matchStatus,
+          matchSource: link.matchSource,
+          confidence: link.confidence,
+          notes: link.notes,
+        })),
+      }),
+    ).resolves.toBeUndefined();
+
+    Object.assign(globalThis, {
+      __ffmDatabaseRuntimePromise: undefined,
+    });
+    vi.resetModules();
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const verificationRuntime = await import("@/lib/data");
+    await expect(
+      verificationRuntime.getAdminSongPageBySongId(songId, USER_ID),
+    ).resolves.toMatchObject({
+      song: {
+        title: "Glass Hearts Updated",
+      },
+    });
+  }, 10_000);
+
   test("imports, publishes, records analytics, and exposes the public page", async () => {
     const {
       createAccountOwner,
