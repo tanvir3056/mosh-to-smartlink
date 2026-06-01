@@ -225,6 +225,121 @@ describe("core data flow", () => {
     });
   }, 10_000);
 
+  test("ignores orphaned local snapshot links instead of blocking future saves", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
+
+    let savedSnapshot: string | null = null;
+    const corruptSnapshot = JSON.stringify({
+      version: 1,
+      savedAt: new Date().toISOString(),
+      tables: {
+        app_users: {
+          columns: [
+            "id",
+            "auth_user_id",
+            "username",
+            "login_email",
+            "password_hash",
+            "created_at",
+            "updated_at",
+          ],
+          rows: [
+            {
+              id: USER_ID,
+              auth_user_id: null,
+              username: USERNAME,
+              login_email: LOGIN_EMAIL,
+              password_hash: "salt:hash",
+              created_at: "2026-06-01T00:00:00.000Z",
+              updated_at: "2026-06-01T00:00:00.000Z",
+            },
+          ],
+        },
+        streaming_links: {
+          columns: [
+            "id",
+            "song_id",
+            "service",
+            "url",
+            "match_status",
+            "review_status",
+            "match_source",
+            "confidence",
+            "notes",
+            "confidence_reason",
+            "matched_title",
+            "matched_artist",
+            "matched_album",
+            "matched_duration_ms",
+            "matched_release_date",
+            "matched_isrc",
+            "position",
+            "is_visible",
+          ],
+          rows: [
+            {
+              id: "link_orphan",
+              song_id: "song_missing",
+              service: "spotify",
+              url: "https://open.spotify.com/track/orphan",
+              match_status: "matched",
+              review_status: "approved",
+              match_source: "spotify_track_url",
+              confidence: 1,
+              notes: null,
+              confidence_reason: "Source platform URL.",
+              matched_title: "Orphan",
+              matched_artist: "Missing Artist",
+              matched_album: "Missing Album",
+              matched_duration_ms: null,
+              matched_release_date: "2026-06-01",
+              matched_isrc: null,
+              position: 0,
+              is_visible: true,
+            },
+          ],
+        },
+      },
+    });
+    const putMock = vi.fn(async (_pathname: string, body: string) => {
+      savedSnapshot = body;
+      return {
+        url: "https://blob.example/backstage/local-database-snapshot.json",
+        downloadUrl: "https://blob.example/backstage/local-database-snapshot.json",
+        pathname: "backstage/local-database-snapshot.json",
+        contentType: "application/json",
+        contentDisposition: "inline",
+      };
+    });
+    const getMock = vi.fn(async () => ({
+      statusCode: 200,
+      stream: new Response(savedSnapshot ?? corruptSnapshot).body,
+      headers: new Headers(),
+    }));
+
+    vi.doMock("@vercel/blob", () => ({
+      get: getMock,
+      put: putMock,
+    }));
+
+    const { createSongImportDraft, getAdminSongPageBySongId, getUserById } =
+      await import("@/lib/data");
+
+    await expect(getUserById(USER_ID)).resolves.toMatchObject({
+      id: USER_ID,
+      username: USERNAME,
+    });
+
+    const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
+    await expect(getAdminSongPageBySongId(songId, USER_ID)).resolves.toMatchObject({
+      song: {
+        title: "Glass Hearts",
+      },
+    });
+
+    expect(savedSnapshot).not.toContain("link_orphan");
+  }, 10_000);
+
   test("refreshes Blob-backed local data before write transactions", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
 

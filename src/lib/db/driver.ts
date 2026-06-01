@@ -49,6 +49,13 @@ const persistedLocalTables = [
 type LocalTableName = (typeof persistedLocalTables)[number];
 const localTablesInDeleteOrder = [...persistedLocalTables].reverse();
 
+interface LocalSnapshotReference {
+  column: string;
+  referencedTable: LocalTableName;
+  referencedColumn?: string;
+  nullable?: boolean;
+}
+
 interface LocalTableSnapshot {
   columns: string[];
   rows: Record<string, unknown>[];
@@ -63,6 +70,51 @@ interface LocalDatabaseSnapshot {
 function quoteIdentifier(identifier: string) {
   return `"${identifier.replaceAll("\"", "\"\"")}"`;
 }
+
+const localSnapshotReferences: Partial<Record<LocalTableName, LocalSnapshotReference[]>> = {
+  tracking_config: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+  ],
+  songs: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+  ],
+  song_pages: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+    { column: "song_id", referencedTable: "songs" },
+  ],
+  streaming_links: [
+    { column: "song_id", referencedTable: "songs" },
+  ],
+  import_attempts: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+    { column: "song_id", referencedTable: "songs", nullable: true },
+  ],
+  visits: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+    { column: "song_id", referencedTable: "songs" },
+    { column: "page_id", referencedTable: "song_pages" },
+  ],
+  click_events: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+    { column: "song_id", referencedTable: "songs" },
+    { column: "page_id", referencedTable: "song_pages" },
+    { column: "visit_id", referencedTable: "visits", nullable: true },
+    {
+      column: "streaming_link_id",
+      referencedTable: "streaming_links",
+      nullable: true,
+    },
+  ],
+  email_connectors: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+  ],
+  email_capture_submissions: [
+    { column: "owner_user_id", referencedTable: "app_users" },
+    { column: "song_id", referencedTable: "songs" },
+    { column: "page_id", referencedTable: "song_pages" },
+    { column: "visit_id", referencedTable: "visits", nullable: true },
+  ],
+};
 
 function isLocalMutationQuery(text: string) {
   return /^(insert|update|delete|truncate|alter|create|drop)\b/i.test(text.trim());
@@ -118,16 +170,68 @@ async function insertLocalSnapshotRows(
       .join(", ");
 
     for (const row of table.rows) {
+      const safeRow = await prepareLocalSnapshotRow(pool, tableName, row);
+
+      if (!safeRow) {
+        continue;
+      }
+
       await pool.query(
         `
           insert into ${quoteIdentifier(tableName)} (${columnList})
           values (${valuePlaceholders})
           on conflict do nothing
         `,
-        table.columns.map((column) => row[column] ?? null),
+        table.columns.map((column) => safeRow[column] ?? null),
       );
     }
   }
+}
+
+async function prepareLocalSnapshotRow(
+  pool: Pool,
+  tableName: LocalTableName,
+  row: Record<string, unknown>,
+) {
+  const references = localSnapshotReferences[tableName] ?? [];
+  let safeRow = row;
+
+  for (const reference of references) {
+    const value = safeRow[reference.column];
+
+    if (value === null || value === undefined || value === "") {
+      if (reference.nullable) {
+        continue;
+      }
+
+      return null;
+    }
+
+    const parentRows = await pool.query(
+      `
+        select 1
+        from ${quoteIdentifier(reference.referencedTable)}
+        where ${quoteIdentifier(reference.referencedColumn ?? "id")} = $1
+        limit 1
+      `,
+      [value],
+    );
+
+    if (parentRows.rows.length > 0) {
+      continue;
+    }
+
+    if (!reference.nullable) {
+      return null;
+    }
+
+    safeRow = {
+      ...safeRow,
+      [reference.column]: null,
+    };
+  }
+
+  return safeRow;
 }
 
 async function replaceLocalSnapshotRows(
