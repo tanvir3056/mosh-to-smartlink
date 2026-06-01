@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { Link as LinkIcon, Plus, Sparkles } from "lucide-react";
+import {
+  Globe2,
+  Link as LinkIcon,
+  Pencil,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 
-import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +19,6 @@ export default async function HomePage() {
       <header className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-5 py-5 sm:px-8">
         <BrandLockup tagline={null} tone="light" />
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Link href="/sign-in">
             <Button tone="ghost">Sign in</Button>
           </Link>
@@ -69,16 +73,28 @@ export default async function HomePage() {
             </div>
             <div className="p-2">
               {[
-                ["Paste a Spotify link", "We pull artwork, metadata and matching services."],
-                ["Review & tune", "Confirm links, set your slug, add email capture."],
-                ["Publish one link", "Share a page that works on every service."],
-              ].map(([title, body], index) => (
+                {
+                  title: "Paste a Spotify link",
+                  body: "We pull artwork, metadata and matching services.",
+                  icon: Plus,
+                },
+                {
+                  title: "Review & tune",
+                  body: "Confirm links, set your slug, add email capture.",
+                  icon: Pencil,
+                },
+                {
+                  title: "Publish one link",
+                  body: "Share a page that works on every service.",
+                  icon: Globe2,
+                },
+              ].map(({ title, body, icon: Icon }, index) => (
                 <div
                   key={title}
                   className="flex items-center gap-3 rounded-[10px] px-3 py-3"
                 >
                   <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
-                    {index + 1}
+                    <Icon className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-sm font-semibold text-[var(--app-text)]">
