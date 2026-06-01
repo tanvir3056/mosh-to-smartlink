@@ -19,7 +19,7 @@ describe("auth page launch copy", () => {
     render(await SignInPage());
 
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
-    expect(screen.getByText("Sign-in mode: Secure account access")).toBeInTheDocument();
+    expect(screen.getByText("Secure session · username + password")).toBeInTheDocument();
   });
 
   test("sign-in page is rendered dynamically so login actions stay deploy-fresh", async () => {
@@ -36,7 +36,7 @@ describe("auth page launch copy", () => {
 
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/first version/i)).not.toBeInTheDocument();
-    expect(screen.getByText("Account mode: Secure account creation")).toBeInTheDocument();
+    expect(screen.getByText("This becomes the root of all your links.")).toBeInTheDocument();
   });
 
   test("sign-up page is rendered dynamically so account creation actions stay deploy-fresh", async () => {

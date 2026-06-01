@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Shield, User } from "lucide-react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -18,11 +19,7 @@ function SubmitButton() {
   );
 }
 
-export function SignInForm({
-  modeLabel,
-}: {
-  modeLabel: string;
-}) {
+export function SignInForm() {
   const [state, formAction] = useActionState<ActionState, FormData>(
     signInAction,
     INITIAL_ACTION_STATE,
@@ -30,33 +27,43 @@ export function SignInForm({
 
   return (
     <form action={formAction} className="grid gap-4">
-      <div className="app-card-soft rounded-2xl px-4 py-3 text-sm text-[var(--app-muted)]">
-        Sign-in mode: {modeLabel}
+      <div className="flex justify-center">
+        <span className="app-chip">
+          <Shield className="h-3.5 w-3.5" />
+          Secure session · username + password
+        </span>
       </div>
       <label className="grid gap-2">
         <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
-        <input
-          name="username"
-          autoComplete="username"
-          className="app-input"
-          placeholder="your-name"
-        />
+        <span className="app-input flex items-center gap-2 px-3">
+          <User className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+          <span className="font-mono text-sm text-[var(--app-muted-2)]">@</span>
+          <input
+            name="username"
+            autoComplete="username"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--app-text)]"
+            placeholder="yourname"
+          />
+        </span>
       </label>
       <label className="grid gap-2">
         <span className="text-sm font-medium text-[var(--app-text)]">Password</span>
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          className="app-input"
-          placeholder="Enter your password"
-        />
+        <span className="app-input flex items-center gap-2 px-3">
+          <Shield className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+          <input
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--app-text)]"
+            placeholder="••••••••"
+          />
+        </span>
       </label>
       <FormStateMessage error={state.error} success={state.success} />
       <SubmitButton />
-      <p className="text-sm text-[var(--app-muted)]">
+      <p className="text-center text-[13.5px] text-[var(--app-muted)]">
         New here?{" "}
-        <Link href="/sign-up" className="font-medium text-[var(--app-text)] underline underline-offset-4">
+        <Link href="/sign-up" className="font-semibold text-[var(--app-accent-text)]">
           Create an account
         </Link>
       </p>

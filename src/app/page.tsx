@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Link as LinkIcon, Plus, Sparkles } from "lucide-react";
 
+import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,7 @@ export default async function HomePage() {
       <header className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-5 py-5 sm:px-8">
         <BrandLockup tagline={null} tone="light" />
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link href="/sign-in">
             <Button tone="ghost">Sign in</Button>
           </Link>

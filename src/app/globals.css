@@ -64,46 +64,82 @@ body {
 }
 
 .bs-admin-theme {
-  --app-bg: oklch(0.985 0.002 270);
-  --app-panel: oklch(1 0 0);
-  --app-panel-strong: oklch(1 0 0);
-  --app-panel-muted: oklch(0.965 0.003 270);
-  --app-soft: oklch(0.985 0.002 270);
-  --app-text: oklch(0.23 0.012 271);
-  --app-muted: oklch(0.45 0.012 271);
-  --app-muted-2: oklch(0.60 0.010 271);
-  --app-line: oklch(0.922 0.004 270);
-  --app-line-strong: oklch(0.87 0.005 270);
-  --app-surface: oklch(1 0 0);
-  --app-surface-line: oklch(0.922 0.004 270);
-  --app-surface-text: oklch(0.23 0.012 271);
-  --app-surface-muted: oklch(0.45 0.012 271);
-  --app-sidebar-bg: oklch(1 0 0);
-  --app-sidebar-panel: oklch(0.985 0.002 270);
-  --app-sidebar-panel-strong: oklch(0.955 0.03 274);
-  --app-sidebar-line: oklch(0.922 0.004 270);
-  --app-sidebar-text: oklch(0.23 0.012 271);
-  --app-sidebar-muted: oklch(0.60 0.010 271);
-  --app-accent: oklch(0.515 0.205 274);
-  --app-accent-strong: oklch(0.46 0.205 274);
-  --app-accent-soft: oklch(0.955 0.03 274);
-  --app-accent-mint: oklch(0.83 0.105 274);
-  --app-accent-line: oklch(0.86 0.07 274);
-  --app-accent-text: oklch(0.45 0.18 274);
-  --app-green: oklch(0.58 0.13 155);
-  --app-green-soft: oklch(0.955 0.04 155);
-  --app-green-line: oklch(0.86 0.07 155);
-  --app-green-text: oklch(0.46 0.12 158);
-  --app-amber: oklch(0.72 0.15 75);
-  --app-amber-soft: oklch(0.96 0.05 80);
-  --app-amber-line: oklch(0.86 0.09 80);
-  --app-amber-text: oklch(0.52 0.11 70);
-  --app-red: oklch(0.585 0.215 22);
-  --app-red-soft: oklch(0.96 0.03 22);
-  --app-red-line: oklch(0.87 0.08 22);
-  --app-red-text: oklch(0.51 0.2 22);
-  --app-blue-soft: oklch(0.955 0.03 250);
-  --app-blue-text: oklch(0.48 0.16 252);
+  --bg: oklch(0.985 0.002 270);
+  --bg-sunken: oklch(0.965 0.003 270);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.985 0.002 270);
+  --hover: oklch(0.965 0.004 270);
+  --line: oklch(0.922 0.004 270);
+  --line-soft: oklch(0.95 0.003 270);
+  --line-strong: oklch(0.87 0.005 270);
+  --text: oklch(0.23 0.012 271);
+  --text-2: oklch(0.45 0.012 271);
+  --text-3: oklch(0.60 0.010 271);
+  --text-on: oklch(0.99 0 0);
+  --accent: oklch(0.515 0.205 274);
+  --accent-hover: oklch(0.46 0.205 274);
+  --accent-press: oklch(0.41 0.20 274);
+  --accent-soft: oklch(0.955 0.03 274);
+  --accent-soft-2: oklch(0.93 0.05 274);
+  --accent-line: oklch(0.86 0.07 274);
+  --accent-text: oklch(0.45 0.18 274);
+  --green: oklch(0.58 0.13 155);
+  --green-soft: oklch(0.955 0.04 155);
+  --green-line: oklch(0.86 0.07 155);
+  --green-text: oklch(0.46 0.12 158);
+  --amber: oklch(0.72 0.15 75);
+  --amber-soft: oklch(0.96 0.05 80);
+  --amber-line: oklch(0.86 0.09 80);
+  --amber-text: oklch(0.52 0.11 70);
+  --red: oklch(0.585 0.215 22);
+  --red-soft: oklch(0.96 0.03 22);
+  --red-line: oklch(0.87 0.08 22);
+  --red-text: oklch(0.51 0.2 22);
+  --blue: oklch(0.6 0.16 250);
+  --blue-soft: oklch(0.955 0.03 250);
+  --blue-text: oklch(0.48 0.16 252);
+  --glass: oklch(1 0 0 / 0.82);
+  --stripe: oklch(0.93 0.004 270);
+  --app-bg: var(--bg);
+  --app-panel: var(--surface);
+  --app-panel-strong: var(--surface);
+  --app-panel-muted: var(--surface-2);
+  --app-soft: var(--bg-sunken);
+  --app-text: var(--text);
+  --app-muted: var(--text-2);
+  --app-muted-2: var(--text-3);
+  --app-line: var(--line);
+  --app-line-strong: var(--line-strong);
+  --app-surface: var(--surface);
+  --app-surface-line: var(--line);
+  --app-surface-text: var(--text);
+  --app-surface-muted: var(--text-2);
+  --app-sidebar-bg: var(--surface);
+  --app-sidebar-panel: var(--surface-2);
+  --app-sidebar-panel-strong: var(--accent-soft);
+  --app-sidebar-line: var(--line);
+  --app-sidebar-text: var(--text);
+  --app-sidebar-muted: var(--text-3);
+  --app-accent: var(--accent);
+  --app-accent-strong: var(--accent-hover);
+  --app-accent-soft: var(--accent-soft);
+  --app-accent-mint: var(--accent-text);
+  --app-accent-line: var(--accent-line);
+  --app-accent-text: var(--accent-text);
+  --app-green: var(--green);
+  --app-green-soft: var(--green-soft);
+  --app-green-line: var(--green-line);
+  --app-green-text: var(--green-text);
+  --app-amber: var(--amber);
+  --app-amber-soft: var(--amber-soft);
+  --app-amber-line: var(--amber-line);
+  --app-amber-text: var(--amber-text);
+  --app-red: var(--red);
+  --app-red-soft: var(--red-soft);
+  --app-red-line: var(--red-line);
+  --app-red-text: var(--red-text);
+  --app-blue-soft: var(--blue-soft);
+  --app-blue-text: var(--blue-text);
   --font-display: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
   --font-body: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
   --font-sans: var(--font-body);
@@ -112,6 +148,45 @@ body {
   background: var(--app-bg);
   color: var(--app-text);
   color-scheme: light;
+}
+
+:root[data-theme="dark"] .bs-admin-theme {
+  --bg: oklch(0.175 0.008 274);
+  --bg-sunken: oklch(0.145 0.008 274);
+  --surface: oklch(0.215 0.009 274);
+  --surface-2: oklch(0.255 0.010 274);
+  --hover: oklch(0.29 0.012 274);
+  --line: oklch(0.33 0.013 274);
+  --line-soft: oklch(0.27 0.011 274);
+  --line-strong: oklch(0.43 0.016 274);
+  --text: oklch(0.965 0.004 274);
+  --text-2: oklch(0.76 0.010 274);
+  --text-3: oklch(0.60 0.012 274);
+  --accent: oklch(0.64 0.185 274);
+  --accent-hover: oklch(0.70 0.17 274);
+  --accent-press: oklch(0.58 0.19 274);
+  --accent-soft: oklch(0.31 0.07 274);
+  --accent-soft-2: oklch(0.37 0.09 274);
+  --accent-line: oklch(0.45 0.10 274);
+  --accent-text: oklch(0.83 0.105 274);
+  --green: oklch(0.66 0.14 155);
+  --green-soft: oklch(0.32 0.06 158);
+  --green-line: oklch(0.43 0.08 158);
+  --green-text: oklch(0.83 0.13 158);
+  --amber: oklch(0.78 0.15 75);
+  --amber-soft: oklch(0.34 0.06 70);
+  --amber-line: oklch(0.47 0.08 70);
+  --amber-text: oklch(0.86 0.13 82);
+  --red: oklch(0.63 0.21 22);
+  --red-soft: oklch(0.33 0.09 22);
+  --red-line: oklch(0.46 0.12 22);
+  --red-text: oklch(0.83 0.135 22);
+  --blue: oklch(0.66 0.16 250);
+  --blue-soft: oklch(0.32 0.07 252);
+  --blue-text: oklch(0.83 0.12 252);
+  --glass: oklch(0.215 0.009 274 / 0.82);
+  --stripe: oklch(0.30 0.012 274);
+  color-scheme: dark;
 }
 
 .bs-admin-theme h1,
@@ -166,6 +241,11 @@ a {
 input::placeholder,
 textarea::placeholder {
   color: rgba(21, 25, 34, 0.34);
+}
+
+.bs-admin-theme input::placeholder,
+.bs-admin-theme textarea::placeholder {
+  color: var(--text-3);
 }
 
 ::selection {
@@ -302,7 +382,7 @@ textarea::placeholder {
   background: var(--app-panel);
   padding: 0 0.75rem;
   color: var(--app-text);
-  color-scheme: light;
+  color-scheme: inherit;
   box-shadow: 0 1px 2px oklch(0.2 0.02 270 / 0.05);
   transition:
     border-color 180ms ease,
@@ -312,7 +392,7 @@ textarea::placeholder {
 }
 
 .app-input::placeholder {
-  color: rgba(21, 25, 34, 0.4);
+  color: var(--text-3);
 }
 
 .app-input:focus {

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ChevronDown, Globe2, LogOut, Plus, Settings } from "lucide-react";
+import { ChevronDown, Globe2, LogOut, Menu, Plus, Settings } from "lucide-react";
 
 import { signOutAction } from "@/app/admin/actions";
 import { AdminNav, AdminNavLinks } from "@/components/admin/admin-nav";
+import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { APP_DOMAIN_HINT } from "@/lib/constants";
@@ -28,6 +29,7 @@ export default async function AdminDashboardLayout({
               tone="light"
               className="items-start"
             />
+            <ThemeToggle size="sm" />
           </div>
 
           <Link href="/admin/songs/new" className="mb-[18px]">
@@ -109,29 +111,47 @@ export default async function AdminDashboardLayout({
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-30 border-b border-[var(--app-line)] bg-[color-mix(in_oklch,var(--app-panel)_82%,transparent)] px-4 py-3 backdrop-blur-xl sm:px-5 lg:hidden">
-            <div className="grid gap-4">
-              <div className="flex items-start justify-between gap-4">
-                <BrandLockup includeDomain tagline={null} tone="light" compact />
-                <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-panel)] px-3 py-1.5 text-[11px] font-semibold text-[var(--app-muted)]">
-                  @{session.username}
+          <header className="sticky top-0 z-30 flex h-[58px] items-center justify-between border-b border-[var(--app-line)] bg-[color-mix(in_oklch,var(--app-panel)_82%,transparent)] px-3.5 backdrop-blur-xl lg:hidden">
+            <BrandLockup tagline={null} tone="light" compact />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Link
+                href="/admin/songs/new"
+                aria-label="Import song"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+              >
+                <Plus className="h-[18px] w-[18px]" />
+              </Link>
+              <details className="group relative">
+                <summary
+                  aria-label="Open navigation"
+                  className="inline-flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] [&::-webkit-details-marker]:hidden"
+                >
+                  <Menu className="h-[18px] w-[18px]" />
+                </summary>
+                <div className="fixed inset-x-0 top-[58px] z-40 border-b border-[var(--app-line)] bg-[var(--app-panel)] p-3.5 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]">
+                  <AdminNavLinks orientation="vertical" />
+                  <div className="my-3 h-px bg-[var(--app-line)]" />
+                  <div className="flex items-center gap-2 rounded-[10px] px-2 py-2">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white">
+                      {session.username[0]?.toUpperCase() ?? "B"}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-semibold text-[var(--app-text)]">
+                        @{session.username}
+                      </span>
+                      <span className="block truncate text-[11.5px] text-[var(--app-muted-2)]">
+                        {session.loginEmail}
+                      </span>
+                    </span>
+                    <form action={signOutAction}>
+                      <Button type="submit" tone="subtle" className="min-h-8 px-3 text-[13px]">
+                        Sign out
+                      </Button>
+                    </form>
+                  </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                <Link href="/admin/songs/new">
-                  <Button className="w-full justify-center">Import song</Button>
-                </Link>
-                <form action={signOutAction}>
-                  <Button type="submit" tone="secondary">
-                    Sign out
-                  </Button>
-                </form>
-              </div>
-
-              <div>
-                <AdminNavLinks orientation="horizontal" />
-              </div>
+              </details>
             </div>
           </header>
 

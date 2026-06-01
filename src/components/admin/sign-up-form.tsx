@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Shield, User } from "lucide-react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -19,11 +20,7 @@ function SubmitButton() {
   );
 }
 
-export function SignUpForm({
-  modeLabel,
-}: {
-  modeLabel: string;
-}) {
+export function SignUpForm() {
   const [state, formAction] = useActionState<ActionState, FormData>(
     signUpAction,
     INITIAL_ACTION_STATE,
@@ -31,33 +28,43 @@ export function SignUpForm({
 
   return (
     <form action={formAction} className="grid gap-4">
-      <div className="app-card-soft rounded-2xl px-4 py-3 text-sm text-[var(--app-muted)]">
-        Account mode: {modeLabel}
-      </div>
       <label className="grid gap-2">
         <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
-        <input
-          name="username"
-          autoComplete="username"
-          className="app-input"
-          placeholder="your-name"
-        />
+        <span className="app-input flex items-center gap-2 px-3">
+          <User className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+          <span className="font-mono text-sm text-[var(--app-muted-2)]">backstage.fm/</span>
+          <input
+            name="username"
+            autoComplete="username"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--app-text)]"
+            placeholder="yourname"
+          />
+        </span>
+        <span className="text-[12.5px] text-[var(--app-muted-2)]">
+          This becomes the root of all your links.
+        </span>
       </label>
       <label className="grid gap-2">
         <span className="text-sm font-medium text-[var(--app-text)]">Password</span>
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          className="app-input"
-          placeholder="Create a password"
-        />
+        <span className="app-input flex items-center gap-2 px-3">
+          <Shield className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+          <input
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--app-text)]"
+            placeholder="At least 8 characters"
+          />
+        </span>
+        <span className="text-[12.5px] text-[var(--app-muted-2)]">
+          Use 8+ characters.
+        </span>
       </label>
       <FormStateMessage error={state.error} success={state.success} />
       <SubmitButton />
-      <p className="text-sm text-[var(--app-muted)]">
+      <p className="text-center text-[13.5px] text-[var(--app-muted)]">
         Already have an account?{" "}
-        <Link href="/sign-in" className="font-medium text-[var(--app-text)] underline underline-offset-4">
+        <Link href="/sign-in" className="font-semibold text-[var(--app-accent-text)]">
           Sign in
         </Link>
       </p>
