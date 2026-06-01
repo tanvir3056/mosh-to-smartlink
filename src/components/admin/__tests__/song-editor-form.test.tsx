@@ -372,4 +372,26 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.getByText("Delete this release")).toBeInTheDocument();
     expect(screen.queryByText("Delete this song")).not.toBeInTheDocument();
   });
+
+  test("keeps the danger zone inside the editor command form", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const dangerZoneHeading = screen.getByRole("heading", { name: "Danger zone" });
+    const deleteButton = screen.getByRole("button", { name: "Delete song" });
+    const publishingRailHeading = screen.getAllByRole("heading", {
+      name: "Ready to publish",
+    })[0];
+
+    expect(dangerZoneHeading.closest("form")).not.toBeNull();
+    expect(
+      dangerZoneHeading.compareDocumentPosition(publishingRailHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(deleteButton).toHaveClass("text-[var(--app-red-text)]");
+    expect(
+      screen.queryByText(
+        "This permanently removes the song, page, links, and analytics tied to it.",
+      ),
+    ).not.toBeInTheDocument();
+  });
 });

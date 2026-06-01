@@ -1131,6 +1131,36 @@ export function SongEditorForm({
             </MetaField>
           </EditorSection>
 
+          <section className="overflow-hidden rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
+            <div className="flex items-center gap-3 border-b border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-5 py-4">
+              <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] bg-[var(--app-panel)] text-[var(--app-red-text)]">
+                <CircleAlert className="h-4 w-4" />
+              </span>
+              <h3 className="text-[15.5px] font-semibold text-[var(--app-red-text)]">
+                Danger zone
+              </h3>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+              <div>
+                <div className="text-sm font-semibold text-[var(--app-text)]">
+                  Delete this release
+                </div>
+                <p className="mt-1 max-w-xl text-[13px] leading-6 text-[var(--app-muted)]">
+                  Permanently removes the page and its link. Visitors will hit a 404.
+                  Analytics history is also deleted. This cannot be undone.
+                </p>
+              </div>
+              <div className="shrink-0">
+                <DeleteSongButton
+                  songId={page.song.id}
+                  songLabel={`${page.song.artistName} - ${page.song.title}`}
+                  inline
+                  variant="ghost"
+                />
+              </div>
+            </div>
+          </section>
+
           <div className="app-card rounded-[14px] p-5 xl:hidden">
             <div className="flex flex-col gap-4">
               <div>
@@ -1248,34 +1278,6 @@ export function SongEditorForm({
           </aside>
         </div>
       </form>
-
-      <section className="mx-auto w-full max-w-[1240px] overflow-hidden rounded-[14px] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
-        <div className="flex items-center gap-3 border-b border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-5 py-4">
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] bg-[var(--app-panel)] text-[var(--app-red-text)]">
-            <CircleAlert className="h-4 w-4" />
-          </span>
-          <h3 className="text-[15.5px] font-semibold text-[var(--app-red-text)]">
-            Danger zone
-          </h3>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
-            <div className="text-sm font-semibold text-[var(--app-text)]">
-              Delete this release
-            </div>
-            <p className="mt-1 max-w-xl text-[13px] leading-6 text-[var(--app-muted)]">
-              Permanently removes the page and its link. Visitors will hit a 404.
-              Analytics history is also deleted. This cannot be undone.
-            </p>
-          </div>
-          <div className="shrink-0">
-            <DeleteSongButton
-              songId={page.song.id}
-              songLabel={`${page.song.artistName} - ${page.song.title}`}
-            />
-          </div>
-        </div>
-      </section>
     </>
   );
 }

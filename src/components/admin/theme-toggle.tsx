@@ -31,16 +31,18 @@ export function ThemeToggle({
 
   useEffect(() => {
     const storedTheme = getStoredTheme();
-    applyTheme(storedTheme);
-    const syncLabel = window.setTimeout(() => setTheme(storedTheme), 0);
+    const syncStoredTheme = window.setTimeout(() => setTheme(storedTheme), 0);
 
-    return () => window.clearTimeout(syncLabel);
+    return () => window.clearTimeout(syncStoredTheme);
   }, []);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    applyTheme(nextTheme);
     window.localStorage.setItem("bs_theme", nextTheme);
   }
 
