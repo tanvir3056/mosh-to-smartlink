@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import {
+  ArrowDownRight,
   ArrowUpRight,
   Download,
   Eye,
@@ -35,6 +36,10 @@ function formatCount(value: number) {
 
 function formatPercent(value: number) {
   return `${Math.round(value * 100)}%`;
+}
+
+function formatDelta(value: number) {
+  return formatPercent(Math.abs(value));
 }
 
 function ratio(value: number, max: number) {
@@ -124,15 +129,21 @@ function MetricCard({
   label,
   value,
   note,
+  delta,
   icon: Icon,
   accent = false,
 }: {
   label: string;
   value: string | number;
   note?: string;
+  delta?: number | null;
   icon: React.ComponentType<{ className?: string }>;
   accent?: boolean;
 }) {
+  const hasDelta = typeof delta === "number";
+  const deltaIsPositive = hasDelta ? delta >= 0 : false;
+  const DeltaIcon = deltaIsPositive ? ArrowUpRight : ArrowDownRight;
+
   return (
     <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
       <div className="flex items-center justify-between gap-3">
@@ -149,8 +160,24 @@ function MetricCard({
         </span>
       </div>
       <div>
-        <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
-          {value}
+        <div className="flex flex-wrap items-baseline gap-2.5">
+          <div className="font-[var(--font-display)] text-[30px] font-semibold leading-none tracking-[-0.02em] text-[var(--app-text)]">
+            {value}
+          </div>
+          {hasDelta ? (
+            <span
+              aria-label={`${label} ${deltaIsPositive ? "increased" : "decreased"} by ${formatDelta(delta)}`}
+              className={cn(
+                "inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11.5px] font-[550] leading-none",
+                deltaIsPositive
+                  ? "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"
+                  : "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]",
+              )}
+            >
+              <DeltaIcon className="h-3 w-3" />
+              {formatDelta(delta)}
+            </span>
+          ) : null}
         </div>
         {note ? <p className="mt-2 text-[12.5px] text-[var(--app-muted-2)]">{note}</p> : null}
       </div>
@@ -510,6 +537,7 @@ export default async function AdminAnalyticsPage({
           label="Visits"
           value={formatCount(analytics.totalVisits)}
           note={`${rangeDays}-day landing views`}
+          delta={analytics.comparison.totalVisitsDeltaRate}
           icon={Eye}
           accent
         />
@@ -519,18 +547,21 @@ export default async function AdminAnalyticsPage({
           note={`${formatPercent(
             analytics.totalVisits > 0 ? analytics.uniqueVisitors / analytics.totalVisits : 0,
           )} of total visits`}
+          delta={analytics.comparison.uniqueVisitorsDeltaRate}
           icon={Users}
         />
         <MetricCard
           label="Service clicks"
           value={formatCount(analytics.totalClicks)}
           note={topService ? `${SERVICE_LABELS[topService.service]} leads` : "No service data yet"}
+          delta={analytics.comparison.totalClicksDeltaRate}
           icon={MousePointer2}
         />
         <MetricCard
           label="Click-through rate"
           value={formatPercent(analytics.clickThroughRate)}
           note={`${formatPercent(repeatVisitRate)} repeat visits`}
+          delta={analytics.comparison.clickThroughRateDelta}
           icon={Target}
         />
       </div>

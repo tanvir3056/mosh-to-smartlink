@@ -641,6 +641,179 @@ describe("core data flow", () => {
     expect(analyticsAfterDelete.totalClicks).toBe(0);
   });
 
+  test("compares analytics KPI totals against the previous period", async () => {
+    const {
+      createAccountOwner,
+      createSongImportDraft,
+      getAdminSongPageBySongId,
+      getAnalyticsSnapshot,
+      getPublishedSongPage,
+      recordClickBySlug,
+      recordVisit,
+      updateSongDraft,
+    } = await import("@/lib/data");
+    const { dbQuery } = await import("@/lib/db/driver");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    const songId = await createSongImportDraft(IMPORT_BUNDLE, USERNAME, USER_ID);
+    const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
+
+    await updateSongDraft({
+      ownerUserId: USER_ID,
+      songId,
+      title: adminPage!.song.title,
+      artistName: adminPage!.song.artistName,
+      albumName: adminPage!.song.albumName,
+      artworkUrl: adminPage!.song.artworkUrl,
+      previewUrl: adminPage!.song.previewUrl,
+      headline: "Stream now",
+      slug: adminPage!.page.slug,
+      status: "published",
+      emailCapture: {
+        enabled: false,
+        title: null,
+        description: null,
+        buttonLabel: null,
+        downloadUrl: null,
+        downloadLabel: null,
+        tag: null,
+      },
+      links: adminPage!.links.map((link) => ({
+        service: link.service,
+        url: link.url,
+        isVisible: link.isVisible,
+        matchStatus: link.matchStatus,
+        matchSource: link.matchSource,
+        confidence: link.confidence,
+        notes: link.notes,
+      })),
+    });
+
+    const publishedPage = await getPublishedSongPage(USERNAME, adminPage!.page.slug);
+    const contextFor = (visitorId: string) => ({
+      visitorId,
+      referrer: "https://instagram.com",
+      referrerHost: "instagram.com",
+      userAgent: "Mozilla/5.0",
+      browserName: "Chrome",
+      osName: "macOS",
+      deviceType: "mobile",
+      country: "NL",
+      city: "Amsterdam",
+      ipHash: visitorId,
+      source: "instagram",
+      medium: "paid-social",
+      campaign: "period-test",
+      term: null,
+      content: null,
+    });
+    const previousAt = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString();
+    const previousVisitA = await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: contextFor("previous-visitor-a"),
+    });
+    const previousVisitB = await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: contextFor("previous-visitor-b"),
+    });
+
+    await recordClickBySlug({
+      username: USERNAME,
+      slug: publishedPage!.page.slug,
+      service: "spotify",
+      context: contextFor("previous-visitor-a"),
+      lastVisitId: previousVisitA,
+      fallbackAttribution: {
+        source: "instagram",
+        medium: "paid-social",
+        campaign: "period-test",
+        term: null,
+        content: null,
+      },
+    });
+    await dbQuery("update visits set created_at = $1 where id in ($2, $3)", [
+      previousAt,
+      previousVisitA,
+      previousVisitB,
+    ]);
+    await dbQuery("update click_events set created_at = $1 where visitor_id = $2", [
+      previousAt,
+      "previous-visitor-a",
+    ]);
+
+    const currentVisitA = await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: contextFor("current-visitor-a"),
+    });
+    const currentVisitB = await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: contextFor("current-visitor-b"),
+    });
+    await recordVisit({
+      ownerUserId: USER_ID,
+      songId: publishedPage!.song.id,
+      pageId: publishedPage!.page.id,
+      path: `/${USERNAME}/${publishedPage!.page.slug}`,
+      context: contextFor("current-visitor-c"),
+    });
+    await recordClickBySlug({
+      username: USERNAME,
+      slug: publishedPage!.page.slug,
+      service: "spotify",
+      context: contextFor("current-visitor-a"),
+      lastVisitId: currentVisitA,
+      fallbackAttribution: {
+        source: "instagram",
+        medium: "paid-social",
+        campaign: "period-test",
+        term: null,
+        content: null,
+      },
+    });
+    await recordClickBySlug({
+      username: USERNAME,
+      slug: publishedPage!.page.slug,
+      service: "spotify",
+      context: contextFor("current-visitor-b"),
+      lastVisitId: currentVisitB,
+      fallbackAttribution: {
+        source: "instagram",
+        medium: "paid-social",
+        campaign: "period-test",
+        term: null,
+        content: null,
+      },
+    });
+
+    const analytics = await getAnalyticsSnapshot(USER_ID, 30);
+
+    expect(analytics.totalVisits).toBe(3);
+    expect(analytics.uniqueVisitors).toBe(3);
+    expect(analytics.totalClicks).toBe(2);
+    expect(analytics.comparison.totalVisitsDeltaRate).toBe(0.5);
+    expect(analytics.comparison.uniqueVisitorsDeltaRate).toBe(0.5);
+    expect(analytics.comparison.totalClicksDeltaRate).toBe(1);
+    expect(analytics.comparison.clickThroughRateDelta).toBeCloseTo(1 / 6);
+  });
+
   test("refuses stale editor saves before inserting streaming links", async () => {
     const { createAccountOwner, updateSongDraft } = await import("@/lib/data");
 

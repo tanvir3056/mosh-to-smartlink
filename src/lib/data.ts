@@ -2028,9 +2028,11 @@ export async function getAnalyticsSnapshot(
   rangeDays = 30,
 ): Promise<AnalyticsSnapshot> {
   const sinceIso = createSinceIso(rangeDays);
+  const previousSinceIso = createSinceIso(rangeDays * 2);
 
   const [
     totals,
+    previousTotals,
     serviceBreakdown,
     dailyVisitEvents,
     dailyClickEvents,
@@ -2059,6 +2061,19 @@ export async function getAnalyticsSnapshot(
           (select count(*) from email_capture_submissions where owner_user_id = $2 and created_at >= $1::timestamptz) as total_email_leads
       `,
       [sinceIso, ownerUserId],
+    ),
+    dbQuery<{
+      total_visits: string | number;
+      unique_visitors: string | number;
+      total_clicks: string | number;
+    }>(
+      `
+        select
+          (select count(*) from visits where owner_user_id = $3 and created_at >= $1::timestamptz and created_at < $2::timestamptz) as total_visits,
+          (select count(distinct visitor_id) from visits where owner_user_id = $3 and created_at >= $1::timestamptz and created_at < $2::timestamptz) as unique_visitors,
+          (select count(*) from click_events where owner_user_id = $3 and created_at >= $1::timestamptz and created_at < $2::timestamptz) as total_clicks
+      `,
+      [previousSinceIso, sinceIso, ownerUserId],
     ),
     dbQuery<{
       service: StreamingLinkRecord["service"];
@@ -2295,6 +2310,15 @@ export async function getAnalyticsSnapshot(
   const totalClicks = Number(row?.total_clicks ?? 0);
   const totalEmailLeads = Number(row?.total_email_leads ?? 0);
   const uniqueVisitors = Number(row?.unique_visitors ?? 0);
+  const previousRow = previousTotals[0];
+  const previousVisits = Number(previousRow?.total_visits ?? 0);
+  const previousUniqueVisitors = Number(previousRow?.unique_visitors ?? 0);
+  const previousClicks = Number(previousRow?.total_clicks ?? 0);
+  const clickThroughRate = totalVisits > 0 ? totalClicks / totalVisits : 0;
+  const previousClickThroughRate =
+    previousVisits > 0 ? previousClicks / previousVisits : null;
+  const changeRate = (current: number, previous: number) =>
+    previous > 0 ? (current - previous) / previous : null;
 
   const referrerClickMap = new Map(
     referrerClicks.map((entry) => [entry.label ?? "Direct", Number(entry.clicks)]),
@@ -2395,9 +2419,18 @@ export async function getAnalyticsSnapshot(
     totalVisits,
     uniqueVisitors,
     totalClicks,
-    clickThroughRate: totalVisits > 0 ? totalClicks / totalVisits : 0,
+    clickThroughRate,
     totalEmailLeads,
     emailLeadRate: totalVisits > 0 ? totalEmailLeads / totalVisits : 0,
+    comparison: {
+      totalVisitsDeltaRate: changeRate(totalVisits, previousVisits),
+      uniqueVisitorsDeltaRate: changeRate(uniqueVisitors, previousUniqueVisitors),
+      totalClicksDeltaRate: changeRate(totalClicks, previousClicks),
+      clickThroughRateDelta:
+        previousClickThroughRate === null
+          ? null
+          : clickThroughRate - previousClickThroughRate,
+    },
     serviceBreakdown: serviceBreakdown.map((entry) => ({
       service: entry.service,
       clicks: Number(entry.clicks),

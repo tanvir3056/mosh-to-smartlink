@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { AnalyticsSnapshot } from "@/lib/types";
@@ -24,6 +24,12 @@ const analyticsSnapshot: AnalyticsSnapshot = {
   clickThroughRate: 0.41,
   totalEmailLeads: 149,
   emailLeadRate: 0.12,
+  comparison: {
+    totalVisitsDeltaRate: 0.12,
+    uniqueVisitorsDeltaRate: 0.1,
+    totalClicksDeltaRate: 0.08,
+    clickThroughRateDelta: -0.013,
+  },
   serviceBreakdown: [{ service: "spotify", clicks: 320 }],
   referrers: [{ label: "Instagram", visits: 620, clicks: 290, ctr: 0.47 }],
   utms: [
@@ -96,7 +102,20 @@ describe("admin analytics page launch copy", () => {
 
     render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByText("Joined email list")).toBeInTheDocument();
-    expect(screen.getByText("12%")).toBeInTheDocument();
+    const leadRateRow = screen.getByText("Joined email list").closest("div");
+
+    expect(leadRateRow).not.toBeNull();
+    expect(within(leadRateRow!).getByText("12%")).toBeInTheDocument();
+  });
+
+  test("renders backend comparison deltas on the Claude KPI cards", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByLabelText("Visits increased by 12%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Unique visitors increased by 10%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Service clicks increased by 8%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Click-through rate decreased by 1%")).toBeInTheDocument();
   });
 });

@@ -23,6 +23,12 @@ const analyticsSnapshot: AnalyticsSnapshot = {
   clickThroughRate: 0.41,
   totalEmailLeads: 149,
   emailLeadRate: 0.12,
+  comparison: {
+    totalVisitsDeltaRate: 0.12,
+    uniqueVisitorsDeltaRate: 0.1,
+    totalClicksDeltaRate: 0.08,
+    clickThroughRateDelta: -0.013,
+  },
   serviceBreakdown: [{ service: "spotify", clicks: 320 }],
   referrers: [
     {

@@ -270,6 +270,13 @@ export interface AnalyticsDailyPoint {
   ctr: number;
 }
 
+export interface AnalyticsComparison {
+  totalVisitsDeltaRate: number | null;
+  uniqueVisitorsDeltaRate: number | null;
+  totalClicksDeltaRate: number | null;
+  clickThroughRateDelta: number | null;
+}
+
 export interface AnalyticsSnapshot {
   rangeDays: number;
   totalVisits: number;
@@ -278,6 +285,7 @@ export interface AnalyticsSnapshot {
   clickThroughRate: number;
   totalEmailLeads: number;
   emailLeadRate: number;
+  comparison: AnalyticsComparison;
   serviceBreakdown: ServiceBreakdownRow[];
   referrers: ReferrerRow[];
   utms: UTMRow[];
