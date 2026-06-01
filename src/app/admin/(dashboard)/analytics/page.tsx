@@ -113,7 +113,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="app-card overflow-hidden rounded-[14px] p-0">
+    <section className="app-card overflow-hidden rounded-[var(--r-lg)] p-0">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
         <div className="flex items-center gap-2.5">
           {Icon ? <Icon className="h-4 w-4 text-[var(--app-muted-2)]" /> : null}
@@ -151,12 +151,12 @@ function MetricCard({
   const DeltaIcon = deltaIsPositive ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
+    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[var(--r-lg)] p-[18px]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] font-[550] text-[var(--app-muted)]">{label}</p>
         <span
           className={cn(
-            "inline-flex h-7 w-7 items-center justify-center rounded-[7px]",
+            "inline-flex h-7 w-7 items-center justify-center rounded-[var(--r-sm)]",
             accent
               ? "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
               : "bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]",
@@ -174,7 +174,7 @@ function MetricCard({
             <span
               aria-label={`${label} ${deltaIsPositive ? "increased" : "decreased"} by ${formatDelta(delta)}`}
               className={cn(
-                "inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11.5px] font-[550] leading-none",
+                "inline-flex h-5 items-center gap-1 rounded-[var(--r-full)] border px-1.5 text-[11.5px] font-[550] leading-none",
                 deltaIsPositive
                   ? "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"
                   : "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]",
@@ -193,7 +193,7 @@ function MetricCard({
 
 function RangeSwitcher({ rangeDays }: { rangeDays: number }) {
   return (
-    <div className="inline-flex rounded-[7px] border border-[var(--app-line)] bg-[var(--bg-sunken)] p-[3px]">
+    <div className="inline-flex rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-soft)] p-[3px]">
       {RANGE_OPTIONS.map((option) => {
         const active = option.days === rangeDays;
 
@@ -202,7 +202,7 @@ function RangeSwitcher({ rangeDays }: { rangeDays: number }) {
             <span
               key={option.days}
               aria-current="page"
-              className="inline-flex h-[30px] items-center justify-center rounded-[5px] bg-[var(--app-panel)] px-[13px] text-[13px] font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.06)]"
+              className="inline-flex h-[30px] items-center justify-center rounded-[var(--r-xs)] bg-[var(--app-panel)] px-[13px] text-[13px] font-semibold text-[var(--app-text)] shadow-[var(--sh-sm)]"
             >
               {option.label}
             </span>
@@ -213,7 +213,7 @@ function RangeSwitcher({ rangeDays }: { rangeDays: number }) {
           <Link
             key={option.days}
             href={`/admin/analytics?range=${option.days}`}
-            className="inline-flex h-[30px] items-center justify-center rounded-[5px] px-[13px] text-[13px] font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+            className="inline-flex h-[30px] items-center justify-center rounded-[var(--r-xs)] px-[13px] text-[13px] font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
           >
             {option.label}
           </Link>
@@ -246,7 +246,7 @@ function LineChart({
   });
 
   return (
-    <div className="overflow-hidden rounded-[10px] border border-[var(--app-line)] bg-[var(--bg-sunken)] p-3">
+    <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-soft)] p-3">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[236px] w-full" role="img" aria-label="Visits and clicks over time">
         <defs>
           <linearGradient id="analytics-visits-fill" x1="0" x2="0" y1="0" y2="1">
@@ -375,7 +375,7 @@ function HBar({
   return (
     <div className="grid gap-3">
       {rows.map((row) => (
-        <div key={row.label} className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-3">
+        <div key={row.label} className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="truncate text-[13.5px] font-semibold text-[var(--app-text)]">
@@ -403,7 +403,7 @@ function HBar({
 
 function EmptyBlock({ label }: { label: string }) {
   return (
-    <div className="rounded-[10px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
+    <div className="rounded-[var(--r-md)] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-8 text-center text-sm text-[var(--app-muted)]">
       {label}
     </div>
   );
@@ -437,7 +437,7 @@ function Signal({
 
   return (
     <div className="flex gap-2.5">
-      <span className={cn("inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px]", toneClasses[tone])}>
+      <span className={cn("inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--r-sm)]", toneClasses[tone])}>
         <Icon className="h-4 w-4" />
       </span>
       <div>
@@ -537,7 +537,7 @@ export default async function AdminAnalyticsPage({
           <Link
             href={`/api/admin/analytics/export?range=${rangeDays}`}
             prefetch={false}
-            className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] tracking-[-0.005em] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out select-none hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] active:translate-y-px"
+            className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] tracking-[-0.005em] text-[var(--app-text)] shadow-[var(--sh-xs)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out select-none hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)] active:translate-y-px"
           >
             <Download className="h-4 w-4" />
             Export
@@ -606,7 +606,7 @@ export default async function AdminAnalyticsPage({
               />
             ))}
           </div>
-          <div className="mt-4 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-[12.5px] leading-5 text-[var(--app-muted)]">
+          <div className="mt-4 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-3 text-[12.5px] leading-5 text-[var(--app-muted)]">
             {bestDay
               ? `Best day: ${format(parseISO(bestDay.date), "MMM d")} with ${bestDay.visits} visits.`
               : "No trend data yet."}

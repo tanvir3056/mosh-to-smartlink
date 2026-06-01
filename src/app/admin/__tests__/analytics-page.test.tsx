@@ -127,6 +127,30 @@ describe("admin analytics page launch copy", () => {
     expect(screen.getByLabelText("Click-through rate decreased by 1%")).toBeInTheDocument();
   });
 
+  test("uses Claude primitive tokens for analytics panels, metrics, range selector, and export", async () => {
+    const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
+
+    render(await AdminAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByRole("heading", { name: "Traffic trend" }).closest("section")).toHaveClass(
+      "rounded-[var(--r-lg)]",
+    );
+    expect(screen.getByLabelText("Visits increased by 12%").closest("section")).toHaveClass(
+      "rounded-[var(--r-lg)]",
+    );
+    expect(screen.getByText("30D")).toHaveClass(
+      "rounded-[var(--r-xs)]",
+      "shadow-[var(--sh-sm)]",
+    );
+    expect(screen.getByRole("link", { name: "Export" })).toHaveClass(
+      "rounded-[var(--r-sm)]",
+      "shadow-[var(--sh-xs)]",
+    );
+    expect(screen.getByRole("img", { name: "Visits and clicks over time" }).closest("div")).toHaveClass(
+      "rounded-[var(--r-md)]",
+    );
+  });
+
   test("shows each streaming service share from backend click totals", async () => {
     const { default: AdminAnalyticsPage } = await import("@/app/admin/(dashboard)/analytics/page");
 
