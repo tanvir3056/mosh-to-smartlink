@@ -10,7 +10,7 @@ import {
   Play,
   Sparkles,
 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types";
@@ -111,28 +111,25 @@ function StageBadge({
   );
 }
 
-function ImportProgress() {
-  const { pending } = useFormStatus();
-
+function ImportProgress({
+  started,
+  activeIndex,
+}: {
+  started: boolean;
+  activeIndex: number;
+}) {
   return (
     <>
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-[14.5px] font-semibold text-[var(--app-text)]">
           What we pull in
         </h2>
-        <span className="app-chip border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
-          {pending ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Working...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-3.5 w-3.5" />
-              Ready to import
-            </>
-          )}
-        </span>
+        {started ? (
+          <span className="app-chip border-[var(--app-accent-line)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Working...
+          </span>
+        ) : null}
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2">
@@ -140,7 +137,15 @@ function ImportProgress() {
           <StageBadge
             key={stage.title}
             stage={stage}
-            state={pending ? (index === 0 ? "active" : "idle") : "idle"}
+            state={
+              started
+                ? activeIndex > index
+                  ? "done"
+                  : activeIndex === index
+                    ? "active"
+                    : "idle"
+                : "idle"
+            }
           />
         ))}
       </section>
@@ -155,7 +160,26 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
   );
   const [spotifyUrl, setSpotifyUrl] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const [progressStarted, setProgressStarted] = useState(false);
+  const [progressIndex, setProgressIndex] = useState(-1);
   const visibleError = localError ?? state.error;
+  const progressActive = progressStarted && !visibleError;
+
+  useEffect(() => {
+    if (!progressActive) {
+      return;
+    }
+
+    const timers = importStages.map((_, index) =>
+      window.setTimeout(() => {
+        setProgressIndex(Math.min(index + 1, importStages.length));
+      }, 700 * (index + 1)),
+    );
+
+    return () => {
+      timers.forEach(window.clearTimeout);
+    };
+  }, [progressActive]);
 
   return (
     <form
@@ -167,6 +191,8 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
 
         if (!trimmedUrl || !isSpotifyImportUrl(trimmedUrl)) {
           event.preventDefault();
+          setProgressStarted(false);
+          setProgressIndex(-1);
           setLocalError(
             "That does not look like a Spotify track or album link. Copy the URL from Share - Copy link.",
           );
@@ -174,6 +200,8 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
         }
 
         setLocalError(null);
+        setProgressIndex(0);
+        setProgressStarted(true);
       }}
     >
       <section className="app-card rounded-[14px] p-6">
@@ -198,6 +226,8 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
                 value={spotifyUrl}
                 onChange={(event) => {
                   setSpotifyUrl(event.currentTarget.value);
+                  setProgressStarted(false);
+                  setProgressIndex(-1);
                   if (localError) {
                     setLocalError(null);
                   }
@@ -226,6 +256,8 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
               type="button"
               onClick={() => {
                 setSpotifyUrl("https://open.spotify.com/track/4n2c9Jt1Fl3O7g4D2nQbXa");
+                setProgressStarted(false);
+                setProgressIndex(-1);
                 setLocalError(null);
               }}
               className="min-h-10 px-2 text-[13px] font-semibold leading-5 text-[var(--app-accent-text)] transition hover:text-[var(--app-accent-strong)]"
@@ -236,7 +268,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
         </div>
       </section>
 
-      <ImportProgress />
+      <ImportProgress started={progressActive} activeIndex={progressIndex} />
     </form>
   );
 }

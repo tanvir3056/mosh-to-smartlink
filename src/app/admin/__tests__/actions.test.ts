@@ -419,6 +419,29 @@ describe("importSpotifyTrackAction", () => {
     expect(result.error).not.toContain("insert into streaming_links");
     expect(mockRedirect).not.toHaveBeenCalled();
   });
+
+  test("returns an artist-facing message when Spotify lookup fails", async () => {
+    const { importSpotifyTrackAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    formData.set("spotify_url", "https://open.spotify.com/track/track_1");
+    mockFetchSpotifyTrackImport.mockRejectedValueOnce(
+      new Error("Spotify oEmbed lookup failed."),
+    );
+
+    const result = await importSpotifyTrackAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error:
+        "Spotify could not be reached. Try again in a moment, or paste a different Spotify track link.",
+      success: null,
+    });
+    expect(result.error).not.toContain("oEmbed");
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
 });
 
 describe("saveTrackingSettingsAction validation", () => {

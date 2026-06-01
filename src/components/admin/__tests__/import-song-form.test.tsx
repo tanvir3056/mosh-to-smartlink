@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 import { ImportSongForm } from "@/components/admin/import-song-form";
 
 vi.mock("@/app/admin/actions", () => ({
-  importSpotifyTrackAction: vi.fn(),
+  importSpotifyTrackAction: vi.fn(async () => ({ error: null, success: null })),
 }));
 
 describe("ImportSongForm", () => {
@@ -47,10 +47,24 @@ describe("ImportSongForm", () => {
     render(<ImportSongForm requestedBy="@warcry" />);
 
     expect(screen.getByText("What we pull in")).toBeInTheDocument();
-    expect(screen.getByText("Ready to import")).toBeInTheDocument();
+    expect(screen.queryByText("Ready to import")).not.toBeInTheDocument();
     expect(screen.getByText("Metadata")).toBeInTheDocument();
     expect(screen.getByText("Artwork")).toBeInTheDocument();
     expect(screen.getByText("Preview")).toBeInTheDocument();
     expect(screen.getByText("Streaming links")).toBeInTheDocument();
+  });
+
+  test("shows staged progress after a valid import submit", async () => {
+    const user = userEvent.setup();
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    await user.type(
+      screen.getByLabelText("Spotify track or album URL"),
+      "https://open.spotify.com/track/4n2c9Jt1Fl3O7g4D2nQbXa",
+    );
+    await user.click(screen.getByRole("button", { name: "Import song" }));
+
+    expect(screen.getByText("Working...")).toBeInTheDocument();
+    expect(screen.getByText("Fetching...")).toBeInTheDocument();
   });
 });

@@ -149,8 +149,18 @@ function getSongImportErrorMessage(error: unknown) {
     return "Backstage could not finish saving that import. Reload Backstage and try again.";
   }
 
+  const message = getErrorMessage(error);
+  const normalizedMessage = message?.toLowerCase() ?? "";
+
+  if (
+    normalizedMessage.includes("spotify oembed lookup failed") ||
+    normalizedMessage.includes("spotify track page lookup failed")
+  ) {
+    return "Spotify could not be reached. Try again in a moment, or paste a different Spotify track link.";
+  }
+
   return (
-    getErrorMessage(error) ??
+    message ??
     "The Spotify import failed. Check the URL and try again."
   );
 }
