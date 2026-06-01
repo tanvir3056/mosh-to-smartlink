@@ -21,9 +21,9 @@ vi.mock("@/lib/data", () => ({
 }));
 
 const dashboardSnapshot: DashboardSnapshot = {
-  totalSongs: 1,
+  totalSongs: 2,
   publishedSongs: 1,
-  draftSongs: 0,
+  draftSongs: 1,
   totalVisits: 250,
   totalClicks: 112,
   songs: [
@@ -41,6 +41,20 @@ const dashboardSnapshot: DashboardSnapshot = {
       visitCount: 250,
       clickCount: 112,
     },
+    {
+      songId: "song-2",
+      ownerUserId: "user-1",
+      username: "warcry",
+      title: "Draft Release",
+      artistName: "WARCRY",
+      artworkUrl: "https://i.scdn.co/image/draft-release",
+      slug: "draft-release",
+      status: "draft",
+      previewUrl: null,
+      updatedAt: "2026-05-19T10:30:00.000Z",
+      visitCount: 0,
+      clickCount: 0,
+    },
   ],
 };
 
@@ -57,8 +71,30 @@ describe("admin overview page", () => {
   test("shows the real username based public path for each release", async () => {
     const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
 
-    render(await AdminOverviewPage());
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("/warcry/release")).toBeInTheDocument();
+  });
+
+  test("matches the Claude release library filters and filters rows by status", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(
+      await AdminOverviewPage({
+        searchParams: Promise.resolve({ status: "published" }),
+      }),
+    );
+
+    expect(screen.getByRole("link", { name: "All" })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: "Published" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute(
+      "href",
+      "/admin?status=draft",
+    );
+    expect(screen.getByText("/warcry/release")).toBeInTheDocument();
+    expect(screen.queryByText("Draft Release")).not.toBeInTheDocument();
   });
 });

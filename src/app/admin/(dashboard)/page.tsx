@@ -20,7 +20,31 @@ import { StatusPill } from "@/components/admin/status-pill";
 import { Button } from "@/components/ui/button";
 import { requireUserSession } from "@/lib/auth";
 import { getDashboardSnapshot } from "@/lib/data";
-import { buildPublicSongPath, formatDateTime } from "@/lib/utils";
+import { buildPublicSongPath, cn, formatDateTime } from "@/lib/utils";
+
+type OverviewStatusFilter = "all" | "published" | "draft";
+
+const releaseFilters: Array<{
+  value: OverviewStatusFilter;
+  label: string;
+  href: string;
+}> = [
+  { value: "all", label: "All", href: "/admin" },
+  { value: "published", label: "Published", href: "/admin?status=published" },
+  { value: "draft", label: "Drafts", href: "/admin?status=draft" },
+];
+
+function parseStatusFilter(
+  value: string | string[] | undefined,
+): OverviewStatusFilter {
+  const normalized = Array.isArray(value) ? value[0] : value;
+
+  if (normalized === "published" || normalized === "draft") {
+    return normalized;
+  }
+
+  return "all";
+}
 
 function ctr(clicks: number, visits: number) {
   if (visits <= 0) {
@@ -87,15 +111,37 @@ function SummaryChip({
   );
 }
 
-export default async function AdminOverviewPage() {
+export default async function AdminOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string | string[] | undefined }>;
+}) {
   const session = await requireUserSession();
+  const resolvedSearchParams = await searchParams;
+  const activeFilter = parseStatusFilter(resolvedSearchParams.status);
   const snapshot = await getDashboardSnapshot(session.userId);
   const publishedSongs = snapshot.songs.filter((song) => song.status === "published");
   const draftSongs = snapshot.songs.filter((song) => song.status === "draft");
+  const visibleSongs =
+    activeFilter === "all"
+      ? snapshot.songs
+      : snapshot.songs.filter((song) => song.status === activeFilter);
   const liveRate =
     snapshot.totalSongs > 0
       ? `${Math.round((snapshot.publishedSongs / snapshot.totalSongs) * 100)}% live`
       : "No pages yet";
+  const emptyTitle =
+    activeFilter === "published"
+      ? "No published releases yet"
+      : activeFilter === "draft"
+        ? "No drafts in review"
+        : "No releases here yet";
+  const emptyBody =
+    activeFilter === "published"
+      ? "Publish a reviewed draft and it will appear in this view."
+      : activeFilter === "draft"
+        ? "Drafts appear here while they are waiting for final review."
+        : "Paste a Spotify link and Backstage builds a clean release page with every streaming service in one place.";
 
   return (
     <div className="app-enter mx-auto grid w-full max-w-[1180px] gap-[30px]">
@@ -189,28 +235,54 @@ export default async function AdminOverviewPage() {
               Every smart link in your workspace.
             </p>
           </div>
-          <Link href="/admin/songs/new">
-            <Button tone="secondary">Import song</Button>
-          </Link>
+          <nav
+            aria-label="Release filters"
+            className="inline-flex rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-1"
+          >
+            {releaseFilters.map((filter) => {
+              const isActive = filter.value === activeFilter;
+
+              return (
+                <Link
+                  key={filter.value}
+                  href={filter.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-[7px] px-3 text-[13px] font-semibold transition-colors",
+                    isActive
+                      ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.06)]"
+                      : "text-[var(--app-muted)] hover:bg-[var(--app-panel)] hover:text-[var(--app-text)]",
+                  )}
+                >
+                  {filter.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         <div className="app-card overflow-hidden rounded-[14px] p-0">
-          {snapshot.songs.length === 0 ? (
+          {visibleSongs.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
               <span className="mb-3 flex h-13 w-13 items-center justify-center rounded-[14px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]">
                 <Music2 className="h-6 w-6" />
               </span>
-              <h3 className="text-[15.5px] font-semibold">No releases here yet</h3>
+              <h3 className="text-[15.5px] font-semibold">{emptyTitle}</h3>
               <p className="mt-1 max-w-sm text-[13.5px] leading-6 text-[var(--app-muted)]">
-                Paste a Spotify link and Backstage builds a clean release page with
-                every streaming service in one place.
+                {emptyBody}
               </p>
-              <Link href="/admin/songs/new" className="mt-4">
-                <Button>
-                  <Sparkles className="h-4 w-4" />
-                  Import your first song
-                </Button>
-              </Link>
+              {snapshot.songs.length === 0 ? (
+                <Link href="/admin/songs/new" className="mt-4">
+                  <Button>
+                    <Sparkles className="h-4 w-4" />
+                    Import your first song
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/admin" className="mt-4">
+                  <Button tone="secondary">View all releases</Button>
+                </Link>
+              )}
             </div>
           ) : (
             <>
@@ -222,7 +294,7 @@ export default async function AdminOverviewPage() {
                 <span className="text-right">Actions</span>
               </div>
               <div className="divide-y divide-[var(--app-line)]">
-                {snapshot.songs.map((song) => (
+                {visibleSongs.map((song) => (
                   <div
                     key={song.songId}
                     className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_168px] lg:items-center"
