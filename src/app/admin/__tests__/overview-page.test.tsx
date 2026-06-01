@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { DashboardSnapshot } from "@/lib/types";
@@ -172,5 +172,43 @@ describe("admin overview page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Published pages")).not.toBeInTheDocument();
     expect(screen.queryByText("Drafts in review")).not.toBeInTheDocument();
+  });
+
+  test("selects the quick-read top release from backend performance data", async () => {
+    mockGetDashboardSnapshot.mockResolvedValue({
+      ...dashboardSnapshot,
+      totalSongs: 3,
+      publishedSongs: 2,
+      totalVisits: 500,
+      totalClicks: 210,
+      songs: [
+        {
+          ...dashboardSnapshot.songs[0],
+          songId: "song-low",
+          title: "Lower Signal",
+          slug: "lower-signal",
+          visitCount: 40,
+          clickCount: 12,
+        },
+        {
+          ...dashboardSnapshot.songs[0],
+          songId: "song-top",
+          title: "Bigger Signal",
+          slug: "bigger-signal",
+          visitCount: 390,
+          clickCount: 180,
+        },
+        dashboardSnapshot.songs[1],
+      ],
+    } satisfies DashboardSnapshot);
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    const quickReadCard = screen.getByRole("heading", { name: "Quick read" }).closest("section");
+
+    expect(quickReadCard).not.toBeNull();
+    expect(within(quickReadCard!).getByText("Top release")).toBeInTheDocument();
+    expect(within(quickReadCard!).getByText("Bigger Signal")).toBeInTheDocument();
   });
 });

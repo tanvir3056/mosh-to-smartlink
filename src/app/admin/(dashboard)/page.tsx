@@ -191,6 +191,24 @@ function topServiceLabel(snapshot: DashboardSnapshot) {
   return `${SERVICE_LABELS[snapshot.topService.service]} · ${share}%`;
 }
 
+function topReleaseByPerformance(songs: DashboardSnapshot["songs"]) {
+  return [...songs].sort((left, right) => {
+    const visitDifference = right.visitCount - left.visitCount;
+
+    if (visitDifference !== 0) {
+      return visitDifference;
+    }
+
+    const clickDifference = right.clickCount - left.clickCount;
+
+    if (clickDifference !== 0) {
+      return clickDifference;
+    }
+
+    return Date.parse(right.updatedAt) - Date.parse(left.updatedAt);
+  })[0];
+}
+
 export default async function AdminOverviewPage({
   searchParams,
 }: {
@@ -202,6 +220,7 @@ export default async function AdminOverviewPage({
   const snapshot = await getDashboardSnapshot(session.userId);
   const publishedSongs = snapshot.songs.filter((song) => song.status === "published");
   const draftSongs = snapshot.songs.filter((song) => song.status === "draft");
+  const topRelease = topReleaseByPerformance(publishedSongs);
   const visibleSongs =
     activeFilter === "all"
       ? snapshot.songs
@@ -543,7 +562,7 @@ export default async function AdminOverviewPage({
           </div>
           <div className="grid gap-3 text-[13.5px]">
             <QuickReadRow label="Top release">
-              {publishedSongs[0]?.title ?? "—"}
+              {topRelease?.title ?? "—"}
             </QuickReadRow>
             <QuickReadRow label="Avg. click-through">
               {ctr(snapshot.totalClicks, snapshot.totalVisits)}
