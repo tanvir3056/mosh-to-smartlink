@@ -197,6 +197,31 @@ describe("admin overview page", () => {
     ).toHaveTextContent("8%");
   });
 
+  test("uses Claude primitive tokens for overview chips, KPI cards, and filters", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("published").parentElement).toHaveClass(
+      "rounded-[var(--r-full)]",
+      "shadow-[var(--sh-xs)]",
+    );
+
+    expect(screen.getByText("Song pages").closest("section")).toHaveClass(
+      "rounded-[var(--r-lg)]",
+    );
+
+    expect(screen.getByRole("navigation", { name: "Release filters" })).toHaveClass(
+      "rounded-[var(--r-sm)]",
+      "bg-[var(--app-soft)]",
+    );
+
+    expect(screen.getByRole("link", { name: "All" })).toHaveClass(
+      "rounded-[var(--r-xs)]",
+      "shadow-[var(--sh-sm)]",
+    );
+  });
+
   test("selects the quick-read top release from backend performance data", async () => {
     mockGetDashboardSnapshot.mockResolvedValue({
       ...dashboardSnapshot,

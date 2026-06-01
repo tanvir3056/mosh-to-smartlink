@@ -82,11 +82,11 @@ function MetricCard({
   const DeltaIcon = deltaIsPositive ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[14px] p-[18px]">
+    <section className="app-card flex min-h-[132px] flex-col justify-between rounded-[var(--r-lg)] p-[18px]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] font-[550] text-[var(--app-muted)]">{label}</p>
         <span
-          className={`inline-flex h-7 w-7 items-center justify-center rounded-[7px] ${
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--r-sm)] ${
             accent
               ? "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
               : "bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]"
@@ -103,7 +103,7 @@ function MetricCard({
           {hasDelta ? (
             <span
               aria-label={`${label} ${deltaIsPositive ? "increased" : "decreased"} by ${formatDelta(delta)}`}
-              className={`inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11.5px] font-[550] leading-none ${
+              className={`inline-flex h-5 items-center gap-1 rounded-[var(--r-full)] border px-1.5 text-[11.5px] font-[550] leading-none ${
                 deltaIsPositive
                   ? "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"
                   : "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
@@ -132,9 +132,9 @@ function SummaryChip({
   tone?: string;
 }) {
   return (
-    <span className="inline-flex h-[30px] items-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)]">
+    <span className="inline-flex h-[30px] items-center gap-[7px] rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel)] px-[11px] text-[13px] shadow-[var(--sh-xs)]">
       <Icon className={`h-3.5 w-3.5 ${tone}`} />
-      <strong className="font-semibold text-[var(--app-text)]">{value}</strong>
+      <strong className="font-[650] text-[var(--app-text)]">{value}</strong>
       <span className="text-[var(--app-muted-2)]">{label}</span>
     </span>
   );
@@ -142,7 +142,7 @@ function SummaryChip({
 
 function rowActionClass(className?: string) {
   return cn(
-    "app-interactive inline-flex h-8 min-h-8 items-center justify-center gap-1.5 rounded-[7px] border border-transparent px-2 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
+    "app-interactive inline-flex h-8 min-h-8 items-center justify-center gap-1.5 rounded-[var(--r-sm)] border border-transparent px-2 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
     className,
   );
 }
@@ -373,7 +373,7 @@ export default async function AdminOverviewPage({
           </div>
           <nav
             aria-label="Release filters"
-            className="inline-flex rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-1"
+            className="inline-flex gap-0.5 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-soft)] p-[3px]"
           >
             {releaseFilters.map((filter) => {
               const isActive = filter.value === activeFilter;
@@ -384,9 +384,9 @@ export default async function AdminOverviewPage({
                   href={filter.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "inline-flex h-8 items-center rounded-[7px] px-3 text-[13px] font-semibold transition-colors",
+                    "inline-flex h-8 items-center rounded-[var(--r-xs)] px-3 text-[13px] font-semibold transition-colors",
                     isActive
-                      ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.06)]"
+                      ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[var(--sh-sm)]"
                       : "text-[var(--app-muted)] hover:bg-[var(--app-panel)] hover:text-[var(--app-text)]",
                   )}
                 >
@@ -397,10 +397,10 @@ export default async function AdminOverviewPage({
           </nav>
         </div>
 
-        <div className="app-card overflow-hidden rounded-[14px] p-0">
+        <div className="app-card overflow-hidden rounded-[var(--r-lg)] p-0">
           {visibleSongs.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
-              <span className="mb-3 flex h-13 w-13 items-center justify-center rounded-[14px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]">
+              <span className="mb-3 flex h-13 w-13 items-center justify-center rounded-[var(--r-lg)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]">
                 <Music2 className="h-6 w-6" />
               </span>
               <h3 className="text-[15.5px] font-semibold">{emptyTitle}</h3>
@@ -554,7 +554,7 @@ export default async function AdminOverviewPage({
               return (
                 <div
                   key={item.title}
-                  className="app-card flex flex-col overflow-hidden rounded-[14px] p-0"
+                  className="app-card flex flex-col overflow-hidden rounded-[var(--r-lg)] p-0"
                 >
                   <div className="flex flex-1 flex-col p-[18px]">
                     <div className="mb-3 flex items-center justify-between">
@@ -584,7 +584,7 @@ export default async function AdminOverviewPage({
           </div>
         </div>
 
-        <section className="app-card rounded-[14px] bg-[linear-gradient(165deg,var(--app-accent-soft),var(--app-panel)_75%)] p-[18px]">
+        <section className="app-card rounded-[var(--r-lg)] bg-[linear-gradient(165deg,var(--app-accent-soft),var(--app-panel)_75%)] p-[18px]">
           <div className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
             <h3 className="text-[15px] font-semibold">Quick read</h3>
