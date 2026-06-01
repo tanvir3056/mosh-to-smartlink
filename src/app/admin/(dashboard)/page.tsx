@@ -111,6 +111,13 @@ function SummaryChip({
   );
 }
 
+function rowActionClass(className?: string) {
+  return cn(
+    "app-interactive inline-flex h-8 min-h-8 items-center justify-center gap-1.5 rounded-[7px] border border-transparent px-2 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
+    className,
+  );
+}
+
 export default async function AdminOverviewPage({
   searchParams,
 }: {
@@ -294,7 +301,7 @@ export default async function AdminOverviewPage({
             </div>
           ) : (
             <>
-              <div className="hidden grid-cols-[1fr_116px_92px_92px_168px] gap-3.5 bg-[var(--app-panel-muted)] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)] lg:grid">
+              <div className="hidden grid-cols-[1fr_116px_92px_92px_220px] gap-3.5 bg-[var(--app-panel-muted)] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--app-muted-2)] lg:grid">
                 <span>Release</span>
                 <span>Status</span>
                 <span>Visits</span>
@@ -305,7 +312,7 @@ export default async function AdminOverviewPage({
                 {visibleSongs.map((song) => (
                   <div
                     key={song.songId}
-                    className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_168px] lg:items-center"
+                    className="grid gap-3.5 px-4 py-3 transition-colors hover:bg-[var(--app-panel-muted)] lg:grid-cols-[1fr_116px_92px_92px_220px] lg:items-center"
                   >
                     <Link
                       href={`/admin/songs/${song.songId}`}
@@ -347,21 +354,31 @@ export default async function AdminOverviewPage({
                       <span>{song.clickCount || "—"}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-1 lg:justify-end">
-                      <Link href={`/admin/songs/${song.songId}`}>
-                        <Button tone="ghost" className="h-8 min-h-8 px-2" title="Edit">
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
+                      <Link
+                        href={`/admin/songs/${song.songId}`}
+                        aria-label={`Edit ${song.title}`}
+                        className={rowActionClass()}
+                        title="Edit"
+                      >
+                        <Edit3 className="h-4 w-4" />
                       </Link>
-                      <a href={`/admin/preview/${song.songId}`}>
-                        <Button tone="ghost" className="h-8 min-h-8 px-2" title="Preview">
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                      <a
+                        href={`/admin/preview/${song.songId}`}
+                        aria-label={`Preview ${song.title}`}
+                        className={rowActionClass("px-2.5")}
+                        title="Preview"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Preview</span>
                       </a>
                       {song.status === "published" ? (
-                        <Link href={buildPublicSongPath(song.username, song.slug)}>
-                          <Button tone="ghost" className="h-8 min-h-8 px-2" title="Open live page">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
+                        <Link
+                          href={buildPublicSongPath(song.username, song.slug)}
+                          aria-label={`Open live page for ${song.title}`}
+                          className={rowActionClass()}
+                          title="Open live page"
+                        >
+                          <ExternalLink className="h-4 w-4" />
                         </Link>
                       ) : null}
                       <DeleteSongButton

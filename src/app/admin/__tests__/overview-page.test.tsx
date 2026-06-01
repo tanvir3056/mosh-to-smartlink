@@ -76,6 +76,22 @@ describe("admin overview page", () => {
     expect(screen.getByText("/warcry/release")).toBeInTheDocument();
   });
 
+  test("uses unmistakable admin preview links instead of public draft URLs", async () => {
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByRole("link", { name: "Preview Draft Release" })).toHaveAttribute(
+      "href",
+      "/admin/preview/song-2",
+    );
+    expect(screen.getByRole("link", { name: "Preview Release" })).toHaveAttribute(
+      "href",
+      "/admin/preview/song-1",
+    );
+    expect(screen.queryByRole("link", { name: "Preview /warcry/draft-release" })).toBeNull();
+  });
+
   test("matches the Claude release library filters and filters rows by status", async () => {
     const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
 
