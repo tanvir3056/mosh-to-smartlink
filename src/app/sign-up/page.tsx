@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { SignUpForm } from "@/components/admin/sign-up-form";
@@ -27,6 +29,16 @@ export default async function SignUpPage() {
 
             <div className="px-7 py-6">
               <SignUpForm />
+            </div>
+
+            <div
+              data-testid="auth-card-footer"
+              className="border-t border-[var(--app-line)] bg-[var(--app-panel-muted)] px-7 py-4 text-center text-[13.5px] text-[var(--app-muted)]"
+            >
+              Already have an account?{" "}
+              <Link href="/sign-in" className="font-semibold text-[var(--app-accent-text)]">
+                Sign in
+              </Link>
             </div>
           </div>
         </section>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Shield, User } from "lucide-react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
@@ -62,11 +61,8 @@ export function SignUpForm() {
       </label>
       <FormStateMessage error={state.error} success={state.success} />
       <SubmitButton />
-      <p className="text-center text-[13.5px] text-[var(--app-muted)]">
-        Already have an account?{" "}
-        <Link href="/sign-in" className="font-semibold text-[var(--app-accent-text)]">
-          Sign in
-        </Link>
+      <p className="text-center text-[11.5px] leading-5 text-[var(--app-muted-2)]">
+        By creating an account you agree to the Terms and acknowledge the Privacy Policy.
       </p>
     </form>
   );

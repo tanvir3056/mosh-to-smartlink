@@ -237,6 +237,19 @@ function createLocalSnapshotPersister(pool: Pool) {
   };
 }
 
+function createLocalWriteQueue() {
+  let tail = Promise.resolve();
+
+  return function runExclusive<T>(operation: () => Promise<T>) {
+    const run = tail.catch(() => undefined).then(operation);
+    tail = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  };
+}
+
 function normalizeErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message.toLowerCase();
@@ -479,6 +492,7 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
   await restoreLocalSnapshot(pool);
   const refreshLocalSnapshot = createLocalSnapshotRefresher(pool);
   const persistLocalSnapshot = createLocalSnapshotPersister(pool);
+  const runExclusiveLocalWrite = createLocalWriteQueue();
 
   return {
     mode: "local",
@@ -489,15 +503,17 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
       text: string,
       params?: unknown[],
     ) {
-      if (isLocalMutationQuery(text)) {
-        await refreshLocalSnapshot();
+      if (!isLocalMutationQuery(text)) {
+        const result = await pool.query<T>(text, params);
+        return result.rows;
       }
 
-      const result = await pool.query<T>(text, params);
-      if (isLocalMutationQuery(text)) {
+      return runExclusiveLocalWrite(async () => {
+        await refreshLocalSnapshot();
+        const result = await pool.query<T>(text, params);
         await persistLocalSnapshot();
-      }
-      return result.rows;
+        return result.rows;
+      });
     },
     async withTransaction<T>(
       callback: (
@@ -507,23 +523,25 @@ async function createLocalRuntime(): Promise<DatabaseRuntime> {
         ) => Promise<R[]>,
       ) => Promise<T>,
     ) {
-      await refreshLocalSnapshot();
-      const client = await pool.connect();
+      return runExclusiveLocalWrite(async () => {
+        await refreshLocalSnapshot();
+        const client = await pool.connect();
 
-      try {
-        await client.query("begin");
-        const result = await callback((text: string, params?: unknown[]) =>
-          queryPgClient(client, text, params),
-        );
-        await client.query("commit");
-        await persistLocalSnapshot();
-        return result;
-      } catch (error) {
-        await client.query("rollback");
-        throw error;
-      } finally {
-        client.release();
-      }
+        try {
+          await client.query("begin");
+          const result = await callback((text: string, params?: unknown[]) =>
+            queryPgClient(client, text, params),
+          );
+          await client.query("commit");
+          await persistLocalSnapshot();
+          return result;
+        } catch (error) {
+          await client.query("rollback");
+          throw error;
+        } finally {
+          client.release();
+        }
+      });
     },
   };
 }

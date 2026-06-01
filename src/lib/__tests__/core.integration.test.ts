@@ -80,6 +80,17 @@ const USER_ID = "user_test_owner";
 const USERNAME = "north-vale";
 const LOGIN_EMAIL = "north-vale@users.backstage.local";
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 beforeEach(() => {
   process.env.POSTGRES_URL = "";
   process.env.LOCAL_DB_PATH = "memory://";
@@ -95,6 +106,35 @@ beforeEach(() => {
 });
 
 describe("core data flow", () => {
+  test("serializes local write transactions so snapshot refreshes cannot overlap saves", async () => {
+    const { dbTransaction } = await import("@/lib/db/driver");
+    const firstStarted = createDeferred<void>();
+    const releaseFirst = createDeferred<void>();
+    const order: string[] = [];
+
+    const firstTransaction = dbTransaction(async () => {
+      order.push("first started");
+      firstStarted.resolve();
+      await releaseFirst.promise;
+      order.push("first finished");
+    });
+
+    await firstStarted.promise;
+
+    const secondTransaction = dbTransaction(async () => {
+      order.push("second started");
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(order).toEqual(["first started"]);
+
+    releaseFirst.resolve();
+    await Promise.all([firstTransaction, secondTransaction]);
+
+    expect(order).toEqual(["first started", "first finished", "second started"]);
+  });
+
   test("hydrates local fallback accounts from Blob persistence after a cold start", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
 
