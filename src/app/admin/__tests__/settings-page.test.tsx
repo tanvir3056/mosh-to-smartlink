@@ -127,6 +127,10 @@ describe("admin settings page", () => {
     expect(screen.getByLabelText("Show artist name on every page")).toBeChecked();
     expect(screen.getByLabelText("Enable preview player by default")).toBeChecked();
     expect(screen.getByLabelText("Lead capture on by default")).not.toBeChecked();
+    expect(screen.getByText("Appearance")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toHaveTextContent(
+      "Dark mode",
+    );
     expect(screen.getByRole("button", { name: "Save settings" })).toHaveAttribute(
       "form",
       "general-settings-form",

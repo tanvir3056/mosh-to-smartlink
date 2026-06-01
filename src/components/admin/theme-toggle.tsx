@@ -23,9 +23,11 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle({
   className,
   size = "md",
+  withLabel = false,
 }: {
   className?: string;
   size?: "sm" | "md";
+  withLabel?: boolean;
 }) {
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
 
@@ -58,11 +60,16 @@ export function ThemeToggle({
       suppressHydrationWarning
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
-        size === "sm" ? "h-8 w-8" : "h-9 w-9",
+        withLabel
+          ? "h-10 w-auto gap-2 px-3.5 text-sm font-[550]"
+          : size === "sm"
+            ? "h-8 w-8"
+            : "h-9 w-9",
         className,
       )}
     >
       <Icon className={size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]"} />
+      {withLabel ? <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span> : null}
     </button>
   );
 }
