@@ -11,4 +11,13 @@ describe("Button", () => {
       "whitespace-nowrap",
     );
   });
+
+  test("uses Claude primitive radius and shadow tokens", () => {
+    render(<Button>Import song</Button>);
+
+    expect(screen.getByRole("button", { name: "Import song" })).toHaveClass(
+      "rounded-[var(--r-sm)]",
+      "shadow-[var(--sh-xs)]",
+    );
+  });
 });

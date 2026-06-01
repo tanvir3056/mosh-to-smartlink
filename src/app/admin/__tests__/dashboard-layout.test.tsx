@@ -35,13 +35,17 @@ describe("admin dashboard layout", () => {
   test("keeps the Claude sidebar brand subtitle visible", async () => {
     const { default: AdminDashboardLayout } = await import("@/app/admin/(dashboard)/layout");
 
-    render(
+    const { container } = render(
       await AdminDashboardLayout({
         children: <div>Dashboard content</div>,
       }),
     );
 
     expect(screen.getAllByText("Release links").length).toBeGreaterThan(0);
+    expect(container.querySelector("aside")).toHaveClass("w-[var(--sidebar-w)]");
+    expect(container.querySelector(".admin-dashboard-shell")).toHaveClass(
+      "lg:pl-[var(--sidebar-w)]",
+    );
   });
 
   test("uses the Claude controlled mobile navigation trigger", async () => {

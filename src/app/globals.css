@@ -101,6 +101,19 @@ body {
   --glass: oklch(1 0 0 / 0.82);
   --scrim: oklch(0.3 0.02 270 / 0.32);
   --stripe: oklch(0.93 0.004 270);
+  --r-xs: 5px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 999px;
+  --sh-xs: 0 1px 2px oklch(0.2 0.02 270 / 0.05);
+  --sh-sm: 0 1px 2px oklch(0.2 0.02 270 / 0.06), 0 1px 3px oklch(0.2 0.02 270 / 0.05);
+  --sh-md: 0 2px 4px oklch(0.2 0.02 270 / 0.04), 0 4px 12px oklch(0.2 0.02 270 / 0.07);
+  --sh-lg: 0 8px 24px oklch(0.2 0.02 270 / 0.10), 0 2px 6px oklch(0.2 0.02 270 / 0.06);
+  --sh-xl: 0 16px 48px oklch(0.2 0.02 270 / 0.16), 0 4px 12px oklch(0.2 0.02 270 / 0.08);
+  --ring: 0 0 0 3px var(--accent-soft-2);
+  --sidebar-w: 252px;
   --app-bg: var(--bg);
   --app-panel: var(--surface);
   --app-panel-strong: var(--surface);
@@ -189,6 +202,11 @@ body {
   --glass: oklch(0.215 0.009 274 / 0.82);
   --scrim: oklch(0.08 0.01 274 / 0.55);
   --stripe: oklch(0.30 0.012 274);
+  --sh-xs: 0 1px 2px oklch(0 0 0 / 0.30);
+  --sh-sm: 0 1px 2px oklch(0 0 0 / 0.32), 0 1px 3px oklch(0 0 0 / 0.26);
+  --sh-md: 0 2px 4px oklch(0 0 0 / 0.28), 0 4px 12px oklch(0 0 0 / 0.40);
+  --sh-lg: 0 8px 24px oklch(0 0 0 / 0.48), 0 2px 6px oklch(0 0 0 / 0.32);
+  --sh-xl: 0 16px 48px oklch(0 0 0 / 0.58), 0 4px 12px oklch(0 0 0 / 0.36);
   color-scheme: dark;
 }
 
@@ -202,7 +220,7 @@ body {
 
 .bs-admin-theme :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px oklch(0.93 0.05 274);
+  box-shadow: var(--ring);
 }
 
 @keyframes app-fade-up {
@@ -328,9 +346,7 @@ textarea::placeholder {
 .app-card {
   border: 1px solid var(--app-line);
   background: var(--app-panel);
-  box-shadow:
-    0 1px 2px oklch(0.2 0.02 270 / 0.06),
-    0 1px 3px oklch(0.2 0.02 270 / 0.05);
+  box-shadow: var(--sh-sm);
 }
 
 .app-card-soft {
@@ -341,9 +357,7 @@ textarea::placeholder {
 .app-shell-card {
   border: 1px solid var(--app-line);
   background: var(--app-panel);
-  box-shadow:
-    0 8px 24px oklch(0.2 0.02 270 / 0.1),
-    0 2px 6px oklch(0.2 0.02 270 / 0.06);
+  box-shadow: var(--sh-lg);
 }
 
 .app-kicker {
@@ -361,7 +375,7 @@ textarea::placeholder {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--r-full);
   border: 1px solid var(--app-line);
   background: var(--app-panel-muted);
   padding: 0.25rem 0.56rem;
@@ -380,13 +394,13 @@ textarea::placeholder {
 
 .app-input {
   min-height: 40px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--app-line);
   background: var(--app-panel);
   padding: 0 0.75rem;
   color: var(--app-text);
   color-scheme: inherit;
-  box-shadow: 0 1px 2px oklch(0.2 0.02 270 / 0.05);
+  box-shadow: var(--sh-xs);
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
@@ -400,7 +414,7 @@ textarea::placeholder {
 
 .app-input:focus {
   border-color: var(--app-accent);
-  box-shadow: 0 0 0 3px oklch(0.93 0.05 274);
+  box-shadow: var(--ring);
   background: var(--app-panel);
 }
 

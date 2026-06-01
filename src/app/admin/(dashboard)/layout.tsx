@@ -22,7 +22,7 @@ export default async function AdminDashboardLayout({
   return (
     <div className="bs-admin-theme min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
       <div className="min-h-screen w-full">
-        <aside className="fixed inset-y-0 left-0 z-20 hidden w-[252px] border-r border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 py-[18px] lg:flex lg:flex-col">
+        <aside className="fixed inset-y-0 left-0 z-20 hidden w-[var(--sidebar-w)] border-r border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 py-[18px] lg:flex lg:flex-col">
           <div className="flex items-center justify-between px-1 pb-[18px]">
             <BrandLockup
               compact
@@ -111,7 +111,7 @@ export default async function AdminDashboardLayout({
           </div>
         </aside>
 
-        <div className="min-w-0 lg:pl-[252px]">
+        <div className="admin-dashboard-shell min-w-0 lg:pl-[var(--sidebar-w)]">
           <MobileAdminMenu
             username={session.username}
             loginEmail={session.loginEmail}

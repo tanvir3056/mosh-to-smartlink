@@ -11,6 +11,23 @@ describe("admin theme tokens", () => {
     expect(globalsCss).toMatch(/--app-line-soft:\s*var\(--line-soft\);/);
   });
 
+  test("defines the Claude primitive radius and elevation contract", () => {
+    expect(globalsCss).toMatch(/--r-xs:\s*5px;/);
+    expect(globalsCss).toMatch(/--r-sm:\s*7px;/);
+    expect(globalsCss).toMatch(/--r-md:\s*10px;/);
+    expect(globalsCss).toMatch(/--r-lg:\s*14px;/);
+    expect(globalsCss).toMatch(/--r-xl:\s*20px;/);
+    expect(globalsCss).toMatch(/--r-full:\s*999px;/);
+    expect(globalsCss).toMatch(
+      /--sh-sm:\s*0 1px 2px oklch\(0\.2 0\.02 270 \/ 0\.06\),\s*0 1px 3px oklch\(0\.2 0\.02 270 \/ 0\.05\);/,
+    );
+    expect(globalsCss).toMatch(
+      /--sh-lg:\s*0 8px 24px oklch\(0\.2 0\.02 270 \/ 0\.10\),\s*0 2px 6px oklch\(0\.2 0\.02 270 \/ 0\.06\);/,
+    );
+    expect(globalsCss).toMatch(/--ring:\s*0 0 0 3px var\(--accent-soft-2\);/);
+    expect(globalsCss).toMatch(/--sidebar-w:\s*252px;/);
+  });
+
   test("uses the Claude design font stack only inside the admin theme", () => {
     expect(globalsCss).toMatch(
       /\.bs-admin-theme\s*\{[\s\S]*--font-body:\s*var\(--font-hanken\),\s*"Hanken Grotesk",\s*system-ui,\s*sans-serif;/,

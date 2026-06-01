@@ -17,11 +17,11 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] border px-3.5 text-sm font-[550] tracking-[-0.005em] whitespace-nowrap select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--r-sm)] border px-3.5 text-sm font-[550] tracking-[-0.005em] whitespace-nowrap select-none touch-manipulation transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
         tone === "primary" &&
-          "border-transparent bg-[var(--app-accent)] text-white shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)]",
+          "border-transparent bg-[var(--app-accent)] text-white shadow-[var(--sh-xs)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)]",
         tone === "secondary" &&
-          "border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]",
+          "border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-text)] shadow-[var(--sh-xs)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]",
         tone === "ghost" &&
           "border-transparent bg-transparent text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
         tone === "subtle" &&
