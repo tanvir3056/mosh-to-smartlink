@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download, Inbox } from "lucide-react";
 
 import type { EmailLeadSnapshot } from "@/lib/types";
 import { buildPublicSongPath, formatDateTime } from "@/lib/utils";
@@ -34,24 +35,49 @@ export function EmailLeadsPanel({
   snapshot: EmailLeadSnapshot;
   showSummary?: boolean;
 }) {
-  return (
-    <section className="app-card app-enter app-enter-delay-1 rounded-[14px] p-5 sm:p-6 lg:p-7">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-3xl">
-          <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
-            Lead inbox
-          </h3>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
-            Every submission lands here first. Export anytime, or let Mailchimp sync in the background.
-          </p>
-        </div>
+  const compact = !showSummary;
 
+  return (
+    <section
+      aria-labelledby="lead-inbox-title"
+      className={`app-card app-enter app-enter-delay-1 rounded-[14px] ${
+        compact ? "overflow-hidden p-0" : "p-5 sm:p-6 lg:p-7"
+      }`}
+    >
+      <div
+        className={
+          compact
+            ? "flex flex-wrap items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]"
+            : "flex flex-wrap items-start justify-between gap-4"
+        }
+      >
+        {compact ? (
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Inbox className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+            <h3 id="lead-inbox-title" className="text-[15.5px] font-semibold text-[var(--app-text)]">
+              Lead inbox
+            </h3>
+          </div>
+        ) : (
+          <div className="max-w-3xl">
+            <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
+            <h3
+              id="lead-inbox-title"
+              className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]"
+            >
+              Lead inbox
+            </h3>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-muted)]">
+              Every submission lands here first. Export anytime, or let Mailchimp sync in the background.
+            </p>
+          </div>
+        )}
         <Link
           href="/api/admin/email-leads/export"
           prefetch={false}
-          className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+          className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
         >
+          <Download className="h-4 w-4" />
           Export CSV
         </Link>
       </div>
@@ -75,8 +101,8 @@ export function EmailLeadsPanel({
       ) : null}
 
       {snapshot.items.length > 0 ? (
-        <div className="mt-6">
-          <div className="grid gap-3 lg:hidden">
+        <div className={compact ? "" : "mt-6"}>
+          <div className={`grid gap-3 lg:hidden ${compact ? "p-3" : ""}`}>
             {snapshot.items.map((lead) => (
               <article
                 key={lead.id}
@@ -120,24 +146,25 @@ export function EmailLeadsPanel({
             ))}
           </div>
 
-          <div className="hidden overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-[var(--app-panel)] lg:block">
+          <div
+            className={`hidden overflow-hidden bg-[var(--app-panel)] lg:block ${
+              compact ? "" : "rounded-[12px] border border-[var(--app-line)]"
+            }`}
+          >
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm text-[var(--app-text)]">
                 <thead className="border-b border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[11px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Captured</th>
                     <th className="px-4 py-3 font-semibold">Email</th>
                     <th className="px-4 py-3 font-semibold">Release</th>
                     <th className="px-4 py-3 font-semibold">Source</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">When</th>
+                    <th className="px-4 py-3 font-semibold text-right">Sync</th>
                   </tr>
                 </thead>
                 <tbody>
                   {snapshot.items.map((lead) => (
                     <tr key={lead.id} className="border-b border-[var(--app-line)] last:border-b-0">
-                      <td className="px-4 py-4 align-top text-[13px] text-[var(--app-muted)]">
-                        {formatDateTime(lead.createdAt)}
-                      </td>
                       <td className="px-4 py-4 align-top font-medium text-[var(--app-text)]">
                         {lead.email}
                       </td>
@@ -158,13 +185,18 @@ export function EmailLeadsPanel({
                           {lead.campaign ?? lead.medium ?? lead.country ?? "No campaign data"}
                         </div>
                       </td>
+                      <td className="px-4 py-4 align-top text-[13px] text-[var(--app-muted)]">
+                        {formatDateTime(lead.createdAt)}
+                      </td>
                       <td className="px-4 py-4 align-top">
-                        <StatusBadge status={lead.connectorStatus} />
-                        {lead.connectorError ? (
+                        <div className="flex flex-col items-end">
+                          <StatusBadge status={lead.connectorStatus} />
+                          {lead.connectorError ? (
                             <p className="mt-2 max-w-xs text-[12px] leading-5 text-[var(--app-red-text)]">
                               {lead.connectorError}
                             </p>
-                        ) : null}
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -174,7 +206,11 @@ export function EmailLeadsPanel({
           </div>
         </div>
       ) : (
-        <div className="mt-6 rounded-[10px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-5 text-sm leading-7 text-[var(--app-muted)]">
+        <div
+          className={`rounded-[10px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-5 text-sm leading-7 text-[var(--app-muted)] ${
+            compact ? "m-3" : "mt-6"
+          }`}
+        >
           No leads yet.
         </div>
       )}
