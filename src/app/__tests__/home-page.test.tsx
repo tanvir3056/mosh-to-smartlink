@@ -2,14 +2,18 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
 describe("home page Claude design", () => {
-  test("keeps the public entry nav free of the admin theme toggle", async () => {
+  test("keeps the public entry nav aligned with the Claude theme toggle", async () => {
     const { default: HomePage } = await import("@/app/page");
 
     render(await HomePage());
 
     expect(
-      screen.queryByRole("button", { name: /switch to (dark|light) mode/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /switch to (dark|light) mode/i }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Create account" })[0]).toHaveClass(
+      "hidden",
+      "min-[460px]:inline-flex",
+    );
   });
 
   test("uses icon tiles for how-it-works steps while retaining the step counters", async () => {
