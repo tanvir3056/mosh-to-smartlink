@@ -92,9 +92,6 @@ export function PreviewPlayer({
           draggable={false}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,10,0)_52%,rgba(8,8,10,0.34)_100%)]" />
-        <div className="pointer-events-none absolute inset-3 border border-[#eee6d6]/18" />
-        <div className="pointer-events-none absolute bottom-3 left-3 h-10 w-10 border-b border-l border-[#f04444]/55" />
-        <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 border-r border-t border-[#eee6d6]/24" />
         {previewUrl ? (
           <button
             type="button"

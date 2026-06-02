@@ -33,7 +33,6 @@ export function PublicSongPage({
         style={{ backgroundImage: `url(${page.song.artworkUrl})` }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,6,0.3),rgba(8,8,10,0.82)_38%,rgba(5,5,6,0.98)_100%)]" />
-      <div className="absolute bottom-6 left-1/2 h-24 w-[min(36rem,92vw)] -translate-x-1/2 border-x border-[#eee6d6]/10" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center px-3 py-6 sm:px-6 sm:py-10">
         {isPreview ? (
