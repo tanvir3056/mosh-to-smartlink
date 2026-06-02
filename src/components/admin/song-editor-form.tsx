@@ -371,32 +371,29 @@ function LeadConnectorNote({
   );
 }
 
-function SetupStepCard({
+function SetupStatusChip({
   icon,
   label,
-  status,
-  detail,
+  value,
 }: {
   icon: React.ReactNode;
   label: string;
-  status: string;
-  detail: string;
+  value?: string;
 }) {
   return (
-    <div className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-4">
-      <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-muted)]">
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-[var(--app-text)]">{label}</h3>
-            <span className="app-chip text-[11.5px]">{status}</span>
-          </div>
-          <p className="mt-1 text-[12.5px] leading-5 text-[var(--app-muted)]">
-            {detail}
-          </p>
+    <div className="flex min-w-0 items-center gap-2.5 rounded-[var(--r-sm)] px-2.5 py-2">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-muted)]">
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <div className="truncate text-[13px] font-semibold text-[var(--app-text)]">
+          {label}
         </div>
+        {value ? (
+          <div className="mt-0.5 truncate text-[11.5px] text-[var(--app-muted)]">
+            {value}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -422,23 +419,25 @@ function ReleaseSetupGuide({
     : allVisibleDestinationsReady
       ? "Ready"
       : "Draft";
-  const publishDetail = isPublished
-    ? "Your live page is available from the public link."
+  const setupSummary = isPublished
+    ? "This release is live. Keep edits saved before sharing changes."
     : allVisibleDestinationsReady
-      ? "Save final edits, then publish when the release looks right."
-      : "Review visible destinations before publishing.";
+      ? "Everything needed is in place. Do one quick destination review, then publish from the rail."
+      : "Finish the visible destinations before publishing.";
 
   return (
-    <section className="app-card overflow-hidden rounded-[var(--r-lg)]">
-      <div className="flex flex-col gap-3 border-b border-[var(--app-line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <div>
-          <p className="app-kicker text-[var(--app-muted)]">Setup path</p>
+    <section
+      data-testid="release-setup-summary"
+      className="app-card overflow-hidden rounded-[var(--r-lg)] p-4 sm:p-5"
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="app-kicker text-[var(--app-muted)]">Setup</p>
           <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.02em] text-[var(--app-text)]">
             Release setup
           </h2>
           <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
-            Work through the page in order: confirm the release, review destinations,
-            then publish from the rail.
+            {setupSummary}
           </p>
         </div>
         <a
@@ -460,28 +459,28 @@ function ReleaseSetupGuide({
           )}
         </a>
       </div>
-      <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-5">
-        <SetupStepCard
+      <div
+        data-testid="release-setup-status-row"
+        className="mt-4 grid gap-1 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-2 sm:grid-cols-3"
+      >
+        <SetupStatusChip
           icon={<ListMusic className="h-4 w-4" />}
-          label="Details"
-          status="Ready"
-          detail="Title, artist, artwork, slug, and headline are editable below."
+          label="Details ready"
+          value="Metadata and artwork"
         />
-        <SetupStepCard
+        <SetupStatusChip
           icon={<Link2 className="h-4 w-4" />}
           label="Destinations"
-          status={`${linkedServices} of ${serviceCount}`}
-          detail={
+          value={
             manualReviewCount
-              ? `${manualReviewCount} visible link still needs review.`
-              : "Visible destinations have a valid link or search fallback."
+              ? `${manualReviewCount} to review`
+              : `${linkedServices} of ${serviceCount} ready`
           }
         />
-        <SetupStepCard
+        <SetupStatusChip
           icon={<Globe2 className="h-4 w-4" />}
-          label="Publish"
-          status={publishStatus}
-          detail={publishDetail}
+          label={publishStatus}
+          value={isPublished ? "Public page live" : "Use the rail when ready"}
         />
       </div>
     </section>

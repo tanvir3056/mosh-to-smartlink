@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -430,23 +430,33 @@ describe("SongEditorForm missing link review", () => {
     );
   });
 
-  test("summarizes the setup flow before the detailed editor controls", () => {
+  test("keeps the setup guidance compact before the detailed editor controls", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
     const setupHeading = screen.getByRole("heading", { name: "Release setup" });
     const publicLinkHeading = screen.getByRole("heading", { name: "Public link" });
+    const setupSummary = screen.getByTestId("release-setup-summary");
+    const setupStatusRow = screen.getByTestId("release-setup-status-row");
 
     expect(setupHeading).toBeInTheDocument();
+    expect(setupSummary).toHaveClass("p-4", "sm:p-5");
+    expect(setupStatusRow).toHaveClass(
+      "rounded-[var(--r-md)]",
+      "bg-[var(--app-panel-muted)]",
+    );
     expect(
       setupHeading.compareDocumentPosition(publicLinkHeading) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(screen.getByText("Details")).toBeInTheDocument();
-    expect(screen.getByText("Destinations")).toBeInTheDocument();
-    expect(screen.getByText("Publish")).toBeInTheDocument();
+    expect(within(setupStatusRow).getByText("Details ready")).toBeInTheDocument();
+    expect(within(setupStatusRow).getByText("Destinations")).toBeInTheDocument();
+    expect(within(setupStatusRow).getByText("Ready")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Review destinations" })).toHaveAttribute(
       "href",
       "#streaming-destinations",
+    );
+    expect(setupSummary.querySelectorAll("[data-testid='release-setup-step-card']")).toHaveLength(
+      0,
     );
   });
 
