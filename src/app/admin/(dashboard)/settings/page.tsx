@@ -125,7 +125,7 @@ function SettingsTabs({ activeTab }: { activeTab: SettingsTab }) {
   return (
     <nav
       aria-label="Settings sections"
-      className="inline-flex max-w-full overflow-x-auto rounded-[7px] border border-[var(--app-line)] bg-[var(--bg-sunken)] p-[3px]"
+      className="inline-flex max-w-full overflow-x-auto rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-soft)] p-[3px]"
     >
       {SETTINGS_TABS.map((tab) => {
         const active = tab.value === activeTab;
@@ -136,9 +136,9 @@ function SettingsTabs({ activeTab }: { activeTab: SettingsTab }) {
             href={tab.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex h-[32px] shrink-0 items-center justify-center rounded-[5px] px-[13px] text-[13px] font-semibold transition",
+              "inline-flex h-[32px] shrink-0 items-center justify-center rounded-[var(--r-xs)] px-[13px] text-[13px] font-semibold transition",
               active
-                ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.06)]"
+                ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[var(--sh-sm)]"
                 : "text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
             )}
           >
@@ -164,10 +164,15 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="app-card overflow-hidden rounded-[14px] p-0">
+    <section className="app-card overflow-hidden rounded-[var(--r-lg)] p-0">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
         <div className="flex items-center gap-2.5">
-          <Icon className="h-4 w-4 text-[var(--app-muted-2)]" />
+          <span
+            data-testid="settings-section-icon"
+            className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]"
+          >
+            <Icon className="h-4 w-4" />
+          </span>
           <div>
             <h2 className="text-[14.5px] font-semibold text-[var(--app-text)]">{title}</h2>
             {sub ? <p className="mt-0.5 text-xs text-[var(--app-muted-2)]">{sub}</p> : null}
@@ -193,13 +198,22 @@ function Metric({
   icon: React.ComponentType<{ className?: string }>;
   accent?: boolean;
 }) {
+  const metricId = String(label)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
   return (
-    <div className="app-card flex min-h-[118px] flex-col justify-between rounded-[14px] p-[18px]">
+    <div
+      data-testid={`settings-metric-${metricId}`}
+      className="app-card flex min-h-[118px] flex-col justify-between rounded-[var(--r-lg)] p-[18px]"
+    >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] font-[550] text-[var(--app-muted)]">{label}</p>
         <span
+          data-testid="settings-metric-icon"
           className={cn(
-            "inline-flex h-7 w-7 items-center justify-center rounded-[7px]",
+            "inline-flex h-7 w-7 items-center justify-center rounded-[var(--r-sm)]",
             accent
               ? "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"
               : "bg-[var(--app-panel-muted)] text-[var(--app-muted-2)]",
@@ -309,7 +323,7 @@ function GeneralSettings({
           </label>
           <label className="grid gap-2">
             <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
-            <div className="flex overflow-hidden rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)] focus-within:border-[var(--app-accent-line)] focus-within:ring-4 focus-within:ring-[var(--app-accent-soft)]">
+            <div className="flex overflow-hidden rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xs)] focus-within:border-[var(--app-accent-line)] focus-within:ring-4 focus-within:ring-[var(--app-accent-soft)]">
               <span className="inline-flex items-center border-r border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 font-mono text-[12px] text-[var(--app-muted-2)]">
                 {APP_DOMAIN_HINT}/
               </span>
@@ -344,7 +358,7 @@ function GeneralSettings({
             />
           </label>
           <div className="flex flex-col gap-3">
-            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+            <label className="app-card-soft flex items-start gap-3 rounded-[var(--r-md)] px-4 py-3">
               <input
                 name="show_artist_name"
                 type="checkbox"
@@ -361,7 +375,7 @@ function GeneralSettings({
                 </span>
               </span>
             </label>
-            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+            <label className="app-card-soft flex items-start gap-3 rounded-[var(--r-md)] px-4 py-3">
               <input
                 name="preview_player_default_enabled"
                 type="checkbox"
@@ -378,7 +392,7 @@ function GeneralSettings({
                 </span>
               </span>
             </label>
-            <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3">
+            <label className="app-card-soft flex items-start gap-3 rounded-[var(--r-md)] px-4 py-3">
               <input
                 name="lead_capture_default_enabled"
                 type="checkbox"

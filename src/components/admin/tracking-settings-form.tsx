@@ -29,8 +29,8 @@ function MailchimpStatusBadge({ connected }: { connected: boolean }) {
     <div
       className={
         connected
-          ? "inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-green-text)]"
-          : "inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-amber-text)]"
+          ? "inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-green-text)]"
+          : "inline-flex items-center gap-1.5 rounded-[var(--r-sm)] border border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--app-amber-text)]"
       }
     >
       <span
@@ -91,10 +91,15 @@ export function TrackingSettingsForm({
       ) : null}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="app-card overflow-hidden rounded-[14px] p-0">
+        <section className="app-card overflow-hidden rounded-[var(--r-lg)] p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
             <div className="flex min-w-0 items-start gap-2.5">
-              <Target className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+              <span
+                data-testid="tracking-section-icon"
+                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]"
+              >
+                <Target className="h-4 w-4" />
+              </span>
               <div className="min-w-0">
                 <h3 className="text-[14.5px] font-semibold text-[var(--app-text)]">
                   Meta Pixel
@@ -154,7 +159,10 @@ export function TrackingSettingsForm({
                 ) : null}
               </div>
 
-              <div className="rounded-[10px] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-3">
+              <div
+                data-testid="tracking-success-alert"
+                className="rounded-[var(--r-md)] border border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-3"
+              >
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-green-text)]" />
                   <div>
@@ -179,10 +187,15 @@ export function TrackingSettingsForm({
           </div>
         </section>
 
-        <section className="app-card overflow-hidden rounded-[14px] p-0">
+        <section className="app-card overflow-hidden rounded-[var(--r-lg)] p-0">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--app-line)] px-[18px] py-[15px]">
             <div className="flex min-w-0 items-start gap-2.5">
-              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
+              <span
+                data-testid="tracking-section-icon"
+                className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]"
+              >
+                <Mail className="h-4 w-4" />
+              </span>
               <div className="max-w-2xl">
                 <h3 className="text-[14.5px] font-semibold text-[var(--app-text)]">
                   Mailchimp
@@ -266,7 +279,7 @@ export function TrackingSettingsForm({
             </label>
 
             <div className="grid gap-3">
-              <label className="app-card-soft flex items-start gap-3 rounded-[10px] px-4 py-3 text-sm text-[var(--app-text)]">
+              <label className="app-card-soft flex items-start gap-3 rounded-[var(--r-md)] px-4 py-3 text-sm text-[var(--app-text)]">
                 <input
                   name="mailchimp_double_opt_in"
                   type="checkbox"

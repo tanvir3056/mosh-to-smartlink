@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { EmailConnectorConfig, EmailLeadSnapshot, TrackingConfig } from "@/lib/types";
@@ -107,10 +107,26 @@ describe("admin settings page", () => {
   test("defaults to the Claude-style general settings tab with real account data", async () => {
     await renderSettingsPage();
 
-    expect(screen.getByRole("link", { name: "General" })).toHaveAttribute(
+    const settingsTabs = screen.getByRole("navigation", {
+      name: "Settings sections",
+    });
+    const generalTab = screen.getByRole("link", { name: "General" });
+    const siteSettingsSection = screen
+      .getByRole("heading", { name: "Site settings" })
+      .closest("section");
+    const publicDefaultsSection = screen
+      .getByRole("heading", { name: "Public defaults" })
+      .closest("section");
+
+    expect(settingsTabs).toHaveClass(
+      "rounded-[var(--r-sm)]",
+      "bg-[var(--app-soft)]",
+    );
+    expect(generalTab).toHaveAttribute(
       "aria-current",
       "page",
     );
+    expect(generalTab).toHaveClass("rounded-[var(--r-xs)]", "shadow-[var(--sh-sm)]");
     expect(screen.getByRole("link", { name: "Integrations" })).toHaveAttribute(
       "href",
       "/admin/settings?tab=integrations",
@@ -120,6 +136,16 @@ describe("admin settings page", () => {
       "/admin/settings?tab=leads",
     );
     expect(screen.getByText("Site settings")).toBeInTheDocument();
+    expect(siteSettingsSection).toHaveClass("rounded-[var(--r-lg)]");
+    expect(
+      within(siteSettingsSection as HTMLElement).getByTestId("settings-section-icon"),
+    ).toHaveClass(
+      "h-[30px]",
+      "w-[30px]",
+      "rounded-[var(--r-sm)]",
+      "bg-[var(--app-panel-muted)]",
+    );
+    expect(publicDefaultsSection).toHaveClass("rounded-[var(--r-lg)]");
     expect(screen.getByLabelText("Display name")).toHaveValue("Backstage");
     expect(screen.getByLabelText("Username")).toHaveValue("warcry");
     expect(screen.getByLabelText("Contact email")).toHaveValue("warcry@example.com");
@@ -132,6 +158,9 @@ describe("admin settings page", () => {
     expect(screen.queryByText("Appearance")).not.toBeInTheDocument();
     expect(screen.queryByText("Theme mode")).not.toBeInTheDocument();
     expect(screen.getByText("Public defaults")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Show artist name on every page").closest("label"),
+    ).toHaveClass("rounded-[var(--r-md)]");
     expect(screen.getByRole("button", { name: "Save settings" })).toHaveAttribute(
       "form",
       "general-settings-form",
@@ -153,10 +182,16 @@ describe("admin settings page", () => {
   test("uses the lead inbox tab for the existing lead snapshot", async () => {
     await renderSettingsPage({ tab: "leads" });
 
+    const totalLeadsMetric = screen.getByTestId("settings-metric-total-leads");
+
     expect(screen.getByRole("link", { name: "Lead inbox" })).toHaveAttribute(
       "aria-current",
       "page",
     );
+    expect(totalLeadsMetric).toHaveClass("rounded-[var(--r-lg)]");
+    expect(
+      within(totalLeadsMetric as HTMLElement).getByTestId("settings-metric-icon"),
+    ).toHaveClass("rounded-[var(--r-sm)]");
     expect(screen.getByText("This week")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
     expect(screen.getByText("Synced to Mailchimp")).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
@@ -143,19 +143,43 @@ describe("TrackingSettingsForm", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Meta Pixel" })).toBeInTheDocument();
+    const metaPixelSection = screen
+      .getByRole("heading", { name: "Meta Pixel" })
+      .closest("section");
+    const mailchimpSection = screen
+      .getByRole("heading", { name: "Mailchimp" })
+      .closest("section");
+
+    expect(metaPixelSection).toHaveClass("rounded-[var(--r-lg)]");
+    expect(mailchimpSection).toHaveClass("rounded-[var(--r-lg)]");
+    expect(
+      within(metaPixelSection as HTMLElement).getByTestId("tracking-section-icon"),
+    ).toHaveClass(
+      "h-[30px]",
+      "w-[30px]",
+      "rounded-[var(--r-sm)]",
+      "bg-[var(--app-panel-muted)]",
+    );
     expect(screen.getByText("Track conversions for ads.")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Enable Meta Pixel" })).toHaveAttribute(
       "name",
       "meta_pixel_enabled",
     );
     expect(screen.getByText("Pixel firing on all live pages")).toBeInTheDocument();
+    expect(screen.getByTestId("tracking-success-alert")).toHaveClass(
+      "rounded-[var(--r-md)]",
+    );
     expect(screen.getByText("Events: PageView, ViewContent, and Lead.")).toBeInTheDocument();
     const connectedBadge = screen.getByText("Connected");
+    expect(connectedBadge).toHaveClass("rounded-[var(--r-sm)]");
     expect(connectedBadge.className).toContain("var(--app-green");
     expect(connectedBadge.querySelector("[aria-hidden='true']")).toBeInTheDocument();
     expect(
       screen.getByText("Fans confirm via email before they're added."),
     ).toBeInTheDocument();
+    expect(screen.getByText("Require double opt-in").closest("label")).toHaveClass(
+      "rounded-[var(--r-md)]",
+    );
     expect(screen.queryByText("Public defaults")).not.toBeInTheDocument();
     expect(screen.queryByText("Live page defaults")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Site name")).not.toBeInTheDocument();
