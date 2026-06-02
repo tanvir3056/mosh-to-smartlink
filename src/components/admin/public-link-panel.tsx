@@ -47,6 +47,7 @@ export function PublicLinkPanel({
   const isPublished = status === "published";
   const publicPath = buildPublicSongPath(username, slug);
   const displayPath = `${APP_DOMAIN_HINT}${publicPath}`;
+  const publicUrl = `https://${displayPath}`;
 
   return (
     <section className="app-card overflow-hidden rounded-[14px]">
@@ -85,10 +86,6 @@ export function PublicLinkPanel({
           <button
             type="button"
             onClick={async () => {
-              const publicUrl =
-                typeof window === "undefined"
-                  ? publicPath
-                  : `${window.location.origin}${publicPath}`;
               await navigator.clipboard.writeText(publicUrl);
               setCopied(true);
             }}

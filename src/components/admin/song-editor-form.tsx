@@ -940,9 +940,26 @@ export function SongEditorForm({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <MetaField label="Slug">
-                <input name="slug" defaultValue={page.page.slug} className="app-input" />
-              </MetaField>
+              <div className="grid gap-2">
+                <label htmlFor="release-slug" className="text-sm font-medium text-[var(--app-text)]">
+                  Slug
+                </label>
+                <div className="flex min-h-10 overflow-hidden rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xs)] transition focus-within:border-[var(--app-accent)] focus-within:ring-4 focus-within:ring-[var(--app-accent-soft)]">
+                  <span className="inline-flex items-center border-r border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 font-mono text-[13px] font-medium text-[var(--app-muted)]">
+                    /{page.page.username}/
+                  </span>
+                  <input
+                    id="release-slug"
+                    name="slug"
+                    defaultValue={page.page.slug}
+                    className="min-w-0 flex-1 bg-transparent px-3 font-mono text-sm text-[var(--app-text)] outline-none placeholder:text-[var(--app-faint)]"
+                    aria-describedby="release-slug-hint"
+                  />
+                </div>
+                <span id="release-slug-hint" className="text-[12.5px] text-[var(--app-muted)]">
+                  Lowercase, dashes only.
+                </span>
+              </div>
               <MetaField label="Preview clip URL">
                 <input
                   name="preview_url"

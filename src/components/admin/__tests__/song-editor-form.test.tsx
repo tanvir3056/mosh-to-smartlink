@@ -410,6 +410,15 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByText("Artwork URL")).not.toBeInTheDocument();
   });
 
+  test("clarifies the live path while editing the release slug", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByLabelText("Slug")).toHaveValue("artist-track");
+    expect(screen.getByText("/artist/")).toBeInTheDocument();
+    expect(screen.getByText("Lowercase, dashes only.")).toBeInTheDocument();
+    expect(screen.queryByText(/backstage\.to/i)).not.toBeInTheDocument();
+  });
+
   test("shows an imported draft confirmation before review work", () => {
     render(
       <SongEditorForm
