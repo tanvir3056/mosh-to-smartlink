@@ -70,7 +70,7 @@ describe("admin dashboard layout", () => {
     expect(screen.getByRole("navigation", { name: "Mobile workspace" })).toBeInTheDocument();
   });
 
-  test("surfaces primary workspace controls inside the mobile menu", async () => {
+  test("keeps the mobile sheet focused on navigation and account actions", async () => {
     const { default: AdminDashboardLayout } = await import("@/app/admin/(dashboard)/layout");
     const user = userEvent.setup();
 
@@ -85,12 +85,22 @@ describe("admin dashboard layout", () => {
     const mobileMenu = document.getElementById("admin-mobile-menu");
     expect(mobileMenu).not.toBeNull();
 
-    const importLink = within(mobileMenu!).getByRole("link", { name: "Import song" });
-
-    expect(importLink).toHaveAttribute("href", "/admin/songs/new");
-    expect(importLink).toHaveStyle({ color: "#fff" });
+    expect(screen.getByLabelText("Import song")).toHaveAttribute(
+      "href",
+      "/admin/songs/new",
+    );
     expect(
-      within(mobileMenu!).getByRole("button", { name: "Switch theme" }),
+      screen.getAllByRole("button", { name: "Switch theme" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(mobileMenu!).queryByRole("link", { name: "Import song" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(mobileMenu!).queryByRole("button", { name: "Switch theme" }),
+    ).not.toBeInTheDocument();
+    expect(within(mobileMenu!).getByText("@warcry")).toBeInTheDocument();
+    expect(
+      within(mobileMenu!).getByRole("button", { name: "Sign out" }),
     ).toBeInTheDocument();
   });
 });

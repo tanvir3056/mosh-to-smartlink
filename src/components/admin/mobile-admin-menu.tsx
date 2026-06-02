@@ -70,20 +70,6 @@ export function MobileAdminMenu({
             onClick={(event) => event.stopPropagation()}
           >
             <AdminNavLinks orientation="vertical" ariaLabel="Mobile workspace" />
-            <div className="mt-3 grid gap-2">
-              <Link
-                href="/admin/songs/new"
-                className="app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-3.5 text-sm font-[550] text-white shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
-                style={{ color: "#fff", WebkitTextFillColor: "#fff" }}
-              >
-                <Plus className="h-4 w-4" />
-                Import song
-              </Link>
-              <ThemeToggle
-                withLabel
-                className="w-full justify-center border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-text)]"
-              />
-            </div>
             <div className="my-3 h-px bg-[var(--app-line)]" />
             <div className="flex items-center gap-2 rounded-[10px] px-2 py-2">
               <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white">
