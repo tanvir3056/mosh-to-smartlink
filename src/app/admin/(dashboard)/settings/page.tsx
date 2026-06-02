@@ -21,7 +21,6 @@ import {
   EmailLeadsPanel,
   EmailLeadsPanelUnavailable,
 } from "@/components/admin/email-leads-panel";
-import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { TrackingSettingsForm } from "@/components/admin/tracking-settings-form";
 import { Button } from "@/components/ui/button";
 import { requireUserSession } from "@/lib/auth";
@@ -400,24 +399,6 @@ function GeneralSettings({
         </div>
       </SectionCard>
 
-      <SectionCard icon={Settings2} title="Appearance" sub="Saved on this browser.">
-        <div className="flex flex-col gap-3">
-          <div className="app-card-soft flex flex-col gap-3 rounded-[10px] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-sm font-semibold text-[var(--app-text)]">
-                Theme mode
-              </div>
-              <p className="mt-1 text-[12.5px] leading-5 text-[var(--app-muted)]">
-                Switch the Backstage workspace between light and dark without changing any public release pages.
-              </p>
-            </div>
-            <ThemeToggle
-              withLabel
-              className="border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.04)]"
-            />
-          </div>
-        </div>
-      </SectionCard>
     </form>
   );
 }
