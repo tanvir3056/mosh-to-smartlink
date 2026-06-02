@@ -542,6 +542,13 @@ describe("SongEditorForm missing link review", () => {
     expect(
       screen.getByRole("button", { name: "Fix missing links" }),
     ).toBeInTheDocument();
+    expect(streamingDestinationsHeading.closest("section")?.firstElementChild).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+    );
+    expect(
+      screen.getByRole("button", { name: "Fix missing links" }).parentElement,
+    ).toHaveClass("w-full", "sm:w-auto");
 
     expect(leadCaptureHeading).toBeInTheDocument();
     expect(dangerZoneHeading).toBeInTheDocument();

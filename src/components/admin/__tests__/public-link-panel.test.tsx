@@ -25,6 +25,30 @@ describe("PublicLinkPanel", () => {
     expect(screen.queryByText(/backstage\.to/i)).not.toBeInTheDocument();
   });
 
+  test("keeps the public URL copy row responsive instead of clipping controls", () => {
+    render(
+      <PublicLinkPanel
+        username="artist"
+        slug="track"
+        status="published"
+        previewHref="/admin/preview/song_1"
+      />,
+    );
+
+    expect(screen.getByTestId("public-link-copy-row")).toHaveClass(
+      "grid",
+      "sm:grid-cols-[auto_minmax(0,1fr)_auto]",
+    );
+    expect(screen.getByTestId("public-link-display-path")).toHaveClass(
+      "break-all",
+      "sm:truncate",
+    );
+    expect(screen.getByRole("button", { name: "Copy" })).toHaveClass(
+      "w-full",
+      "sm:w-auto",
+    );
+  });
+
   test("copies the configured public URL instead of the admin browser origin", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

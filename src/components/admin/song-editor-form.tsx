@@ -212,8 +212,8 @@ function EditorSection({
       id={id}
       className={`app-card overflow-hidden rounded-[var(--r-lg)] ${className ?? ""}`}
     >
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--app-line)] px-5 py-4">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex flex-col gap-3 border-b border-[var(--app-line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
           <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
             {icon}
           </span>
@@ -228,9 +228,13 @@ function EditorSection({
             ) : null}
           </div>
         </div>
-        {right ? <div className="shrink-0">{right}</div> : null}
+        {right ? (
+          <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto">
+            {right}
+          </div>
+        ) : null}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -1029,11 +1033,11 @@ export function SongEditorForm({
                         : "bg-[var(--app-panel-muted)] opacity-75"
                     }`}
                   >
-                    <div className="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
+                    <div className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
                       <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
                         <ServiceIcon service={service} className="max-w-[22px]" />
                       </span>
-                      <div className="min-w-[160px] flex-1">
+                      <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-[var(--app-text)]">
                           {serviceLabel}
                         </div>
@@ -1049,7 +1053,7 @@ export function SongEditorForm({
                               : "Found - please confirm"}
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
                         <ServiceStatusBadge
                           label={
                             needsResolution

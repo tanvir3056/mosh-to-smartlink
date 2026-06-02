@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -68,5 +68,29 @@ describe("admin dashboard layout", () => {
     expect(mobileMenuButton).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("button", { name: "Close navigation" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Mobile workspace" })).toBeInTheDocument();
+  });
+
+  test("surfaces primary workspace controls inside the mobile menu", async () => {
+    const { default: AdminDashboardLayout } = await import("@/app/admin/(dashboard)/layout");
+    const user = userEvent.setup();
+
+    render(
+      await AdminDashboardLayout({
+        children: <div>Dashboard content</div>,
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+
+    const mobileMenu = document.getElementById("admin-mobile-menu");
+    expect(mobileMenu).not.toBeNull();
+
+    const importLink = within(mobileMenu!).getByRole("link", { name: "Import song" });
+
+    expect(importLink).toHaveAttribute("href", "/admin/songs/new");
+    expect(importLink).toHaveStyle({ color: "#fff" });
+    expect(
+      within(mobileMenu!).getByRole("button", { name: "Switch theme" }),
+    ).toBeInTheDocument();
   });
 });
