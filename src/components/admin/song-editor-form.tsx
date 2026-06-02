@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  Eye,
   EyeOff,
   ExternalLink,
   Globe2,
@@ -152,8 +151,8 @@ function ServiceVisibilitySwitch({
         aria-label={ariaLabel}
         className="peer sr-only"
       />
-      <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
-      <span className="relative ml-0.5 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition-transform peer-checked:translate-x-5" />
+      <span className="pointer-events-none absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
+      <span className="pointer-events-none relative ml-0.5 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition-transform peer-checked:translate-x-5" />
     </label>
   );
 }
@@ -509,9 +508,9 @@ export function SongEditorForm({
   const isPublished = page.page.status === "published";
   const headerLinkHref = isPublished
     ? publicHref
-    : `/admin/preview/${page.song.id}`;
-  const headerLinkLabel = isPublished ? "Open live page" : "Preview draft";
-  const HeaderLinkIcon = isPublished ? ExternalLink : Eye;
+    : "#streaming-destinations";
+  const headerLinkLabel = isPublished ? "Open live page" : "Review links";
+  const HeaderLinkIcon = isPublished ? ExternalLink : Search;
   const [leadCaptureEnabled, setLeadCaptureEnabled] = useState(
     page.emailCapture.enabled,
   );
@@ -1594,6 +1593,31 @@ export function SongEditorForm({
             )}
           </EditorSection>
 
+          <div className="app-card rounded-[var(--r-lg)] p-5 xl:hidden">
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="app-kicker text-[var(--app-muted)]">Publishing rail</p>
+                <h3 className="mt-2 text-base font-semibold text-[var(--app-text)]">
+                  {allVisibleDestinationsReady
+                    ? "Ready to publish"
+                    : publishReady
+                      ? "Almost ready"
+                      : "Not ready to publish"}
+                </h3>
+                <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
+                  {readinessMessage}
+                </p>
+              </div>
+              <SaveButtons
+                canPublish={publishReady}
+                isPublished={page.page.status === "published"}
+                draftAction={draftAction}
+                publishAction={publishAction}
+                unpublishAction={unpublishAction}
+              />
+            </div>
+          </div>
+
           <section className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
             <div className="flex items-center gap-3 border-b border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-5 py-4">
               <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] bg-[var(--app-panel)] text-[var(--app-red-text)]">
@@ -1623,31 +1647,6 @@ export function SongEditorForm({
               </div>
             </div>
           </section>
-
-          <div className="app-card rounded-[var(--r-lg)] p-5 xl:hidden">
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="app-kicker text-[var(--app-muted)]">Publishing rail</p>
-                <h3 className="mt-2 text-base font-semibold text-[var(--app-text)]">
-                  {allVisibleDestinationsReady
-                    ? "Ready to publish"
-                    : publishReady
-                      ? "Almost ready"
-                      : "Not ready to publish"}
-                </h3>
-                <p className="mt-2 text-sm leading-7 text-[var(--app-muted)]">
-                  {readinessMessage}
-                </p>
-              </div>
-              <SaveButtons
-                canPublish={publishReady}
-                isPublished={page.page.status === "published"}
-                draftAction={draftAction}
-                publishAction={publishAction}
-                unpublishAction={unpublishAction}
-              />
-            </div>
-          </div>
 
           <FormStateMessage error={state.error} success={state.success} />
         </div>

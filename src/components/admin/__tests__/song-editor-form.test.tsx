@@ -231,6 +231,9 @@ describe("SongEditorForm missing link review", () => {
 
     expect(screen.getAllByLabelText("Show on public page")).toHaveLength(6);
     expect(screen.queryByText("Show on public page")).not.toBeInTheDocument();
+    const firstSwitch = screen.getAllByLabelText("Show on public page")[0].parentElement;
+
+    expect(firstSwitch?.querySelectorAll("span")[0]).toHaveClass("pointer-events-none");
   });
 
   test("starts matched streaming destinations as compact rows until expanded", async () => {
@@ -251,10 +254,10 @@ describe("SongEditorForm missing link review", () => {
   test("uses theme-safe editor action surfaces", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
-    const preview = screen.getByRole("link", { name: "Preview draft" });
+    const setupAction = screen.getByRole("link", { name: "Review links" });
 
-    expect(preview.className).toContain("bg-[var(--app-panel)]");
-    expect(preview.className).not.toContain("bg-white");
+    expect(setupAction.className).toContain("bg-[var(--app-panel)]");
+    expect(setupAction.className).not.toContain("bg-white");
   });
 
   test("uses shared editor primitives for command-center surfaces", () => {
@@ -263,7 +266,7 @@ describe("SongEditorForm missing link review", () => {
     const releaseDetailsSection = screen
       .getByRole("heading", { name: "Release details" })
       .closest("section");
-    const preview = screen.getByRole("link", { name: "Preview draft" });
+    const setupAction = screen.getByRole("link", { name: "Review links" });
     const connectorInput = screen.getByLabelText("Connector");
     const connectorShell = connectorInput.parentElement;
     const connectorNote = screen.getByText(/Leads are saved in Settings/i);
@@ -276,7 +279,7 @@ describe("SongEditorForm missing link review", () => {
       .find(Boolean);
 
     expect(releaseDetailsSection).toHaveClass("rounded-[var(--r-lg)]");
-    expect(preview).toHaveClass("rounded-[var(--r-sm)]", "shadow-[var(--sh-xs)]");
+    expect(setupAction).toHaveClass("rounded-[var(--r-sm)]", "shadow-[var(--sh-xs)]");
     expect(connectorShell).toHaveClass(
       "rounded-[var(--r-sm)]",
       "shadow-[var(--sh-xs)]",
@@ -390,6 +393,20 @@ describe("SongEditorForm missing link review", () => {
     for (const previewLink of screen.getAllByRole("link", { name: /preview/i })) {
       expect(previewLink).toHaveAttribute("href", "/admin/preview/song_1");
     }
+  });
+
+  test("keeps the draft setup header focused on review instead of preview", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByRole("link", { name: "Review links" })).toHaveAttribute(
+      "href",
+      "#streaming-destinations",
+    );
+    expect(screen.queryByRole("link", { name: "Preview draft" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Admin preview" })).toHaveAttribute(
+      "href",
+      "/admin/preview/song_1",
+    );
   });
 
   test("routes published editor header actions to the live public page", () => {
@@ -572,7 +589,7 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.queryByText("Delete this song")).not.toBeInTheDocument();
   });
 
-  test("keeps the danger zone inside the editor command form", () => {
+  test("keeps the mobile publishing rail before the danger zone", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
     const dangerZoneHeading = screen.getByRole("heading", { name: "Danger zone" });
@@ -583,7 +600,7 @@ describe("SongEditorForm missing link review", () => {
 
     expect(dangerZoneHeading.closest("form")).not.toBeNull();
     expect(
-      dangerZoneHeading.compareDocumentPosition(publishingRailHeading) &
+      publishingRailHeading.compareDocumentPosition(dangerZoneHeading) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(deleteButton).toHaveClass("text-[var(--app-red-text)]");
