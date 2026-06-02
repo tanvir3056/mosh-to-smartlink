@@ -12,6 +12,7 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
+  ExternalLink,
   Globe2,
   Link2,
   ListMusic,
@@ -443,6 +444,12 @@ export function SongEditorForm({
     ? formatDestinationAttention(manualReviewCount)
     : "Show at least one valid streaming destination before this page goes live.";
   const publicHref = buildPublicSongPath(page.page.username, page.page.slug);
+  const isPublished = page.page.status === "published";
+  const headerLinkHref = isPublished
+    ? publicHref
+    : `/admin/preview/${page.song.id}`;
+  const headerLinkLabel = isPublished ? "Open live page" : "Preview draft";
+  const HeaderLinkIcon = isPublished ? ExternalLink : Eye;
 
   function updateServiceDraft(
     service: StreamingService,
@@ -669,11 +676,13 @@ export function SongEditorForm({
 
           <div className="flex flex-wrap items-center gap-2">
             <a
-              href={`/admin/preview/${page.song.id}`}
+              href={headerLinkHref}
+              target={isPublished ? "_blank" : undefined}
+              rel={isPublished ? "noreferrer" : undefined}
               className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
             >
-              <Eye className="h-4 w-4" />
-              {page.page.status === "published" ? "Preview" : "Preview draft"}
+              <HeaderLinkIcon className="h-4 w-4" />
+              {headerLinkLabel}
             </a>
             <Button
               type="submit"

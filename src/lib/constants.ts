@@ -4,7 +4,34 @@ export const APP_NAME = "Backstage";
 export const APP_TAGLINE = "Release control for artists running paid traffic.";
 export const APP_DESCRIPTION =
   "Private release pages, destination review, and first-party campaign insights for artists running paid social.";
-export const APP_DOMAIN_HINT = "backstage.to";
+
+function normalizeAppDomainHint(value: string | null | undefined) {
+  const fallbackDomain = "mosh-to-smartlink.vercel.app";
+  const trimmed = value?.trim().replace(/^["']|["']$/g, "");
+
+  if (!trimmed) {
+    return fallbackDomain;
+  }
+
+  const hasProtocol = /^[a-z][a-z\d+\-.]*:\/\//i.test(trimmed);
+  const candidate = hasProtocol ? trimmed : `https://${trimmed}`;
+
+  try {
+    const url = new URL(candidate);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return fallbackDomain;
+    }
+
+    return url.host;
+  } catch {
+    return fallbackDomain;
+  }
+}
+
+export const APP_DOMAIN_HINT = normalizeAppDomainHint(
+  process.env.NEXT_PUBLIC_APP_URL,
+);
 export const VISITOR_COOKIE = "ffm_visitor_id";
 export const LAST_VISIT_COOKIE = "ffm_last_visit_id";
 export const ADMIN_SESSION_COOKIE = "ffm_admin_session";

@@ -372,6 +372,17 @@ describe("SongEditorForm missing link review", () => {
     }
   });
 
+  test("routes published editor header actions to the live public page", () => {
+    render(<SongEditorForm page={PUBLISHED_PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.queryByRole("link", { name: "Preview" })).not.toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", { name: "Open live page" })
+        .some((link) => link.getAttribute("href") === "/artist/artist-track"),
+    ).toBe(true);
+  });
+
   test("renders the artwork control as a replace tile without a raw URL label", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
