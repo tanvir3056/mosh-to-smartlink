@@ -100,6 +100,62 @@ function reviewStatusLabel(value: ReviewStatus) {
   }
 }
 
+function serviceStatusTone(label: string) {
+  if (label === "Approved") {
+    return "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]";
+  }
+
+  if (label === "Needs review" || label === "Search fallback") {
+    return "border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]";
+  }
+
+  return "border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]";
+}
+
+function ServiceStatusBadge({ label }: { label: string }) {
+  return (
+    <span
+      className={`inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[12px] font-semibold ${serviceStatusTone(label)}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+      {label}
+    </span>
+  );
+}
+
+function ServiceConfidencePill({ label }: { label: string }) {
+  return (
+    <span className="hidden h-6 shrink-0 items-center rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 text-[12px] font-medium text-[var(--app-muted)] sm:inline-flex">
+      {label}
+    </span>
+  );
+}
+
+function ServiceVisibilitySwitch({
+  name,
+  checked,
+  onChange,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: (isVisible: boolean) => void;
+}) {
+  return (
+    <label className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full">
+      <input
+        name={name}
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+        aria-label="Show on public page"
+        className="peer sr-only"
+      />
+      <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
+      <span className="relative ml-0.5 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition-transform peer-checked:translate-x-5" />
+    </label>
+  );
+}
+
 function formatDestinationAttention(count: number) {
   if (count === 0) {
     return "All visible destinations are ready.";
@@ -172,7 +228,7 @@ function EditorSection({
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
-      <div className="p-5 sm:p-6">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -933,11 +989,11 @@ export function SongEditorForm({
                         : "bg-[var(--app-panel-muted)] opacity-75"
                     }`}
                   >
-                    <div className="flex flex-wrap items-center gap-3 p-3">
+                    <div className="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
                       <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
                         <ServiceIcon service={service} className="max-w-[22px]" />
                       </span>
-                      <div className="min-w-[180px] flex-1">
+                      <div className="min-w-[160px] flex-1">
                         <div className="truncate text-sm font-semibold text-[var(--app-text)]">
                           {serviceLabel}
                         </div>
@@ -953,19 +1009,19 @@ export function SongEditorForm({
                               : "Found - please confirm"}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex min-h-9 items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-soft)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-text)]">
-                          {needsResolution
+                      <div className="flex shrink-0 items-center gap-2">
+                        <ServiceStatusBadge
+                          label={
+                            needsResolution
                             ? draft.resolutionMode === "search_fallback"
                               ? "Search fallback"
                               : draft.url
                                 ? "Manual link"
                                 : "Unresolved"
-                            : reviewStatusLabel(reviewStatus)}
-                        </span>
-                        <span className="inline-flex min-h-9 items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-muted)]">
-                          {formatConfidence(link?.confidence ?? null)}
-                        </span>
+                            : reviewStatusLabel(reviewStatus)
+                          }
+                        />
+                        <ServiceConfidencePill label={formatConfidence(link?.confidence ?? null)} />
                         <button
                           type="button"
                           aria-expanded={isExpanded}
@@ -979,22 +1035,16 @@ export function SongEditorForm({
                             <ChevronRight className="h-4 w-4" />
                           )}
                         </button>
-                        <label className="inline-flex items-center gap-2 text-sm text-[var(--app-text)]">
-                          <input
-                            name={`${service}_is_visible`}
-                            type="checkbox"
-                            checked={draft.isVisible}
-                            onChange={(event) => {
-                              const isVisible = event.currentTarget.checked;
-                              updateServiceDraft(service, (current) => ({
-                                ...current,
-                                isVisible,
-                              }));
-                            }}
-                            className="h-4 w-4 rounded border-slate-300 bg-transparent"
-                          />
-                          Show on public page
-                        </label>
+                        <ServiceVisibilitySwitch
+                          name={`${service}_is_visible`}
+                          checked={draft.isVisible}
+                          onChange={(isVisible) =>
+                            updateServiceDraft(service, (current) => ({
+                              ...current,
+                              isVisible,
+                            }))
+                          }
+                        />
                       </div>
                     </div>
 

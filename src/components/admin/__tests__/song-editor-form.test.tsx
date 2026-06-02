@@ -213,6 +213,13 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.getByText("Streaming destinations")).toBeInTheDocument();
   });
 
+  test("keeps destination visibility controls compact while remaining accessible", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getAllByLabelText("Show on public page")).toHaveLength(6);
+    expect(screen.queryByText("Show on public page")).not.toBeInTheDocument();
+  });
+
   test("starts matched streaming destinations as compact rows until expanded", async () => {
     const user = userEvent.setup();
 
