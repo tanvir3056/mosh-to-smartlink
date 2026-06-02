@@ -185,6 +185,19 @@ const PUBLISHED_PAGE: SongPageWithLinks = {
   },
 };
 
+const EMAIL_CAPTURE_PAGE: SongPageWithLinks = {
+  ...PAGE,
+  emailCapture: {
+    enabled: true,
+    title: "Download the song for free",
+    description: "Drop your email to unlock the track.",
+    buttonLabel: "Get the download",
+    downloadUrl: "https://example.com/download.mp3",
+    downloadLabel: "Download song",
+    tag: "free-download",
+  },
+};
+
 const CONNECTED_EMAIL_CONNECTOR: EmailConnectorConfig = {
   provider: "mailchimp",
   audienceId: "audience-1",
@@ -245,7 +258,7 @@ describe("SongEditorForm missing link review", () => {
   });
 
   test("uses shared editor primitives for command-center surfaces", () => {
-    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+    render(<SongEditorForm page={EMAIL_CAPTURE_PAGE} showMissingLinksReview={false} />);
 
     const releaseDetailsSection = screen
       .getByRole("heading", { name: "Release details" })
@@ -577,7 +590,7 @@ describe("SongEditorForm missing link review", () => {
   test("shows the connected Mailchimp connector in the lead capture section", () => {
     render(
       <SongEditorForm
-        page={PAGE}
+        page={EMAIL_CAPTURE_PAGE}
         emailConnector={CONNECTED_EMAIL_CONNECTOR}
         showMissingLinksReview={false}
       />,
@@ -590,5 +603,20 @@ describe("SongEditorForm missing link review", () => {
         /Leads sync to your connected Mailchimp audience and appear in Settings/i,
       ),
     ).toBeInTheDocument();
+  });
+
+  test("collapses lead capture settings until the feature is enabled", async () => {
+    const user = userEvent.setup();
+
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(screen.getByText("Lead capture is off.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Offer title")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Reward URL")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Enable email capture on this song page"));
+
+    expect(screen.getByLabelText("Offer title")).toBeInTheDocument();
+    expect(screen.getByLabelText("Reward URL")).toBeInTheDocument();
   });
 });

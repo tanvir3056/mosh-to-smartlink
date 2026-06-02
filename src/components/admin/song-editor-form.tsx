@@ -135,10 +135,12 @@ function ServiceVisibilitySwitch({
   name,
   checked,
   onChange,
+  ariaLabel = "Show on public page",
 }: {
   name: string;
   checked: boolean;
   onChange: (isVisible: boolean) => void;
+  ariaLabel?: string;
 }) {
   return (
     <label className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full">
@@ -147,7 +149,7 @@ function ServiceVisibilitySwitch({
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.currentTarget.checked)}
-        aria-label="Show on public page"
+        aria-label={ariaLabel}
         className="peer sr-only"
       />
       <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
@@ -506,6 +508,17 @@ export function SongEditorForm({
     : `/admin/preview/${page.song.id}`;
   const headerLinkLabel = isPublished ? "Open live page" : "Preview draft";
   const HeaderLinkIcon = isPublished ? ExternalLink : Eye;
+  const [leadCaptureEnabled, setLeadCaptureEnabled] = useState(
+    page.emailCapture.enabled,
+  );
+  const [leadCaptureDraft, setLeadCaptureDraft] = useState({
+    title: page.emailCapture.title ?? "",
+    buttonLabel: page.emailCapture.buttonLabel ?? "",
+    description: page.emailCapture.description ?? "",
+    downloadUrl: page.emailCapture.downloadUrl ?? "",
+    downloadLabel: page.emailCapture.downloadLabel ?? "",
+    tag: page.emailCapture.tag ?? "",
+  });
 
   function updateServiceDraft(
     service: StreamingService,
@@ -525,6 +538,16 @@ export function SongEditorForm({
     setExpandedServices((current) => ({
       ...current,
       [service]: !current[service],
+    }));
+  }
+
+  function updateLeadCaptureDraft(
+    key: keyof typeof leadCaptureDraft,
+    value: string,
+  ) {
+    setLeadCaptureDraft((current) => ({
+      ...current,
+      [key]: value,
     }));
   }
 
@@ -1412,73 +1435,142 @@ export function SongEditorForm({
             title="Lead capture"
             subtitle="Collect emails in exchange for a reward."
           >
-            <label className="app-card-soft flex items-center gap-3 rounded-[var(--r-md)] px-4 py-3 text-sm text-[var(--app-text)]">
-              <input
+            <label className="app-card-soft flex items-center justify-between gap-3 rounded-[var(--r-md)] px-4 py-3 text-sm text-[var(--app-text)]">
+              <span className="min-w-0">
+                <span className="block font-semibold">
+                  Enable email capture on this song page
+                </span>
+                <span className="mt-0.5 block text-[12.5px] text-[var(--app-muted)]">
+                  Add a reward form below the streaming destinations.
+                </span>
+              </span>
+              <ServiceVisibilitySwitch
                 name="email_capture_enabled"
-                type="checkbox"
-                defaultChecked={page.emailCapture.enabled}
-                className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                checked={leadCaptureEnabled}
+                ariaLabel="Enable email capture on this song page"
+                onChange={setLeadCaptureEnabled}
               />
-              Enable email capture on this song page
             </label>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MetaField label="Offer title">
+            {leadCaptureEnabled ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MetaField label="Offer title">
+                    <input
+                      name="email_capture_title"
+                      value={leadCaptureDraft.title}
+                      onChange={(event) =>
+                        updateLeadCaptureDraft("title", event.currentTarget.value)
+                      }
+                      className="app-input"
+                      placeholder="Download the song for free"
+                    />
+                  </MetaField>
+                  <MetaField label="Button label">
+                    <input
+                      name="email_capture_button_label"
+                      value={leadCaptureDraft.buttonLabel}
+                      onChange={(event) =>
+                        updateLeadCaptureDraft("buttonLabel", event.currentTarget.value)
+                      }
+                      className="app-input"
+                      placeholder="Get the download"
+                    />
+                  </MetaField>
+                  <LeadConnectorField connector={emailConnector} />
+                </div>
+
+                <MetaField label="Offer description">
+                  <textarea
+                    name="email_capture_description"
+                    value={leadCaptureDraft.description}
+                    onChange={(event) =>
+                      updateLeadCaptureDraft("description", event.currentTarget.value)
+                    }
+                    className="app-input min-h-28 resize-y"
+                    placeholder="Drop your email to unlock the track and hear about future releases first."
+                  />
+                </MetaField>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MetaField label="Reward URL">
+                    <input
+                      name="email_capture_download_url"
+                      value={leadCaptureDraft.downloadUrl}
+                      onChange={(event) =>
+                        updateLeadCaptureDraft("downloadUrl", event.currentTarget.value)
+                      }
+                      className="app-input"
+                      placeholder="https://..."
+                    />
+                  </MetaField>
+                  <MetaField label="Reward label">
+                    <input
+                      name="email_capture_download_label"
+                      value={leadCaptureDraft.downloadLabel}
+                      onChange={(event) =>
+                        updateLeadCaptureDraft("downloadLabel", event.currentTarget.value)
+                      }
+                      className="app-input"
+                      placeholder="Download song"
+                    />
+                  </MetaField>
+                </div>
+
+                <MetaField label="Connector tag">
+                  <input
+                    name="email_capture_tag"
+                    value={leadCaptureDraft.tag}
+                    onChange={(event) =>
+                      updateLeadCaptureDraft("tag", event.currentTarget.value)
+                    }
+                    className="app-input"
+                    placeholder="free-download"
+                  />
+                </MetaField>
+                <LeadConnectorNote connector={emailConnector} />
+              </>
+            ) : (
+              <div className="rounded-[var(--r-md)] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-4">
+                <p className="text-sm font-semibold text-[var(--app-text)]">
+                  Lead capture is off.
+                </p>
+                <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
+                  Turn it on when this release needs an email form, free download,
+                  or reward handoff.
+                </p>
                 <input
                   name="email_capture_title"
-                  defaultValue={page.emailCapture.title ?? ""}
-                  className="app-input"
-                  placeholder="Download the song for free"
+                  type="hidden"
+                  value={leadCaptureDraft.title}
                 />
-              </MetaField>
-              <MetaField label="Button label">
                 <input
                   name="email_capture_button_label"
-                  defaultValue={page.emailCapture.buttonLabel ?? ""}
-                  className="app-input"
-                  placeholder="Get the download"
+                  type="hidden"
+                  value={leadCaptureDraft.buttonLabel}
                 />
-              </MetaField>
-              <LeadConnectorField connector={emailConnector} />
-            </div>
-
-            <MetaField label="Offer description">
-              <textarea
-                name="email_capture_description"
-                defaultValue={page.emailCapture.description ?? ""}
-                className="app-input min-h-28 resize-y"
-                placeholder="Drop your email to unlock the track and hear about future releases first."
-              />
-            </MetaField>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MetaField label="Reward URL">
                 <input
                   name="email_capture_download_url"
-                  defaultValue={page.emailCapture.downloadUrl ?? ""}
-                  className="app-input"
-                  placeholder="https://..."
+                  type="hidden"
+                  value={leadCaptureDraft.downloadUrl}
                 />
-              </MetaField>
-              <MetaField label="Reward label">
                 <input
                   name="email_capture_download_label"
-                  defaultValue={page.emailCapture.downloadLabel ?? ""}
-                  className="app-input"
-                  placeholder="Download song"
+                  type="hidden"
+                  value={leadCaptureDraft.downloadLabel}
                 />
-              </MetaField>
-            </div>
-
-            <MetaField label="Connector tag">
-              <input
-                name="email_capture_tag"
-                defaultValue={page.emailCapture.tag ?? ""}
-                className="app-input"
-                placeholder="free-download"
-              />
-            </MetaField>
-            <LeadConnectorNote connector={emailConnector} />
+                <input
+                  name="email_capture_description"
+                  type="hidden"
+                  value={leadCaptureDraft.description}
+                />
+                <input
+                  name="email_capture_tag"
+                  type="hidden"
+                  value={leadCaptureDraft.tag}
+                />
+              </div>
+            )}
           </EditorSection>
 
           <section className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--app-red-line)] bg-[var(--app-panel)]">
