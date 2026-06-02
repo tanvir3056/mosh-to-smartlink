@@ -371,6 +371,123 @@ function LeadConnectorNote({
   );
 }
 
+function SetupStepCard({
+  icon,
+  label,
+  status,
+  detail,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  status: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] text-[var(--app-muted)]">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--app-text)]">{label}</h3>
+            <span className="app-chip text-[11.5px]">{status}</span>
+          </div>
+          <p className="mt-1 text-[12.5px] leading-5 text-[var(--app-muted)]">
+            {detail}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReleaseSetupGuide({
+  allVisibleDestinationsReady,
+  isPublished,
+  linkedServices,
+  manualReviewCount,
+  publicHref,
+  serviceCount,
+}: {
+  allVisibleDestinationsReady: boolean;
+  isPublished: boolean;
+  linkedServices: number;
+  manualReviewCount: number;
+  publicHref: string;
+  serviceCount: number;
+}) {
+  const publishStatus = isPublished
+    ? "Live"
+    : allVisibleDestinationsReady
+      ? "Ready"
+      : "Draft";
+  const publishDetail = isPublished
+    ? "Your live page is available from the public link."
+    : allVisibleDestinationsReady
+      ? "Save final edits, then publish when the release looks right."
+      : "Review visible destinations before publishing.";
+
+  return (
+    <section className="app-card overflow-hidden rounded-[var(--r-lg)]">
+      <div className="flex flex-col gap-3 border-b border-[var(--app-line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div>
+          <p className="app-kicker text-[var(--app-muted)]">Setup path</p>
+          <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.02em] text-[var(--app-text)]">
+            Release setup
+          </h2>
+          <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
+            Work through the page in order: confirm the release, review destinations,
+            then publish from the rail.
+          </p>
+        </div>
+        <a
+          href={isPublished ? publicHref : "#streaming-destinations"}
+          target={isPublished ? "_blank" : undefined}
+          rel={isPublished ? "noreferrer" : undefined}
+          className="app-interactive inline-flex min-h-10 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
+        >
+          {isPublished ? (
+            <>
+              <ExternalLink className="h-4 w-4" />
+              Open live page
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4" />
+              Review destinations
+            </>
+          )}
+        </a>
+      </div>
+      <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-5">
+        <SetupStepCard
+          icon={<ListMusic className="h-4 w-4" />}
+          label="Details"
+          status="Ready"
+          detail="Title, artist, artwork, slug, and headline are editable below."
+        />
+        <SetupStepCard
+          icon={<Link2 className="h-4 w-4" />}
+          label="Destinations"
+          status={`${linkedServices} of ${serviceCount}`}
+          detail={
+            manualReviewCount
+              ? `${manualReviewCount} visible link still needs review.`
+              : "Visible destinations have a valid link or search fallback."
+          }
+        />
+        <SetupStepCard
+          icon={<Globe2 className="h-4 w-4" />}
+          label="Publish"
+          status={publishStatus}
+          detail={publishDetail}
+        />
+      </div>
+    </section>
+  );
+}
+
 export function SongEditorForm({
   page,
   performance,
@@ -441,15 +558,7 @@ export function SongEditorForm({
     Record<StreamingService, boolean>
   >(() =>
     Object.fromEntries(
-      STREAMING_SERVICES.map((service) => {
-        const link = page.links.find((entry) => entry.service === service);
-        const needsAttention =
-          !link?.url ||
-          link.matchStatus !== "matched" ||
-          deriveReviewStatus(link.matchStatus, link.url) !== "approved";
-
-        return [service, needsAttention];
-      }),
+      STREAMING_SERVICES.map((service) => [service, false]),
     ) as Record<StreamingService, boolean>,
   );
   const importedMissingServices = useMemo(
@@ -890,8 +999,17 @@ export function SongEditorForm({
           </section>
         ) : null}
 
+        <ReleaseSetupGuide
+          allVisibleDestinationsReady={allVisibleDestinationsReady}
+          isPublished={isPublished}
+          linkedServices={linkedServices}
+          manualReviewCount={manualReviewCount}
+          publicHref={publicHref}
+          serviceCount={STREAMING_SERVICES.length}
+        />
+
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_336px] xl:items-start">
-        <div className="grid gap-5">
+          <div className="grid gap-5">
           <PublicLinkPanel
             username={page.page.username}
             slug={page.page.slug}

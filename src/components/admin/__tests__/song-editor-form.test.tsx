@@ -251,6 +251,27 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.getByText("Destination URL")).toBeInTheDocument();
   });
 
+  test("starts unresolved streaming destinations as compact rows until expanded", async () => {
+    const user = userEvent.setup();
+
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    expect(
+      screen.getByRole("button", {
+        name: "Expand YouTube Music destination details",
+      }),
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Manually add link")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Expand YouTube Music destination details",
+      }),
+    );
+
+    expect(screen.getByText("Manually add link")).toBeInTheDocument();
+  });
+
   test("uses theme-safe editor action surfaces", () => {
     render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
 
@@ -406,6 +427,26 @@ describe("SongEditorForm missing link review", () => {
     expect(screen.getByRole("link", { name: "Admin preview" })).toHaveAttribute(
       "href",
       "/admin/preview/song_1",
+    );
+  });
+
+  test("summarizes the setup flow before the detailed editor controls", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const setupHeading = screen.getByRole("heading", { name: "Release setup" });
+    const publicLinkHeading = screen.getByRole("heading", { name: "Public link" });
+
+    expect(setupHeading).toBeInTheDocument();
+    expect(
+      setupHeading.compareDocumentPosition(publicLinkHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("Details")).toBeInTheDocument();
+    expect(screen.getByText("Destinations")).toBeInTheDocument();
+    expect(screen.getByText("Publish")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review destinations" })).toHaveAttribute(
+      "href",
+      "#streaming-destinations",
     );
   });
 
