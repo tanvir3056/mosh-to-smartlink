@@ -181,6 +181,25 @@ describe("admin overview page", () => {
     );
   });
 
+  test("labels the review step accurately when only published releases exist", async () => {
+    mockGetDashboardSnapshot.mockResolvedValue({
+      ...dashboardSnapshot,
+      totalSongs: 1,
+      publishedSongs: 1,
+      draftSongs: 0,
+      songs: [dashboardSnapshot.songs[0]],
+    } satisfies DashboardSnapshot);
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.queryByRole("link", { name: /open a draft/i })).toBeNull();
+    expect(screen.getByRole("link", { name: /review a release/i })).toHaveAttribute(
+      "href",
+      "/admin/songs/song-1",
+    );
+  });
+
   test("renders the Claude quick-read service and visits trend signals", async () => {
     const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
 

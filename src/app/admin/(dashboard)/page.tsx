@@ -330,7 +330,11 @@ export default async function AdminOverviewPage({
     : firstSongId
       ? `/admin/songs/${firstSongId}`
       : "/admin/songs/new";
-  const reviewCta = firstSongId ? "Open a draft" : "Start with import";
+  const reviewCta = firstDraftSongId
+    ? "Open a draft"
+    : firstSongId
+      ? "Review a release"
+      : "Start with import";
   const emptyTitle =
     activeFilter === "published"
       ? "No published releases yet"
