@@ -746,7 +746,7 @@ export function ArtworkUploadField({
               <div
                 role="img"
                 aria-label="Artwork crop editor"
-                className="relative mx-auto aspect-square w-full max-w-[440px] touch-none overflow-hidden rounded-[16px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] shadow-[inset_0_0_0_1px_var(--app-line)]"
+                className="relative mx-auto aspect-square w-full max-w-[440px] touch-none overflow-hidden rounded-[var(--r-crop)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] shadow-[inset_0_0_0_1px_var(--app-line)]"
                 onPointerDown={(event) => {
                   dragState.current = {
                     pointerId: event.pointerId,
@@ -818,7 +818,7 @@ export function ArtworkUploadField({
                 <p className="app-kicker text-[var(--app-muted-2)]">
                   Final cover
                 </p>
-                <div className="relative mt-3 aspect-square overflow-hidden rounded-[12px] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
+                <div className="relative mt-3 aspect-square overflow-hidden rounded-[var(--r-frame)] border border-[var(--app-line)] bg-[var(--app-panel-muted)]">
                   <img
                     src={cropSession.imageDataUrl}
                     alt=""

@@ -116,7 +116,7 @@ export default async function AdminPreviewPage({
           className={cn(
             "overflow-hidden border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xl)]",
             device === "mobile"
-              ? "w-full max-w-[390px] rounded-[34px] p-[9px]"
+              ? "w-full max-w-[390px] rounded-[var(--r-device-shell)] p-[9px]"
               : "w-full max-w-[960px] rounded-[var(--r-lg)]",
           )}
         >
@@ -124,8 +124,8 @@ export default async function AdminPreviewPage({
             className={cn(
               "overflow-hidden",
               device === "mobile"
-                ? "rounded-[26px] border border-[var(--app-line-soft)]"
-                : "rounded-[12px]",
+                ? "rounded-[var(--r-device-screen)] border border-[var(--app-line-soft)]"
+                : "rounded-[var(--r-frame)]",
             )}
           >
             <PublicSongPage

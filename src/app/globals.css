@@ -108,6 +108,12 @@ body {
   --r-lg: 14px;
   --r-xl: 20px;
   --r-full: 999px;
+  --r-swatch: 3px;
+  --r-frame: 12px;
+  --r-crop: 16px;
+  --r-dialog: 18px;
+  --r-device-screen: 26px;
+  --r-device-shell: 34px;
   --sh-xs: 0 1px 2px oklch(0.2 0.02 270 / 0.05);
   --sh-sm: 0 1px 2px oklch(0.2 0.02 270 / 0.06), 0 1px 3px oklch(0.2 0.02 270 / 0.05);
   --sh-md: 0 2px 4px oklch(0.2 0.02 270 / 0.04), 0 4px 12px oklch(0.2 0.02 270 / 0.07);

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function AdminPreviewNotFound() {
   return (
     <main className="bs-admin-theme flex min-h-screen items-center justify-center bg-[var(--app-bg)] px-5 py-10">
-      <section className="app-card w-full max-w-md rounded-[18px] p-7 text-center shadow-[var(--sh-xl)]">
+      <section className="app-card w-full max-w-md rounded-[var(--r-dialog)] p-7 text-center shadow-[var(--sh-xl)]">
         <p className="app-kicker text-[var(--app-muted)]">Preview unavailable</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
           Preview could not be opened.

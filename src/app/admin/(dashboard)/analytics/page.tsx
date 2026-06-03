@@ -412,7 +412,7 @@ function EmptyBlock({ label }: { label: string }) {
 function Legend({ color, label }: { color: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-[var(--app-muted)]">
-      <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: color }} />
+      <span className="h-2.5 w-2.5 rounded-[var(--r-swatch)]" style={{ background: color }} />
       {label}
     </span>
   );
@@ -642,7 +642,7 @@ export default async function AdminAnalyticsPage({
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-2 text-[13px] text-[var(--app-muted)]">
-                    <span className="h-2 w-2 rounded-[3px]" style={{ background: row.color }} />
+                    <span className="h-2 w-2 rounded-[var(--r-swatch)]" style={{ background: row.color }} />
                     {row.label}
                   </span>
                   <span className="font-mono text-[13px] font-semibold text-[var(--app-text)]">

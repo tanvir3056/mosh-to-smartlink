@@ -160,7 +160,7 @@ export function EmailLeadsPanel({
 
           <div
             className={`hidden overflow-hidden bg-[var(--app-panel)] lg:block ${
-              compact ? "" : "rounded-[12px] border border-[var(--app-line)]"
+              compact ? "" : "rounded-[var(--r-frame)] border border-[var(--app-line)]"
             }`}
           >
             <div className="overflow-x-auto">

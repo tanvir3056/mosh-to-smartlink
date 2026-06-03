@@ -18,6 +18,12 @@ describe("admin theme tokens", () => {
     expect(globalsCss).toMatch(/--r-lg:\s*14px;/);
     expect(globalsCss).toMatch(/--r-xl:\s*20px;/);
     expect(globalsCss).toMatch(/--r-full:\s*999px;/);
+    expect(globalsCss).toMatch(/--r-swatch:\s*3px;/);
+    expect(globalsCss).toMatch(/--r-frame:\s*12px;/);
+    expect(globalsCss).toMatch(/--r-crop:\s*16px;/);
+    expect(globalsCss).toMatch(/--r-dialog:\s*18px;/);
+    expect(globalsCss).toMatch(/--r-device-screen:\s*26px;/);
+    expect(globalsCss).toMatch(/--r-device-shell:\s*34px;/);
     expect(globalsCss).toMatch(
       /--sh-sm:\s*0 1px 2px oklch\(0\.2 0\.02 270 \/ 0\.06\),\s*0 1px 3px oklch\(0\.2 0\.02 270 \/ 0\.05\);/,
     );
@@ -140,9 +146,15 @@ describe("admin theme tokens", () => {
       "src/components/admin/tracking-settings-form.tsx",
     ].map((path) => readFileSync(path, "utf8"));
     const combinedSource = adminRadiusSources.join("\n");
-    const hardcodedRadiusClasses = (
-      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm|full)\b/g) ?? []
+    const hardcodedArbitraryRadiusClasses = (
+      combinedSource.match(/rounded-\[[^\]]+\]/g) ?? []
     ).filter((className) => !className.includes("var(--r-"));
+    const hardcodedNamedRadiusClasses =
+      combinedSource.match(/rounded-(?:2xl|xl|lg|md|sm|full)\b/g) ?? [];
+    const hardcodedRadiusClasses = [
+      ...hardcodedArbitraryRadiusClasses,
+      ...hardcodedNamedRadiusClasses,
+    ];
 
     expect(combinedSource).toContain("rounded-[var(--r-sm)]");
     expect(combinedSource).toContain("rounded-[var(--r-md)]");
@@ -176,9 +188,15 @@ describe("admin theme tokens", () => {
       "src/components/brand/brand-mark.tsx",
     ].map((path) => readFileSync(path, "utf8"));
     const combinedSource = publicEntrySources.join("\n");
-    const hardcodedRadiusClasses = (
-      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm|full)\b/g) ?? []
+    const hardcodedArbitraryRadiusClasses = (
+      combinedSource.match(/rounded-\[[^\]]+\]/g) ?? []
     ).filter((className) => !className.includes("var(--r-"));
+    const hardcodedNamedRadiusClasses =
+      combinedSource.match(/rounded-(?:2xl|xl|lg|md|sm|full)\b/g) ?? [];
+    const hardcodedRadiusClasses = [
+      ...hardcodedArbitraryRadiusClasses,
+      ...hardcodedNamedRadiusClasses,
+    ];
 
     expect(combinedSource).toContain("rounded-[var(--r-sm)]");
     expect(combinedSource).toContain("rounded-[var(--r-md)]");
