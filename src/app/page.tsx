@@ -66,11 +66,22 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-            <div className="mt-6 flex items-center gap-2 text-[13.5px] text-[var(--app-muted-2)]">
-              <LinkIcon className="h-4 w-4" />
-              <span className="font-mono">
-                {APP_DOMAIN_HINT}/<span className="text-[var(--app-accent-text)]">username</span>/<span className="text-[var(--app-muted)]">song-slug</span>
-              </span>
+            <div
+              data-testid="home-link-example"
+              className="mt-6 flex max-w-full items-start gap-2.5 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 py-2.5 text-[13.5px] text-[var(--app-muted-2)] sm:inline-flex"
+            >
+              <LinkIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <span className="block text-[11.5px] font-semibold text-[var(--app-muted)]">
+                  Public release link
+                </span>
+                <span className="mt-0.5 block font-mono text-[13.5px] font-medium text-[var(--app-text)]">
+                  <span className="text-[var(--app-accent-text)]">@username</span>/<span className="text-[var(--app-muted)]">song-slug</span>
+                </span>
+                <span className="mt-0.5 block break-words text-[11.5px] text-[var(--app-muted-2)]">
+                  {APP_DOMAIN_HINT}
+                </span>
+              </div>
             </div>
           </div>
 

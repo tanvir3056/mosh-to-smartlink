@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
 import { APP_DOMAIN_HINT } from "@/lib/constants";
@@ -31,12 +31,20 @@ describe("home page Claude design", () => {
     expect(screen.getByText("03")).toBeInTheDocument();
   });
 
-  test("uses the configured app domain in the example smart-link path", async () => {
+  test("keeps the configured app domain as helper copy beside a compact smart-link path", async () => {
     const { default: HomePage } = await import("@/app/page");
 
     render(await HomePage());
 
-    expect(screen.getByText(`${APP_DOMAIN_HINT}/`, { exact: false })).toBeInTheDocument();
+    const linkExample = screen.getByTestId("home-link-example");
+    const compactPath = within(linkExample)
+      .getByText("@username", { exact: false })
+      .closest(".font-mono");
+
+    expect(compactPath).not.toBeNull();
+    expect(compactPath).toHaveTextContent("@username/song-slug");
+    expect(compactPath).not.toHaveTextContent(APP_DOMAIN_HINT);
+    expect(within(linkExample).getByText(APP_DOMAIN_HINT)).toHaveClass("break-words");
     expect(screen.queryByText("backstage.fm/", { exact: false })).not.toBeInTheDocument();
   });
 });
