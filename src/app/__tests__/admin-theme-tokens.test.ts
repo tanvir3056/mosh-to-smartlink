@@ -111,4 +111,21 @@ describe("admin theme tokens", () => {
     expect(combinedSource).toContain("shadow-[var(--sh-sm)]");
     expect(hardcodedElevationClasses).toEqual([]);
   });
+
+  test("keeps public entry chrome on Backstage radius tokens", () => {
+    const publicEntrySources = [
+      "src/app/page.tsx",
+      "src/app/global-error.tsx",
+      "src/components/brand/brand-mark.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = publicEntrySources.join("\n");
+    const hardcodedRadiusClasses = (
+      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm)\b/g) ?? []
+    ).filter((className) => !className.includes("var(--r-"));
+
+    expect(combinedSource).toContain("rounded-[var(--r-sm)]");
+    expect(combinedSource).toContain("rounded-[var(--r-md)]");
+    expect(combinedSource).toContain("rounded-[var(--r-lg)]");
+    expect(hardcodedRadiusClasses).toEqual([]);
+  });
 });

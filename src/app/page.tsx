@@ -85,7 +85,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[14px] p-0 shadow-[var(--sh-lg)]">
+          <div className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[var(--r-lg)] p-0 shadow-[var(--sh-lg)]">
             <div className="flex items-center gap-2 border-b border-[var(--app-line)] px-5 py-4">
               <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
               <h2 className="text-[14.5px] font-semibold">How it works</h2>
@@ -110,9 +110,9 @@ export default async function HomePage() {
               ].map(({ title, body, icon: Icon }, index) => (
                 <div
                   key={title}
-                  className="flex items-center gap-3 rounded-[10px] px-3 py-3"
+                  className="flex items-center gap-3 rounded-[var(--r-md)] px-3 py-3"
                 >
-                  <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
+                  <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[var(--r-md)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
                     <Icon className="h-4 w-4" />
                   </span>
                   <div>

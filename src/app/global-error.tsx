@@ -48,7 +48,7 @@ export default function GlobalError({
         <main className="flex min-h-screen items-center justify-center px-6 py-10 text-center">
           <section className="app-enter w-full max-w-[440px]">
             <title>Backstage</title>
-            <div className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-2xl border border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]">
+            <div className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-[var(--r-lg)] border border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]">
               !
             </div>
             <p className="app-kicker text-[var(--app-muted)]">Continue to your account</p>
@@ -67,20 +67,20 @@ export default function GlobalError({
             <div className="mt-6 flex flex-wrap justify-center gap-2.5">
               <a
                 href="/sign-in"
-                className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-transparent bg-[var(--app-accent)] px-3.5 text-sm font-[550] text-white shadow-[var(--sh-xs)]"
+                className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-3.5 text-sm font-[550] text-white shadow-[var(--sh-xs)]"
               >
                 Sign in
               </a>
               <a
                 href="/"
-                className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[var(--sh-xs)]"
+                className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[var(--sh-xs)]"
               >
                 Open homepage
               </a>
               <button
                 type="button"
                 onClick={reloadPage}
-                className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-transparent bg-transparent px-3.5 text-sm font-[550] text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+                className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-transparent px-3.5 text-sm font-[550] text-[var(--app-muted)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
               >
                 Reload page
               </button>
