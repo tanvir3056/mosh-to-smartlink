@@ -155,9 +155,10 @@ function getSongImportErrorMessage(error: unknown) {
 
   if (
     normalizedMessage.includes("spotify oembed lookup failed") ||
-    normalizedMessage.includes("spotify track page lookup failed")
+    normalizedMessage.includes("spotify track page lookup failed") ||
+    normalizedMessage.includes("spotify page lookup failed")
   ) {
-    return "Spotify could not be reached. Try again in a moment, or paste a different Spotify track link.";
+    return "Spotify could not be reached. Try again in a moment, or paste a different Spotify track or album link.";
   }
 
   return (
@@ -386,7 +387,7 @@ export async function importSpotifyTrackAction(
 
   if (!spotifyUrl) {
     return {
-      error: "Paste a Spotify track URL to start the import.",
+      error: "Paste a Spotify track or album URL to start the import.",
       success: null,
     };
   }

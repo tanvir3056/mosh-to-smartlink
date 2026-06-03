@@ -3,7 +3,7 @@ import {
   extractMetaTag,
   normalizeDateOnly,
   normalizeIsrc,
-  normalizeSpotifyTrackUrl,
+  normalizeSpotifyReleaseUrl,
 } from "@/lib/utils";
 
 function extractDocumentTitle(html: string) {
@@ -61,9 +61,9 @@ function extractSpotifyReleaseDate(html: string) {
   );
 }
 
-async function fetchSpotifyOEmbed(trackUrl: string) {
+async function fetchSpotifyOEmbed(releaseUrl: string) {
   const response = await fetch(
-    `https://open.spotify.com/oembed?url=${encodeURIComponent(trackUrl)}`,
+    `https://open.spotify.com/oembed?url=${encodeURIComponent(releaseUrl)}`,
     {
       cache: "no-store",
     },
@@ -80,8 +80,8 @@ async function fetchSpotifyOEmbed(trackUrl: string) {
   };
 }
 
-async function fetchSpotifyTrackHtml(trackUrl: string) {
-  const response = await fetch(trackUrl, {
+async function fetchSpotifyReleaseHtml(releaseUrl: string) {
+  const response = await fetch(releaseUrl, {
     cache: "no-store",
     headers: {
       "user-agent": "Mozilla/5.0",
@@ -89,7 +89,7 @@ async function fetchSpotifyTrackHtml(trackUrl: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Spotify track page lookup failed.");
+    throw new Error("Spotify page lookup failed.");
   }
 
   return response.text();
@@ -98,15 +98,15 @@ async function fetchSpotifyTrackHtml(trackUrl: string) {
 export async function fetchSpotifyTrackImport(
   spotifyTrackUrl: string,
 ): Promise<SpotifyTrackImport> {
-  const normalized = normalizeSpotifyTrackUrl(spotifyTrackUrl);
+  const normalized = normalizeSpotifyReleaseUrl(spotifyTrackUrl);
 
   if (!normalized) {
-    throw new Error("Enter a valid Spotify track URL.");
+    throw new Error("Enter a valid Spotify track or album URL.");
   }
 
   const [oembed, html] = await Promise.all([
     fetchSpotifyOEmbed(normalized.url),
-    fetchSpotifyTrackHtml(normalized.url),
+    fetchSpotifyReleaseHtml(normalized.url),
   ]);
 
   const ogTitle = extractMetaTag(html, "og:title") ?? oembed.title ?? "Untitled";
@@ -134,7 +134,7 @@ export async function fetchSpotifyTrackImport(
   const isrc = extractSpotifyIsrc(html);
 
   return {
-    spotifyTrackId: normalized.trackId,
+    spotifyTrackId: normalized.id,
     spotifyTrackUrl: normalized.url,
     title: ogTitle,
     artistName,
@@ -153,6 +153,7 @@ export async function fetchSpotifyTrackImport(
       isrc,
       releaseDate,
       durationMs,
+      spotifyType: normalized.type,
     },
   };
 }

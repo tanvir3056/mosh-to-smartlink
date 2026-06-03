@@ -39,24 +39,49 @@ export function buildServiceRedirectPath(
   return `/go/${username}/${slug}/${service}`;
 }
 
-export function parseSpotifyTrackId(value: string) {
-  const match = value.match(
-    /(?:spotify:track:|open\.spotify\.com\/(?:intl-[^/]+\/)?(?:embed\/)?track\/)([A-Za-z0-9]{22})/,
-  );
+export type SpotifyReleaseUrl = {
+  id: string;
+  type: "track" | "album";
+  url: string;
+};
 
-  return match?.[1] ?? null;
-}
+const SPOTIFY_RELEASE_PATTERN =
+  /(?:spotify:(track|album):|open\.spotify\.com\/(?:intl-[^/]+\/)?(?:embed\/)?(track|album)\/)([A-Za-z0-9]{22})/;
 
-export function normalizeSpotifyTrackUrl(value: string) {
-  const trackId = parseSpotifyTrackId(value);
+export function normalizeSpotifyReleaseUrl(
+  value: string,
+): SpotifyReleaseUrl | null {
+  const match = value.trim().match(SPOTIFY_RELEASE_PATTERN);
+  const type = match?.[1] ?? match?.[2];
+  const id = match?.[3];
 
-  if (!trackId) {
+  if ((type !== "track" && type !== "album") || !id) {
     return null;
   }
 
   return {
-    trackId,
-    url: `https://open.spotify.com/track/${trackId}`,
+    id,
+    type,
+    url: `https://open.spotify.com/${type}/${id}`,
+  };
+}
+
+export function parseSpotifyTrackId(value: string) {
+  const release = normalizeSpotifyReleaseUrl(value);
+
+  return release?.type === "track" ? release.id : null;
+}
+
+export function normalizeSpotifyTrackUrl(value: string) {
+  const release = normalizeSpotifyReleaseUrl(value);
+
+  if (!release || release.type !== "track") {
+    return null;
+  }
+
+  return {
+    trackId: release.id,
+    url: release.url,
   };
 }
 

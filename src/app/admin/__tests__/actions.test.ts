@@ -454,10 +454,27 @@ describe("importSpotifyTrackAction", () => {
 
     expect(result).toEqual({
       error:
-        "Spotify could not be reached. Try again in a moment, or paste a different Spotify track link.",
+        "Spotify could not be reached. Try again in a moment, or paste a different Spotify track or album link.",
       success: null,
     });
     expect(result.error).not.toContain("oEmbed");
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
+  test("uses track-or-album copy when the import URL is missing", async () => {
+    const { importSpotifyTrackAction } = await import("@/app/admin/actions");
+    const formData = new FormData();
+
+    const result = await importSpotifyTrackAction(
+      { error: null, success: null },
+      formData,
+    );
+
+    expect(result).toEqual({
+      error: "Paste a Spotify track or album URL to start the import.",
+      success: null,
+    });
+    expect(mockFetchSpotifyTrackImport).not.toHaveBeenCalled();
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 });

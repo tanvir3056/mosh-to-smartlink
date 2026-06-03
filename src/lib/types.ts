@@ -323,6 +323,7 @@ export interface SpotifyTrackImport {
     isrc?: string | null;
     releaseDate?: string | null;
     durationMs?: number | null;
+    spotifyType?: "track" | "album";
   };
 }
 
