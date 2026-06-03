@@ -4,8 +4,12 @@ import { describe, expect, test, vi } from "vitest";
 
 import { ImportSongForm } from "@/components/admin/import-song-form";
 
+const { mockImportSpotifyTrackAction } = vi.hoisted(() => ({
+  mockImportSpotifyTrackAction: vi.fn(async () => ({ error: null, success: null })),
+}));
+
 vi.mock("@/app/admin/actions", () => ({
-  importSpotifyTrackAction: vi.fn(async () => ({ error: null, success: null })),
+  importSpotifyTrackAction: mockImportSpotifyTrackAction,
 }));
 
 describe("ImportSongForm", () => {
@@ -18,6 +22,19 @@ describe("ImportSongForm", () => {
     expect(input).toHaveAttribute("name", "spotify_url");
     expect(input).toHaveAttribute("aria-describedby", "spotify-url-help");
     expect(form).toHaveAttribute("novalidate");
+  });
+
+  test("shows specific app-owned guidance for an empty import submit", async () => {
+    const user = userEvent.setup();
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    await user.click(screen.getByRole("button", { name: "Import song" }));
+
+    expect(
+      screen.getByRole("alert"),
+    ).toHaveTextContent("Paste a Spotify track or album URL to start the import.");
+    expect(screen.queryByText(/does not look like a Spotify/i)).not.toBeInTheDocument();
+    expect(mockImportSpotifyTrackAction).not.toHaveBeenCalled();
   });
 
   test("matches the Claude form hierarchy with the helper copy below the URL field", () => {

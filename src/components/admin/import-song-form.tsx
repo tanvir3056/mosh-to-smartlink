@@ -194,7 +194,9 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
           setProgressStarted(false);
           setProgressIndex(-1);
           setLocalError(
-            "That does not look like a Spotify track or album link. Copy the URL from Share - Copy link.",
+            trimmedUrl
+              ? "That does not look like a Spotify track or album link. Copy the URL from Share - Copy link."
+              : "Paste a Spotify track or album URL to start the import.",
           );
           return;
         }
