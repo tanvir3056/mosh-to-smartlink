@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { APP_DOMAIN_HINT } from "@/lib/constants";
 import type { EmailConnectorConfig, EmailLeadSnapshot, TrackingConfig } from "@/lib/types";
 
 const {
@@ -176,6 +177,22 @@ describe("admin settings page", () => {
       "general-settings-form",
     );
     expect(screen.queryByText(/Integrations form/i)).not.toBeInTheDocument();
+  });
+
+  test("keeps the production domain outside the compact settings username field", async () => {
+    await renderSettingsPage();
+
+    const username = screen.getByLabelText("Username");
+    const usernameShell = username.closest("div");
+
+    expect(usernameShell).not.toBeNull();
+    expect(within(usernameShell as HTMLElement).getByText("@")).toBeInTheDocument();
+    expect(
+      within(usernameShell as HTMLElement).queryByText(`${APP_DOMAIN_HINT}/`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(`Public pages publish under ${APP_DOMAIN_HINT}/warcry.`),
+    ).toHaveClass("break-words");
   });
 
   test("uses the integrations tab for the existing settings backend form", async () => {

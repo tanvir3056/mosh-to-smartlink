@@ -322,7 +322,7 @@ function GeneralSettings({
             <span className="text-sm font-medium text-[var(--app-text)]">Username</span>
             <div className="flex overflow-hidden rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xs)] focus-within:border-[var(--app-accent-line)] focus-within:ring-4 focus-within:ring-[var(--app-accent-soft)]">
               <span className="inline-flex items-center border-r border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 font-mono text-[12px] text-[var(--app-muted-2)]">
-                {APP_DOMAIN_HINT}/
+                @
               </span>
               <input
                 value={session.username}
@@ -331,6 +331,9 @@ function GeneralSettings({
                 className="min-h-10 min-w-0 flex-1 bg-transparent px-3 font-mono text-[13px] text-[var(--app-text)] outline-none"
               />
             </div>
+            <span className="break-words text-[12.5px] text-[var(--app-muted-2)]">
+              Public pages publish under {APP_DOMAIN_HINT}/{session.username}.
+            </span>
           </label>
           <label className="grid gap-2">
             <span className="text-sm font-medium text-[var(--app-text)]">Contact email</span>
