@@ -1148,7 +1148,7 @@ describe("core data flow", () => {
     });
     const result = await recordEmailCaptureSubmission({
       page: publishedPage!,
-      email: "fan@example.com",
+      email: "  Fan@Example.com  ",
       lastVisitId: visitId,
       context: {
         visitorId: "visitor_lead",
@@ -1202,6 +1202,10 @@ describe("core data flow", () => {
 
     expect(String(memberCall[0])).toContain("/lists/aud_123/members/");
     expect(String(tagCall[0])).toContain("/tags");
+    expect(JSON.parse(String(memberCall[1]?.body))).toMatchObject({
+      email_address: "fan@example.com",
+      status_if_new: "subscribed",
+    });
     expect(JSON.parse(String(tagCall[1]?.body))).toEqual({
       tags: [
         { name: "smart-link", status: "active" },

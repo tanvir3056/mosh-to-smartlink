@@ -2850,6 +2850,7 @@ export async function recordEmailCaptureSubmission(input: {
   context: TrackingContext;
 }) {
   const normalizedEmail = normalizeLeadEmail(input.email);
+  const email = normalizedEmail;
   const rows = await dbQuery<EmailLeadRow>(
     `
       insert into email_capture_submissions (
@@ -2945,7 +2946,7 @@ export async function recordEmailCaptureSubmission(input: {
       input.page.page.id,
       input.lastVisitId,
       input.context.visitorId,
-      input.email,
+      email,
       normalizedEmail,
       input.context.referrer,
       input.context.referrerHost,
@@ -2996,7 +2997,7 @@ export async function recordEmailCaptureSubmission(input: {
               encryptedApiKey: connector.encrypted_api_key,
             }
           : null,
-      email: input.email,
+      email,
       pageTag: input.page.emailCapture.tag,
     });
   } catch (error) {
