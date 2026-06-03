@@ -54,8 +54,8 @@ export default async function AdminDashboardLayout({
             <div className="px-1 pb-2">
               <div className="mb-2 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 py-3">
                 <div className="mb-1 flex items-center gap-2 text-[12.5px] font-semibold text-[var(--app-text)]">
-                  <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--app-accent)]" />
+                  <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-[var(--r-full)] bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]">
+                    <span className="h-1.5 w-1.5 rounded-[var(--r-full)] bg-[var(--app-accent)]" />
                   </span>
                   Your link space
                 </div>

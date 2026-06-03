@@ -77,7 +77,7 @@ export function AvatarUploadControl({
       <AccountAvatar
         avatarUrl={currentAvatarUrl}
         username={username}
-        className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white"
+        className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--r-full)] bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white"
       />
       <input
         ref={inputRef}

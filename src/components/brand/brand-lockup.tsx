@@ -32,7 +32,7 @@ export function BrandLockup({
           {includeDomain ? (
             <span
               className={cn(
-                "rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 py-1 text-[11px] font-[550] uppercase tracking-[0.04em] text-[var(--app-muted)]",
+                "rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 py-1 text-[11px] font-[550] uppercase tracking-[0.04em] text-[var(--app-muted)]",
               )}
             >
               {APP_DOMAIN_HINT}

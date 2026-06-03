@@ -37,8 +37,8 @@ function MailchimpStatusBadge({ connected }: { connected: boolean }) {
         aria-hidden="true"
         className={
           connected
-            ? "h-1.5 w-1.5 rounded-full bg-[var(--app-green)]"
-            : "h-1.5 w-1.5 rounded-full bg-[var(--app-amber)]"
+            ? "h-1.5 w-1.5 rounded-[var(--r-full)] bg-[var(--app-green)]"
+            : "h-1.5 w-1.5 rounded-[var(--r-full)] bg-[var(--app-amber)]"
         }
       />
       {connected ? "Connected" : "Local only"}
@@ -84,7 +84,7 @@ export function TrackingSettingsForm({
             </p>
           </div>
 
-          <div className="w-fit rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
+          <div className="w-fit rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel-muted)]/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--app-text)]">
             {isMailchimpConnected ? "Mailchimp connected" : "Local lead storage"}
           </div>
         </div>
@@ -118,8 +118,8 @@ export function TrackingSettingsForm({
                 className="peer sr-only"
                 aria-label="Enable Meta Pixel"
               />
-              <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent-soft)]" />
-              <span className="absolute left-1 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition peer-checked:translate-x-5 peer-checked:bg-[var(--app-accent)]" />
+              <span className="absolute inset-0 rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent-soft)]" />
+              <span className="absolute left-1 h-5 w-5 rounded-[var(--r-full)] bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition peer-checked:translate-x-5 peer-checked:bg-[var(--app-accent)]" />
             </label>
           </div>
           <div className="grid gap-4 p-[18px]">

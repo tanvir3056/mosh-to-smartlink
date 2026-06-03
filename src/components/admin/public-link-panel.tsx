@@ -69,7 +69,7 @@ export function PublicLinkPanel({
         </div>
         <span className="app-chip shrink-0">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
+            className={`h-1.5 w-1.5 rounded-[var(--r-full)] ${
               isPublished ? "bg-[var(--app-green)]" : "bg-[var(--app-amber)]"
             }`}
           />

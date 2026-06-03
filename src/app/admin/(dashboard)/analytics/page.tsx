@@ -334,12 +334,12 @@ function Donut({
 
   return (
     <div
-      className="grid h-[120px] w-[120px] shrink-0 place-items-center rounded-full"
+      className="grid h-[120px] w-[120px] shrink-0 place-items-center rounded-[var(--r-full)]"
       style={{
         background: `conic-gradient(var(--app-accent) ${normalized}%, var(--app-line) 0)`,
       }}
     >
-      <div className="grid h-[88px] w-[88px] place-items-center rounded-full bg-[var(--app-panel)] text-center">
+      <div className="grid h-[88px] w-[88px] place-items-center rounded-[var(--r-full)] bg-[var(--app-panel)] text-center">
         <div>
           <div className="font-[var(--font-display)] text-[24px] font-semibold tracking-[-0.03em] text-[var(--app-text)]">
             {label}
@@ -389,9 +389,9 @@ function HBar({
               {row.display ?? row.value.toLocaleString()}
             </div>
           </div>
-          <div className="mt-3 h-2 rounded-full bg-[var(--app-panel-muted)]">
+          <div className="mt-3 h-2 rounded-[var(--r-full)] bg-[var(--app-panel-muted)]">
             <div
-              className="h-2 rounded-full"
+              className="h-2 rounded-[var(--r-full)]"
               style={{ width: `${ratio(row.value, max)}%`, background: row.color ?? color }}
             />
           </div>

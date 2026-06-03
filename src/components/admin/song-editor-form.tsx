@@ -114,9 +114,9 @@ function serviceStatusTone(label: string) {
 function ServiceStatusBadge({ label }: { label: string }) {
   return (
     <span
-      className={`inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[12px] font-semibold ${serviceStatusTone(label)}`}
+      className={`inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[var(--r-full)] border px-2.5 text-[12px] font-semibold ${serviceStatusTone(label)}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+      <span className="h-1.5 w-1.5 rounded-[var(--r-full)] bg-current opacity-70" />
       {label}
     </span>
   );
@@ -124,7 +124,7 @@ function ServiceStatusBadge({ label }: { label: string }) {
 
 function ServiceConfidencePill({ label }: { label: string }) {
   return (
-    <span className="hidden h-6 shrink-0 items-center rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 text-[12px] font-medium text-[var(--app-muted)] sm:inline-flex">
+    <span className="hidden h-6 shrink-0 items-center rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-2.5 text-[12px] font-medium text-[var(--app-muted)] sm:inline-flex">
       {label}
     </span>
   );
@@ -142,7 +142,7 @@ function ServiceVisibilitySwitch({
   ariaLabel?: string;
 }) {
   return (
-    <label className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full">
+    <label className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-[var(--r-full)]">
       <input
         name={name}
         type="checkbox"
@@ -151,8 +151,8 @@ function ServiceVisibilitySwitch({
         aria-label={ariaLabel}
         className="peer sr-only"
       />
-      <span className="pointer-events-none absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
-      <span className="pointer-events-none relative ml-0.5 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition-transform peer-checked:translate-x-5" />
+      <span className="pointer-events-none absolute inset-0 rounded-[var(--r-full)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent)] peer-focus-visible:shadow-[var(--ring)]" />
+      <span className="pointer-events-none relative ml-0.5 h-5 w-5 rounded-[var(--r-full)] bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition-transform peer-checked:translate-x-5" />
     </label>
   );
 }
@@ -1810,12 +1810,12 @@ export function SongEditorForm({
             <section className="app-card overflow-hidden rounded-[var(--r-lg)]">
               <div className="flex items-center gap-4 border-b border-[var(--app-line)] bg-[linear-gradient(160deg,var(--app-accent-soft),var(--app-panel))] p-5">
                 <div
-                  className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full"
+                  className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-[var(--r-full)]"
                   style={{
                     background: `conic-gradient(var(--app-accent) ${readinessScore}%, var(--app-line) 0)`,
                   }}
                 >
-                  <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-[var(--app-panel)] text-base font-semibold text-[var(--app-text)]">
+                  <div className="grid h-[54px] w-[54px] place-items-center rounded-[var(--r-full)] bg-[var(--app-panel)] text-base font-semibold text-[var(--app-text)]">
                     {readinessScore}%
                   </div>
                 </div>

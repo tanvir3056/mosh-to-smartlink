@@ -79,7 +79,7 @@ export function AdminNavLinks({
             )}
           >
             {active ? (
-              <span className="absolute bottom-2 left-[-10px] top-2 hidden w-[3px] rounded-full bg-[var(--app-accent)] lg:block" />
+              <span className="absolute bottom-2 left-[-10px] top-2 hidden w-[3px] rounded-[var(--r-full)] bg-[var(--app-accent)] lg:block" />
             ) : null}
             <span
               className={cn(

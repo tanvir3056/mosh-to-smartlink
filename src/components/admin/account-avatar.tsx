@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 const DEFAULT_AVATAR_CLASS =
-  "inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white";
+  "inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[var(--r-full)] bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white";
 
 export function AccountAvatar({
   avatarUrl,

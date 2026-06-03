@@ -112,7 +112,7 @@ function SettingsResultToast({
       role="status"
       aria-label={result.label}
       className={cn(
-        "fixed bottom-6 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-[18px] py-3 text-[13.5px] font-semibold shadow-[var(--sh-lg)]",
+        "fixed bottom-6 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-[var(--r-full)] px-[18px] py-3 text-[13.5px] font-semibold shadow-[var(--sh-lg)]",
         isError
           ? "border border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
           : "bg-[var(--app-text)] text-[var(--app-bg)]",

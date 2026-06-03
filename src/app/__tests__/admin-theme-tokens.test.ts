@@ -99,31 +99,36 @@ describe("admin theme tokens", () => {
   test("keeps admin chrome on Backstage radius tokens", () => {
     const adminRadiusSources = [
       "src/app/admin/(dashboard)/layout.tsx",
+      "src/app/admin/(dashboard)/analytics/page.tsx",
       "src/app/admin/(dashboard)/page.tsx",
       "src/app/admin/(dashboard)/settings/page.tsx",
       "src/app/admin/error.tsx",
       "src/app/admin/preview/[songId]/not-found.tsx",
       "src/app/admin/preview/[songId]/page.tsx",
+      "src/components/admin/account-avatar.tsx",
       "src/components/admin/admin-nav.tsx",
       "src/components/admin/artwork-upload-field.tsx",
+      "src/components/admin/avatar-upload-control.tsx",
       "src/components/admin/email-leads-panel.tsx",
       "src/components/admin/form-state.tsx",
       "src/components/admin/import-song-form.tsx",
       "src/components/admin/mobile-admin-menu.tsx",
       "src/components/admin/public-link-panel.tsx",
       "src/components/admin/song-editor-form.tsx",
+      "src/components/admin/status-pill.tsx",
       "src/components/admin/theme-toggle.tsx",
       "src/components/admin/tracking-settings-form.tsx",
     ].map((path) => readFileSync(path, "utf8"));
     const combinedSource = adminRadiusSources.join("\n");
     const hardcodedRadiusClasses = (
-      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm)\b/g) ?? []
+      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm|full)\b/g) ?? []
     ).filter((className) => !className.includes("var(--r-"));
 
     expect(combinedSource).toContain("rounded-[var(--r-sm)]");
     expect(combinedSource).toContain("rounded-[var(--r-md)]");
     expect(combinedSource).toContain("rounded-[var(--r-lg)]");
     expect(combinedSource).toContain("rounded-[var(--r-xl)]");
+    expect(combinedSource).toContain("rounded-[var(--r-full)]");
     expect(hardcodedRadiusClasses).toEqual([]);
   });
 
@@ -147,16 +152,18 @@ describe("admin theme tokens", () => {
     const publicEntrySources = [
       "src/app/page.tsx",
       "src/app/global-error.tsx",
+      "src/components/brand/brand-lockup.tsx",
       "src/components/brand/brand-mark.tsx",
     ].map((path) => readFileSync(path, "utf8"));
     const combinedSource = publicEntrySources.join("\n");
     const hardcodedRadiusClasses = (
-      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm)\b/g) ?? []
+      combinedSource.match(/rounded-(?:\[[^\]]+\]|2xl|xl|lg|md|sm|full)\b/g) ?? []
     ).filter((className) => !className.includes("var(--r-"));
 
     expect(combinedSource).toContain("rounded-[var(--r-sm)]");
     expect(combinedSource).toContain("rounded-[var(--r-md)]");
     expect(combinedSource).toContain("rounded-[var(--r-lg)]");
+    expect(combinedSource).toContain("rounded-[var(--r-full)]");
     expect(hardcodedRadiusClasses).toEqual([]);
   });
 });

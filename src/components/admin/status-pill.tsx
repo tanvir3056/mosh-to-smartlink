@@ -17,7 +17,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center rounded-full border px-2.5 text-[12.5px] font-[550] tracking-[-0.003em]",
+        "inline-flex h-6 items-center rounded-[var(--r-full)] border px-2.5 text-[12.5px] font-[550] tracking-[-0.003em]",
         status === "published" &&
           "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]",
         status === "draft" &&

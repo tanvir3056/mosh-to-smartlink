@@ -58,7 +58,7 @@ export default async function AdminPreviewPage({
 
         <div className="flex flex-wrap items-center gap-3">
           <span className="app-chip border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] text-[var(--app-amber-text)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--app-amber)]" />
+            <span className="h-1.5 w-1.5 rounded-[var(--r-full)] bg-[var(--app-amber)]" />
             {isPublished ? "Live preview" : "Draft preview"}
           </span>
           <nav
