@@ -17,7 +17,7 @@ import { INITIAL_ACTION_STATE, type ActionState } from "@/app/admin/action-types
 import { importSpotifyTrackAction } from "@/app/admin/actions";
 import { FormStateMessage } from "@/components/admin/form-state";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, normalizeSpotifyReleaseUrl } from "@/lib/utils";
 
 const importStages = [
   {
@@ -43,7 +43,7 @@ const importStages = [
 ];
 
 function isSpotifyImportUrl(value: string) {
-  return /open\.spotify\.com\/(track|album)\//i.test(value.trim());
+  return Boolean(normalizeSpotifyReleaseUrl(value));
 }
 
 function SubmitButton() {
@@ -242,7 +242,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
               />
             </div>
             <p id="spotify-url-help" className="text-sm leading-6 text-[var(--app-muted)]">
-              Open the song in Spotify, tap{" "}
+              Open the track or album in Spotify, tap{" "}
               <span className="font-semibold text-[var(--app-text)]">
                 Share - Copy link
               </span>

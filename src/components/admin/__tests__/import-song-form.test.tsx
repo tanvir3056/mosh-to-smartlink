@@ -24,7 +24,7 @@ describe("ImportSongForm", () => {
     render(<ImportSongForm requestedBy="@warcry" />);
 
     const input = screen.getByLabelText("Spotify track or album URL");
-    const helper = screen.getByText(/Open the song in Spotify/i);
+    const helper = screen.getByText(/Open the track or album in Spotify/i);
 
     expect(
       input.compareDocumentPosition(helper) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -78,5 +78,19 @@ describe("ImportSongForm", () => {
 
     expect(screen.getByText("Working...")).toBeInTheDocument();
     expect(screen.getByText("Fetching...")).toBeInTheDocument();
+  });
+
+  test("lets localized Spotify album links reach the import action", async () => {
+    const user = userEvent.setup();
+    render(<ImportSongForm requestedBy="@warcry" />);
+
+    await user.type(
+      screen.getByLabelText("Spotify track or album URL"),
+      "https://open.spotify.com/intl-us/album/0rAWaAAMfz3d4jpVWI6zn4?si=abc",
+    );
+    await user.click(screen.getByRole("button", { name: "Import song" }));
+
+    expect(screen.queryByText(/That does not look like a Spotify/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Working...")).toBeInTheDocument();
   });
 });
