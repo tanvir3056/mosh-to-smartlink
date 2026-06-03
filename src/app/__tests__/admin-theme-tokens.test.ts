@@ -95,4 +95,20 @@ describe("admin theme tokens", () => {
     expect(combinedSource).toContain("shadow-[var(--sh-xs)]");
     expect(hardcodedElevationClasses).toEqual([]);
   });
+
+  test("keeps public entry chrome on Backstage shadow tokens", () => {
+    const publicEntrySources = [
+      "src/app/page.tsx",
+      "src/app/global-error.tsx",
+      "src/components/brand/brand-mark.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = publicEntrySources.join("\n");
+    const hardcodedElevationClasses = (
+      combinedSource.match(/shadow-\[[^\]]*(?:rgba|oklch)[^\]]*\]/g) ?? []
+    ).filter((className) => !className.includes("_inset"));
+
+    expect(combinedSource).toContain("shadow-[var(--sh-lg)]");
+    expect(combinedSource).toContain("shadow-[var(--sh-sm)]");
+    expect(hardcodedElevationClasses).toEqual([]);
+  });
 });

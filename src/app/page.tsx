@@ -85,7 +85,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[14px] p-0 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]">
+          <div className="app-card app-enter app-enter-delay-1 overflow-hidden rounded-[14px] p-0 shadow-[var(--sh-lg)]">
             <div className="flex items-center gap-2 border-b border-[var(--app-line)] px-5 py-4">
               <Sparkles className="h-4 w-4 text-[var(--app-accent-text)]" />
               <h2 className="text-[14.5px] font-semibold">How it works</h2>
