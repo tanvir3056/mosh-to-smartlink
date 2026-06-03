@@ -21,8 +21,19 @@ const seedRequestSchema = z.object({
   seedName: z.string().trim().min(1).max(48).optional(),
 });
 
+let qaSeedQueue = Promise.resolve();
+
 function isQaRouteEnabled() {
   return appEnv.nodeEnv !== "production";
+}
+
+async function runExclusiveQaSeed<T>(callback: () => Promise<T>) {
+  const queued = qaSeedQueue.then(callback, callback);
+  qaSeedQueue = queued.then(
+    () => undefined,
+    () => undefined,
+  );
+  return queued;
 }
 
 function buildArtworkDataUrl(seedName: string) {
@@ -158,77 +169,79 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await ensureQaAdminUser();
-  const seedName =
-    parsed.data.seedName ??
-    `${parsed.data.scenario}-${crypto.randomUUID().slice(0, 8)}`;
-  const bundle = buildImportBundle(seedName);
-  const songId = await createSongImportDraft(bundle, user.username, user.id);
-  const adminPage = await getAdminSongPageBySongId(songId, user.id);
+  return runExclusiveQaSeed(async () => {
+    const user = await ensureQaAdminUser();
+    const seedName =
+      parsed.data.seedName ??
+      `${parsed.data.scenario}-${crypto.randomUUID().slice(0, 8)}`;
+    const bundle = buildImportBundle(seedName);
+    const songId = await createSongImportDraft(bundle, user.username, user.id);
+    const adminPage = await getAdminSongPageBySongId(songId, user.id);
 
-  if (!adminPage) {
-    return NextResponse.json(
-      { error: "The QA song page could not be created." },
-      { status: 500 },
-    );
-  }
+    if (!adminPage) {
+      return NextResponse.json(
+        { error: "The QA song page could not be created." },
+        { status: 500 },
+      );
+    }
 
-  await updateSongDraft({
-    ownerUserId: user.id,
-    songId,
-    title: adminPage.song.title,
-    artistName: adminPage.song.artistName,
-    albumName: adminPage.song.albumName,
-    artworkUrl: adminPage.song.artworkUrl,
-    previewUrl: adminPage.song.previewUrl,
-    headline:
-      parsed.data.scenario === "email-capture"
-        ? "Unlock the free download"
-        : "Stream now",
-    slug: adminPage.page.slug,
-    status: "published",
-    emailCapture:
-      parsed.data.scenario === "email-capture"
-        ? {
-            enabled: true,
-            title: "Download the song for free",
-            description:
-              "Drop your email to unlock the track and hear about future drops first.",
-            buttonLabel: "Get the download",
-            downloadUrl: "https://example.com/free-download.mp3",
-            downloadLabel: "Download the track",
-            tag: "qa-free-download",
-          }
-        : {
-            enabled: false,
-            title: null,
-            description: null,
-            buttonLabel: null,
-            downloadUrl: null,
-            downloadLabel: null,
-            tag: null,
-          },
-    links: adminPage.links.map((link) => ({
-      service: link.service,
-      url: link.url,
-      matchStatus: link.matchStatus,
-      matchSource: link.matchSource,
-      confidence: link.confidence,
-      notes: link.notes,
-    })),
-  });
+    await updateSongDraft({
+      ownerUserId: user.id,
+      songId,
+      title: adminPage.song.title,
+      artistName: adminPage.song.artistName,
+      albumName: adminPage.song.albumName,
+      artworkUrl: adminPage.song.artworkUrl,
+      previewUrl: adminPage.song.previewUrl,
+      headline:
+        parsed.data.scenario === "email-capture"
+          ? "Unlock the free download"
+          : "Stream now",
+      slug: adminPage.page.slug,
+      status: "published",
+      emailCapture:
+        parsed.data.scenario === "email-capture"
+          ? {
+              enabled: true,
+              title: "Download the song for free",
+              description:
+                "Drop your email to unlock the track and hear about future drops first.",
+              buttonLabel: "Get the download",
+              downloadUrl: "https://example.com/free-download.mp3",
+              downloadLabel: "Download the track",
+              tag: "qa-free-download",
+            }
+          : {
+              enabled: false,
+              title: null,
+              description: null,
+              buttonLabel: null,
+              downloadUrl: null,
+              downloadLabel: null,
+              tag: null,
+            },
+      links: adminPage.links.map((link) => ({
+        service: link.service,
+        url: link.url,
+        matchStatus: link.matchStatus,
+        matchSource: link.matchSource,
+        confidence: link.confidence,
+        notes: link.notes,
+      })),
+    });
 
-  const updatedPage = await getAdminSongPageBySongId(songId, user.id);
-  const publicSlug = updatedPage?.page.slug ?? adminPage.page.slug;
+    const updatedPage = await getAdminSongPageBySongId(songId, user.id);
+    const publicSlug = updatedPage?.page.slug ?? adminPage.page.slug;
 
-  revalidatePath(buildPublicSongPath(user.username, publicSlug));
-  revalidateTag(publishedSongPageTag(user.username, publicSlug), "max");
+    revalidatePath(buildPublicSongPath(user.username, publicSlug));
+    revalidateTag(publishedSongPageTag(user.username, publicSlug), "max");
 
-  return NextResponse.json({
-    songId,
-    username: user.username,
-    slug: publicSlug,
-    scenario: parsed.data.scenario,
+    return NextResponse.json({
+      songId,
+      username: user.username,
+      slug: publicSlug,
+      scenario: parsed.data.scenario,
+    });
   });
 }
 
