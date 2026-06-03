@@ -284,7 +284,7 @@ export function TrackingSettingsForm({
                   name="mailchimp_double_opt_in"
                   type="checkbox"
                   defaultChecked={connector.doubleOptIn}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+                  className="mt-0.5 h-4 w-4 rounded border-[var(--app-line)] bg-transparent"
                 />
                 <span className="grid gap-1">
                   <span className="font-medium">Require double opt-in</span>

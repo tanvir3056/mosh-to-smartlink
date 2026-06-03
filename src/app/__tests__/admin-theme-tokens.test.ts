@@ -60,4 +60,17 @@ describe("admin theme tokens", () => {
       /\b(?:border|bg|text)-red-(?:50|100|200|500|600|700|800|900)\b/,
     );
   });
+
+  test("keeps admin checkbox borders on Backstage line tokens", () => {
+    const adminCheckboxSources = [
+      "src/app/admin/(dashboard)/settings/page.tsx",
+      "src/components/admin/tracking-settings-form.tsx",
+      "src/components/admin/song-editor-form.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = adminCheckboxSources.join("\n");
+    const legacyCheckboxBorder = ["border", "slate", "300"].join("-");
+
+    expect(combinedSource).toContain("border-[var(--app-line)]");
+    expect(combinedSource).not.toContain(legacyCheckboxBorder);
+  });
 });

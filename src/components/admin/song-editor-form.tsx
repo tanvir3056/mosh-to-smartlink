@@ -752,7 +752,7 @@ export function SongEditorForm({
                               isVisible,
                             }));
                           }}
-                          className="h-4 w-4 rounded border-slate-300 bg-transparent"
+                          className="h-4 w-4 rounded border-[var(--app-line)] bg-transparent"
                         />
                         Show on page
                       </label>

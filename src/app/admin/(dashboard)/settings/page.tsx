@@ -364,7 +364,7 @@ function GeneralSettings({
                 type="checkbox"
                 aria-label="Show artist name on every page"
                 defaultChecked={defaults.showArtistName}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+                className="mt-0.5 h-4 w-4 rounded border-[var(--app-line)] bg-transparent"
               />
               <span>
                 <span className="block text-sm font-semibold text-[var(--app-text)]">
@@ -381,7 +381,7 @@ function GeneralSettings({
                 type="checkbox"
                 aria-label="Enable preview player by default"
                 defaultChecked={defaults.previewPlayerDefaultEnabled}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+                className="mt-0.5 h-4 w-4 rounded border-[var(--app-line)] bg-transparent"
               />
               <span>
                 <span className="block text-sm font-semibold text-[var(--app-text)]">
@@ -398,7 +398,7 @@ function GeneralSettings({
                 type="checkbox"
                 aria-label="Lead capture on by default"
                 defaultChecked={defaults.leadCaptureDefaultEnabled}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-transparent"
+                className="mt-0.5 h-4 w-4 rounded border-[var(--app-line)] bg-transparent"
               />
               <span>
                 <span className="block text-sm font-semibold text-[var(--app-text)]">
