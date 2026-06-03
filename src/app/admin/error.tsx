@@ -44,7 +44,7 @@ export default function AdminError({
             </Button>
             <Link
               href="/sign-in"
-              className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)]"
+              className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[var(--sh-xs)]"
             >
               Sign in again
             </Link>

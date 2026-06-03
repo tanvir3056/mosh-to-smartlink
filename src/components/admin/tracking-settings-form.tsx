@@ -119,7 +119,7 @@ export function TrackingSettingsForm({
                 aria-label="Enable Meta Pixel"
               />
               <span className="absolute inset-0 rounded-full border border-[var(--app-line)] bg-[var(--app-panel-muted)] transition peer-checked:border-[var(--app-accent-line)] peer-checked:bg-[var(--app-accent-soft)]" />
-              <span className="absolute left-1 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[0_1px_3px_oklch(0.2_0.02_270_/_0.18)] transition peer-checked:translate-x-5 peer-checked:bg-[var(--app-accent)]" />
+              <span className="absolute left-1 h-5 w-5 rounded-full bg-[var(--app-panel)] shadow-[var(--sh-sm)] transition peer-checked:translate-x-5 peer-checked:bg-[var(--app-accent)]" />
             </label>
           </div>
           <div className="grid gap-4 p-[18px]">

@@ -79,7 +79,7 @@ export default async function AdminDashboardLayout({
                   <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--app-muted-2)] transition group-open:rotate-180" />
                 </summary>
 
-                <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-20 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] p-1.5 shadow-[0_16px_40px_rgba(20,24,34,0.13)]">
+                <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-20 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] p-1.5 shadow-[var(--sh-xl)]">
                   <div className="px-2.5 py-2">
                     <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[var(--app-text)]">
                       <Globe2 className="h-3.5 w-3.5 text-[var(--app-accent-text)]" />

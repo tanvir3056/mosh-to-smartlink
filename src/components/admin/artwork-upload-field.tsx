@@ -664,7 +664,7 @@ export function ArtworkUploadField({
         <div className="flex">
           <label
             htmlFor={inputId}
-            className="app-interactive inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-line)]"
+            className="app-interactive inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-line)]"
           >
             {busy ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -718,7 +718,7 @@ export function ArtworkUploadField({
 
       {cropSession && cropGeometry && artworkFrameStyle ? (
         <div className="fixed inset-0 z-[70] bg-[var(--scrim)] px-4 py-6 backdrop-blur-[3px]">
-          <div className="app-card mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[20px] bg-[var(--app-panel)] p-5 shadow-[0_16px_48px_oklch(0.2_0.02_270_/_0.16),0_4px_12px_oklch(0.2_0.02_270_/_0.08)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="app-card mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[20px] bg-[var(--app-panel)] p-5 shadow-[var(--sh-xl)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div>

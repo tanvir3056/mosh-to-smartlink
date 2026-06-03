@@ -73,4 +73,26 @@ describe("admin theme tokens", () => {
     expect(combinedSource).toContain("border-[var(--app-line)]");
     expect(combinedSource).not.toContain(legacyCheckboxBorder);
   });
+
+  test("keeps admin elevation on Backstage shadow tokens", () => {
+    const adminElevationSources = [
+      "src/app/admin/(dashboard)/layout.tsx",
+      "src/app/admin/(dashboard)/settings/page.tsx",
+      "src/app/admin/error.tsx",
+      "src/app/admin/preview/[songId]/not-found.tsx",
+      "src/app/admin/preview/[songId]/page.tsx",
+      "src/components/admin/artwork-upload-field.tsx",
+      "src/components/admin/email-leads-panel.tsx",
+      "src/components/admin/mobile-admin-menu.tsx",
+      "src/components/admin/public-link-panel.tsx",
+      "src/components/admin/tracking-settings-form.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = adminElevationSources.join("\n");
+    const hardcodedElevationClasses = (
+      combinedSource.match(/shadow-\[[^\]]*(?:rgba|oklch)[^\]]*\]/g) ?? []
+    ).filter((className) => !className.includes("_inset"));
+
+    expect(combinedSource).toContain("shadow-[var(--sh-xs)]");
+    expect(hardcodedElevationClasses).toEqual([]);
+  });
 });

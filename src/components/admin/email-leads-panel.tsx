@@ -77,7 +77,7 @@ export function EmailLeadsPanel({
           <form action={resyncEmailLeadsFormAction}>
             <button
               type="submit"
-              className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+              className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
             >
               <RefreshCw className="h-4 w-4" />
               Re-sync
@@ -86,7 +86,7 @@ export function EmailLeadsPanel({
           <Link
             href="/api/admin/email-leads/export"
             prefetch={false}
-            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_oklch(0.2_0.02_270_/_0.05)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
           >
             <Download className="h-4 w-4" />
             Export CSV

@@ -68,7 +68,7 @@ export function MobileAdminMenu({
         >
           <div
             id="admin-mobile-menu"
-            className="border-b border-[var(--app-line)] bg-[var(--app-panel)] p-3.5 shadow-[0_8px_24px_oklch(0.2_0.02_270_/_0.10),0_2px_6px_oklch(0.2_0.02_270_/_0.06)]"
+            className="border-b border-[var(--app-line)] bg-[var(--app-panel)] p-3.5 shadow-[var(--sh-lg)]"
             onClick={(event) => event.stopPropagation()}
           >
             <AdminNavLinks orientation="vertical" ariaLabel="Mobile workspace" />

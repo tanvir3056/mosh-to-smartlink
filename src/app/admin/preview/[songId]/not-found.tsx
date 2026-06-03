@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function AdminPreviewNotFound() {
   return (
     <main className="bs-admin-theme flex min-h-screen items-center justify-center bg-[var(--app-bg)] px-5 py-10">
-      <section className="app-card w-full max-w-md rounded-[18px] p-7 text-center shadow-[0_24px_70px_rgba(20,24,34,0.12)]">
+      <section className="app-card w-full max-w-md rounded-[18px] p-7 text-center shadow-[var(--sh-xl)]">
         <p className="app-kicker text-[var(--app-muted)]">Preview unavailable</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[var(--app-text)]">
           Preview could not be opened.
@@ -15,7 +15,7 @@ export default function AdminPreviewNotFound() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link
             href="/admin"
-            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,75,219,0.18)]"
+            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[var(--sh-xs)]"
             style={{ color: "#fff", WebkitTextFillColor: "#fff" }}
           >
             Back to library

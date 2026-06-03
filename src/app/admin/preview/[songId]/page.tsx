@@ -19,7 +19,7 @@ function segmentedClass(active: boolean) {
   return cn(
     "inline-flex min-h-8 items-center justify-center rounded-[7px] px-3 text-[13px] font-semibold transition",
     active
-      ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.06)]"
+      ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[var(--sh-xs)]"
       : "text-[var(--app-muted)] hover:text-[var(--app-text)]",
   );
 }
@@ -47,7 +47,7 @@ export default async function AdminPreviewPage({
 
   return (
     <div className="bs-admin-theme flex min-h-screen flex-col bg-[var(--app-bg)] text-[var(--app-text)]">
-      <header className="sticky top-0 z-20 flex min-h-[58px] shrink-0 flex-col gap-3 border-b border-[var(--app-line)] bg-[var(--app-panel)]/96 px-4 py-3 shadow-[0_1px_2px_rgba(20,24,34,0.04)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-[18px]">
+      <header className="sticky top-0 z-20 flex min-h-[58px] shrink-0 flex-col gap-3 border-b border-[var(--app-line)] bg-[var(--app-panel)]/96 px-4 py-3 shadow-[var(--sh-xs)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-[18px]">
         <Link
           href={`/admin/songs/${songId}`}
           className="app-interactive inline-flex min-h-9 items-center justify-center gap-1.5 self-start rounded-[7px] px-3 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] sm:self-auto"
@@ -86,7 +86,7 @@ export default async function AdminPreviewPage({
           <Link
             href={publicHref}
             target="_blank"
-            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-text)] shadow-[0_1px_2px_rgba(20,24,34,0.05)] transition hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
           >
             <ExternalLink className="h-4 w-4" />
             Open live
@@ -114,7 +114,7 @@ export default async function AdminPreviewPage({
           data-testid="admin-preview-device-frame"
           data-device={device}
           className={cn(
-            "overflow-hidden border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[0_24px_70px_rgba(20,24,34,0.16)]",
+            "overflow-hidden border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xl)]",
             device === "mobile"
               ? "w-full max-w-[390px] rounded-[34px] p-[9px]"
               : "w-full max-w-[960px] rounded-[14px]",
