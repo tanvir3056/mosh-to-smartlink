@@ -819,7 +819,7 @@ export function SongEditorForm({
                           aria-invalid={Boolean(manualFieldError)}
                         />
                         {manualFieldError ? (
-                          <p className="text-sm text-red-600">{manualFieldError}</p>
+                          <p className="text-sm text-[var(--app-red-text)]">{manualFieldError}</p>
                         ) : null}
                       </div>
                     ) : (
@@ -1378,7 +1378,7 @@ export function SongEditorForm({
                                 aria-invalid={Boolean(manualFieldError)}
                               />
                               {manualFieldError ? (
-                                <p className="text-sm text-red-600">{manualFieldError}</p>
+                                <p className="text-sm text-[var(--app-red-text)]">{manualFieldError}</p>
                               ) : null}
                             </label>
                           ) : (
@@ -1414,7 +1414,7 @@ export function SongEditorForm({
                               aria-invalid={Boolean(manualFieldError)}
                             />
                             {manualFieldError ? (
-                              <p className="text-sm text-red-600">{manualFieldError}</p>
+                              <p className="text-sm text-[var(--app-red-text)]">{manualFieldError}</p>
                             ) : null}
                           </label>
 

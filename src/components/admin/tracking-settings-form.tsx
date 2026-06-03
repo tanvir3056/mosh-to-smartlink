@@ -153,7 +153,7 @@ export function TrackingSettingsForm({
                   Use digits only. Required before Meta Pixel can be enabled.
                 </span>
                 {metaPixelIdError ? (
-                  <p id="meta-pixel-id-error" className="text-sm text-red-600">
+                  <p id="meta-pixel-id-error" className="text-sm text-[var(--app-red-text)]">
                     {metaPixelIdError}
                   </p>
                 ) : null}
@@ -229,7 +229,7 @@ export function TrackingSettingsForm({
                 )}
               />
               {mailchimpAudienceIdError ? (
-                <p id="mailchimp-audience-id-error" className="text-sm text-red-600">
+                <p id="mailchimp-audience-id-error" className="text-sm text-[var(--app-red-text)]">
                   {mailchimpAudienceIdError}
                 </p>
               ) : null}
@@ -262,7 +262,7 @@ export function TrackingSettingsForm({
                 Use the full key, including the datacenter suffix like -us21.
               </span>
               {mailchimpApiKeyError ? (
-                <p id="mailchimp-api-key-error" className="text-sm text-red-600">
+                <p id="mailchimp-api-key-error" className="text-sm text-[var(--app-red-text)]">
                   {mailchimpApiKeyError}
                 </p>
               ) : null}

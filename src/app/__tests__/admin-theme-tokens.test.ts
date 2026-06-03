@@ -43,4 +43,21 @@ describe("admin theme tokens", () => {
       /:root\s*\{[\s\S]*--font-display:\s*"Avenir Next Condensed",\s*"Avenir Next"/,
     );
   });
+
+  test("keeps admin error states on Backstage semantic tokens", () => {
+    const adminErrorSources = [
+      "src/components/admin/form-state.tsx",
+      "src/components/admin/tracking-settings-form.tsx",
+      "src/components/admin/artwork-upload-field.tsx",
+      "src/components/admin/song-editor-form.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = adminErrorSources.join("\n");
+
+    expect(combinedSource).toContain("var(--app-red-line)");
+    expect(combinedSource).toContain("var(--app-red-soft)");
+    expect(combinedSource).toContain("var(--app-red-text)");
+    expect(combinedSource).not.toMatch(
+      /\b(?:border|bg|text)-red-(?:50|100|200|500|600|700|800|900)\b/,
+    );
+  });
 });

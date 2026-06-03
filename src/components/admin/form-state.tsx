@@ -41,8 +41,8 @@ export function FormStateMessage({
       aria-live={isError ? "assertive" : "polite"}
       className={`rounded-2xl border px-4 py-3 text-sm ${
         isError
-          ? "border-red-200 bg-red-50 text-red-700"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          ? "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
+          : "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"
       }`}
     >
       {displayError ?? success}
