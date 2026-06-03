@@ -33,7 +33,7 @@ export function SignUpForm() {
         <span className="app-input flex items-center gap-2 px-3">
           <User className="h-4 w-4 shrink-0 text-[var(--app-muted-2)]" />
           <span className="font-mono text-sm text-[var(--app-muted-2)]">
-            {APP_DOMAIN_HINT}/
+            @
           </span>
           <input
             name="username"
@@ -42,8 +42,8 @@ export function SignUpForm() {
             placeholder="yourname"
           />
         </span>
-        <span className="text-[12.5px] text-[var(--app-muted-2)]">
-          This becomes the root of all your links.
+        <span className="break-words text-[12.5px] text-[var(--app-muted-2)]">
+          Your public link will use {APP_DOMAIN_HINT}/yourname.
         </span>
       </label>
       <label className="grid gap-2">

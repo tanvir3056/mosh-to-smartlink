@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { APP_DOMAIN_HINT } from "@/lib/constants";
@@ -47,8 +47,17 @@ describe("auth page launch copy", () => {
     expect(
       screen.getByRole("button", { name: /switch to (dark|light) mode/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("This becomes the root of all your links.")).toBeInTheDocument();
-    expect(screen.getByText(`${APP_DOMAIN_HINT}/`)).toBeInTheDocument();
+    const username = screen.getByPlaceholderText("yourname");
+    const usernameShell = username.closest(".app-input");
+
+    expect(usernameShell).not.toBeNull();
+    expect(within(usernameShell as HTMLElement).getByText("@")).toBeInTheDocument();
+    expect(
+      within(usernameShell as HTMLElement).queryByText(`${APP_DOMAIN_HINT}/`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(`Your public link will use ${APP_DOMAIN_HINT}/yourname.`),
+    ).toHaveClass("break-words");
     expect(screen.queryByText("backstage.fm/")).not.toBeInTheDocument();
     expect(
       screen.getByText(
