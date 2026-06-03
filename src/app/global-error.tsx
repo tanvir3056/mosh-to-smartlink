@@ -67,7 +67,7 @@ export default function GlobalError({
             <div className="mt-6 flex flex-wrap justify-center gap-2.5">
               <a
                 href="/sign-in"
-                className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-3.5 text-sm font-[550] text-white shadow-[var(--sh-xs)]"
+                className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-3.5 text-sm font-[550] text-[var(--app-text-on)] shadow-[var(--sh-xs)]"
               >
                 Sign in
               </a>

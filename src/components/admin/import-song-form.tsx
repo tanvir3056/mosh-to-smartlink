@@ -217,7 +217,7 @@ export function ImportSongForm({ requestedBy }: { requestedBy: string }) {
               Spotify track or album URL
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-[var(--r-full)] bg-[#1ed760] text-white">
+              <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-[var(--r-full)] bg-[#1ed760] text-[var(--app-text-on)]">
                 <Music2 className="h-3.5 w-3.5" />
               </span>
               <input

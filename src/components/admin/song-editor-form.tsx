@@ -954,7 +954,7 @@ export function SongEditorForm({
               <div className="flex flex-wrap gap-2 sm:justify-end">
                 <a
                   href="#streaming-destinations"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-[var(--app-text-on)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
                 >
                   Review &amp; publish
                 </a>
@@ -992,7 +992,7 @@ export function SongEditorForm({
                 <Link
                   href={publicHref}
                   target="_blank"
-                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-white shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
+                  className="inline-flex min-h-9 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-3.5 text-sm font-semibold text-[var(--app-text-on)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-accent-strong)]"
                 >
                   Open live page
                 </Link>

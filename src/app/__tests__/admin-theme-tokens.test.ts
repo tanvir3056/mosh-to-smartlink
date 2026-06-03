@@ -28,6 +28,26 @@ describe("admin theme tokens", () => {
     expect(globalsCss).toMatch(/--sidebar-w:\s*252px;/);
   });
 
+  test("keeps high-contrast action foregrounds on the Claude text-on token", () => {
+    const foregroundSources = [
+      "src/app/global-error.tsx",
+      "src/app/admin/preview/[songId]/not-found.tsx",
+      "src/components/brand/brand-mark.tsx",
+      "src/components/admin/account-avatar.tsx",
+      "src/components/admin/artwork-upload-field.tsx",
+      "src/components/admin/avatar-upload-control.tsx",
+      "src/components/admin/import-song-form.tsx",
+      "src/components/admin/public-link-panel.tsx",
+      "src/components/admin/song-editor-form.tsx",
+      "src/components/ui/button.tsx",
+    ].map((path) => readFileSync(path, "utf8"));
+    const combinedSource = foregroundSources.join("\n");
+
+    expect(globalsCss).toMatch(/--app-text-on:\s*var\(--text-on\);/);
+    expect(combinedSource).toContain("text-[var(--app-text-on)]");
+    expect(combinedSource).not.toMatch(/\b(?:active:)?text-white\b/);
+  });
+
   test("uses the Claude design font stack only inside the admin theme", () => {
     expect(globalsCss).toMatch(
       /\.bs-admin-theme\s*\{[\s\S]*--font-body:\s*var\(--font-hanken\),\s*"Hanken Grotesk",\s*system-ui,\s*sans-serif;/,

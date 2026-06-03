@@ -12,7 +12,7 @@ function actionLinkClass(tone: "primary" | "secondary" | "ghost" = "secondary") 
     "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[var(--r-sm)] px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
 
   if (tone === "primary") {
-    return `${base} bg-[var(--app-accent)] text-white shadow-[var(--sh-xs)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)] active:text-white`;
+    return `${base} bg-[var(--app-accent)] text-[var(--app-text-on)] shadow-[var(--sh-xs)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)] active:text-[var(--app-text-on)]`;
   }
 
   if (tone === "ghost") {

@@ -9,7 +9,7 @@ export function BrandMark({
   return (
     <span
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] bg-[linear-gradient(150deg,var(--app-accent),oklch(0.42_0.2_290))] text-white shadow-[var(--sh-sm)]",
+        "inline-flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] bg-[linear-gradient(150deg,var(--app-accent),oklch(0.42_0.2_290))] text-[var(--app-text-on)] shadow-[var(--sh-sm)]",
         className,
       )}
       {...props}

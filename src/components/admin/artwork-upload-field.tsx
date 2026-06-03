@@ -902,7 +902,7 @@ export function ArtworkUploadField({
                       }
                     }}
                     disabled={busy}
-                    className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--app-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-text-on)] transition hover:bg-[var(--app-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {busy ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />

@@ -7,6 +7,7 @@
   --app-panel-muted: #ebe8df;
   --app-soft: #f6f2e8;
   --app-text: #151922;
+  --app-text-on: #ffffff;
   --app-muted: #5e6674;
   --app-muted-2: #7e8795;
   --app-line: rgba(21, 25, 34, 0.1);
@@ -120,6 +121,7 @@ body {
   --app-panel-muted: var(--surface-2);
   --app-soft: var(--bg-sunken);
   --app-text: var(--text);
+  --app-text-on: var(--text-on);
   --app-muted: var(--text-2);
   --app-muted-2: var(--text-3);
   --app-line: var(--line);
