@@ -95,6 +95,7 @@ psql "$POSTGRES_URL" -f supabase/migrations/20260422183000_multi_account.sql
 psql "$POSTGRES_URL" -f supabase/migrations/20260425090000_email_capture.sql
 psql "$POSTGRES_URL" -f supabase/migrations/20260429110000_match_review_evidence.sql
 psql "$POSTGRES_URL" -f supabase/migrations/20260430021500_streaming_link_visibility.sql
+psql "$POSTGRES_URL" -f supabase/migrations/20260603060000_user_avatar_url.sql
 ```
 
 5. Deploy to Vercel.

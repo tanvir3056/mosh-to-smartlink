@@ -903,6 +903,50 @@ export async function updateLocalPasswordHash(userId: string, passwordHash: stri
   );
 }
 
+function isMissingAvatarColumnError(error: unknown) {
+  const record = error as { code?: unknown; message?: unknown };
+  const message = typeof record.message === "string" ? record.message.toLowerCase() : "";
+
+  return (
+    record.code === "42703" ||
+    (message.includes("avatar_url") && message.includes("does not exist"))
+  );
+}
+
+export async function getUserAvatarUrl(userId: string) {
+  try {
+    const rows = await dbQuery<{ avatar_url: string | null }>(
+      `
+        select avatar_url
+        from app_users
+        where id = $1
+        limit 1
+      `,
+      [userId],
+    );
+
+    return rows[0]?.avatar_url ?? null;
+  } catch (error) {
+    if (isMissingAvatarColumnError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+export async function updateUserAvatarUrl(userId: string, avatarUrl: string) {
+  await dbQuery(
+    `
+      update app_users
+      set avatar_url = $2,
+          updated_at = current_timestamp
+      where id = $1
+    `,
+    [userId, avatarUrl],
+  );
+}
+
 export async function linkUserAuthIdentity(userId: string, authUserId: string) {
   await dbQuery(
     `

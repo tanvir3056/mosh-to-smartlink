@@ -6,11 +6,13 @@ import type { EmailConnectorConfig, EmailLeadSnapshot, TrackingConfig } from "@/
 const {
   mockGetEmailConnectorConfig,
   mockGetEmailLeadSnapshot,
+  mockGetUserAvatarUrl,
   mockGetTrackingConfig,
   mockRequireUserSession,
 } = vi.hoisted(() => ({
   mockGetEmailConnectorConfig: vi.fn(),
   mockGetEmailLeadSnapshot: vi.fn(),
+  mockGetUserAvatarUrl: vi.fn(),
   mockGetTrackingConfig: vi.fn(),
   mockRequireUserSession: vi.fn(),
 }));
@@ -22,6 +24,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/data", () => ({
   getEmailConnectorConfig: mockGetEmailConnectorConfig,
   getEmailLeadSnapshot: mockGetEmailLeadSnapshot,
+  getUserAvatarUrl: mockGetUserAvatarUrl,
   getTrackingConfig: mockGetTrackingConfig,
 }));
 
@@ -100,6 +103,7 @@ describe("admin settings page", () => {
       loginEmail: "warcry@example.com",
     });
     mockGetTrackingConfig.mockResolvedValue(trackingConfig);
+    mockGetUserAvatarUrl.mockResolvedValue("https://images.example.com/avatar.jpg");
     mockGetEmailConnectorConfig.mockResolvedValue(connectorConfig);
     mockGetEmailLeadSnapshot.mockResolvedValue(leadSnapshot);
   });
@@ -149,6 +153,12 @@ describe("admin settings page", () => {
     expect(screen.getByLabelText("Display name")).toHaveValue("Backstage");
     expect(screen.getByLabelText("Username")).toHaveValue("warcry");
     expect(screen.getByLabelText("Contact email")).toHaveValue("warcry@example.com");
+    expect(screen.getByAltText("warcry avatar")).toHaveAttribute(
+      "src",
+      "https://images.example.com/avatar.jpg",
+    );
+    expect(mockGetUserAvatarUrl).toHaveBeenCalledWith("user-1");
+    expect(screen.getByRole("button", { name: "Upload avatar" })).toBeEnabled();
     expect(screen.getByLabelText("Default headline")).toHaveValue(
       "Out now - stream everywhere.",
     );

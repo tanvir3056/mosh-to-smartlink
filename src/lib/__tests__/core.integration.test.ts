@@ -225,6 +225,29 @@ describe("core data flow", () => {
     });
   }, 10_000);
 
+  test("persists account avatars on the user profile record", async () => {
+    const {
+      createAccountOwner,
+      getUserAvatarUrl,
+      updateUserAvatarUrl,
+    } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    await expect(getUserAvatarUrl(USER_ID)).resolves.toBeNull();
+
+    await updateUserAvatarUrl(USER_ID, "https://cdn.example.com/avatar.webp");
+
+    await expect(getUserAvatarUrl(USER_ID)).resolves.toBe(
+      "https://cdn.example.com/avatar.webp",
+    );
+  });
+
   test("ignores orphaned local snapshot links instead of blocking future saves", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "test-blob-token";
 

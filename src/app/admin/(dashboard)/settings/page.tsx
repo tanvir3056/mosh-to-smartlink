@@ -9,7 +9,6 @@ import {
   Settings2,
   ShieldCheck,
   Target,
-  Upload,
   User,
   Users,
 } from "lucide-react";
@@ -17,6 +16,9 @@ import {
 import {
   saveGeneralSettingsAction,
 } from "@/app/admin/actions";
+import {
+  AvatarUploadControl,
+} from "@/components/admin/avatar-upload-control";
 import {
   EmailLeadsPanel,
   EmailLeadsPanelUnavailable,
@@ -28,6 +30,7 @@ import { APP_DOMAIN_HINT } from "@/lib/constants";
 import {
   getEmailConnectorConfig,
   getEmailLeadSnapshot,
+  getUserAvatarUrl,
   getTrackingConfig,
 } from "@/lib/data";
 import type { EmailConnectorConfig, EmailLeadSnapshot, TrackingConfig } from "@/lib/types";
@@ -281,9 +284,11 @@ function TopAction({
 }
 
 function GeneralSettings({
+  avatarUrl,
   session,
   trackingConfig,
 }: {
+  avatarUrl: string | null;
   session: { username: string; loginEmail: string };
   trackingConfig: TrackingConfig | null;
 }) {
@@ -303,15 +308,7 @@ function GeneralSettings({
     >
       <SectionCard icon={User} title="Site settings" sub="Your public link space.">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white">
-              {session.username[0]?.toUpperCase() ?? "B"}
-            </span>
-            <Button type="button" tone="subtle" disabled>
-              <Upload className="h-4 w-4" />
-              Upload avatar
-            </Button>
-          </div>
+          <AvatarUploadControl username={session.username} avatarUrl={avatarUrl} />
 
           <label className="grid gap-2">
             <span className="text-sm font-medium text-[var(--app-text)]">Display name</span>
@@ -489,10 +486,11 @@ export default async function AdminSettingsPage({
   const activeTab = parseSettingsTab(params.tab);
   const result = parseSettingsResult(params);
   const session = await requireUserSession();
-  const [trackingResult, connectorResult, leadSnapshotResult] = await Promise.allSettled([
+  const [trackingResult, connectorResult, leadSnapshotResult, avatarResult] = await Promise.allSettled([
     getTrackingConfig(session.userId),
     getEmailConnectorConfig(session.userId),
     getEmailLeadSnapshot(session.userId),
+    getUserAvatarUrl(session.userId),
   ]);
   const settingsReady =
     trackingResult.status === "fulfilled" && connectorResult.status === "fulfilled";
@@ -502,6 +500,8 @@ export default async function AdminSettingsPage({
     connectorResult.status === "fulfilled" ? connectorResult.value : null;
   const leadSnapshot =
     leadSnapshotResult.status === "fulfilled" ? leadSnapshotResult.value : null;
+  const avatarUrl =
+    avatarResult.status === "fulfilled" ? avatarResult.value : null;
 
   if (trackingResult.status === "rejected") {
     console.error(
@@ -521,6 +521,13 @@ export default async function AdminSettingsPage({
     console.error(
       "Failed to load email lead snapshot for settings page.",
       leadSnapshotResult.reason,
+    );
+  }
+
+  if (avatarResult.status === "rejected") {
+    console.error(
+      "Failed to load avatar for settings page.",
+      avatarResult.reason,
     );
   }
 
@@ -549,6 +556,7 @@ export default async function AdminSettingsPage({
 
       {activeTab === "general" ? (
         <GeneralSettings
+          avatarUrl={avatarUrl}
           session={session}
           trackingConfig={trackingConfig}
         />
