@@ -22,7 +22,7 @@ function StatusBadge({
 
   return (
     <span
-      className={`inline-flex w-fit items-center rounded-[7px] border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] ${styles}`}
+      className={`inline-flex w-fit items-center rounded-[var(--r-sm)] border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] ${styles}`}
     >
       {label}
     </span>
@@ -41,7 +41,7 @@ export function EmailLeadsPanel({
   return (
     <section
       aria-labelledby="lead-inbox-title"
-      className={`app-card app-enter app-enter-delay-1 rounded-[14px] ${
+      className={`app-card app-enter app-enter-delay-1 rounded-[var(--r-lg)] ${
         compact ? "overflow-hidden p-0" : "p-5 sm:p-6 lg:p-7"
       }`}
     >
@@ -77,7 +77,7 @@ export function EmailLeadsPanel({
           <form action={resyncEmailLeadsFormAction}>
             <button
               type="submit"
-              className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+              className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
             >
               <RefreshCw className="h-4 w-4" />
               Re-sync
@@ -86,7 +86,7 @@ export function EmailLeadsPanel({
           <Link
             href="/api/admin/email-leads/export"
             prefetch={false}
-            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-panel-muted)]"
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -102,7 +102,7 @@ export function EmailLeadsPanel({
             { label: "Local only", value: snapshot.localOnlyLeads },
             { label: "Needs attention", value: snapshot.failedLeads },
           ].map((item) => (
-            <div key={item.label} className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-4 shadow-[0_1px_0_oklch(1_0_0_/_0.2)_inset]">
+            <div key={item.label} className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-4 shadow-[0_1px_0_oklch(1_0_0_/_0.2)_inset]">
               <p className="app-kicker text-[var(--app-muted)]">{item.label}</p>
               <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--app-text)]">
                 {item.value}
@@ -118,7 +118,7 @@ export function EmailLeadsPanel({
             {snapshot.items.map((lead) => (
               <article
                 key={lead.id}
-                className="rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-4"
+                className="rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 py-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -219,7 +219,7 @@ export function EmailLeadsPanel({
         </div>
       ) : (
         <div
-          className={`rounded-[10px] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-5 text-sm leading-7 text-[var(--app-muted)] ${
+          className={`rounded-[var(--r-md)] border border-dashed border-[var(--app-line)] bg-[var(--app-panel-muted)] px-4 py-5 text-sm leading-7 text-[var(--app-muted)] ${
             compact ? "m-3" : "mt-6"
           }`}
         >
@@ -232,7 +232,7 @@ export function EmailLeadsPanel({
 
 export function EmailLeadsPanelUnavailable() {
   return (
-    <section className="app-card app-enter app-enter-delay-1 rounded-[14px] p-5 sm:p-6">
+    <section className="app-card app-enter app-enter-delay-1 rounded-[var(--r-lg)] p-5 sm:p-6">
       <p className="app-kicker text-[var(--app-muted)]">Captured leads</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--app-text)]">
         Lead inbox unavailable

@@ -39,7 +39,7 @@ export function FormStateMessage({
     <div
       role={isError ? "alert" : "status"}
       aria-live={isError ? "assertive" : "polite"}
-      className={`rounded-2xl border px-4 py-3 text-sm ${
+      className={`rounded-[var(--r-xl)] border px-4 py-3 text-sm ${
         isError
           ? "border-[var(--app-red-line)] bg-[var(--app-red-soft)] text-[var(--app-red-text)]"
           : "border-[var(--app-green-line)] bg-[var(--app-green-soft)] text-[var(--app-green-text)]"

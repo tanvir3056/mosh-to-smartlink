@@ -15,14 +15,14 @@ export default function AdminPreviewNotFound() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link
             href="/admin"
-            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[var(--sh-xs)]"
+            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-accent)] px-4 text-sm font-semibold text-white shadow-[var(--sh-xs)]"
             style={{ color: "#fff", WebkitTextFillColor: "#fff" }}
           >
             Back to library
           </Link>
           <Link
             href="/admin/songs/new"
-            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)]"
+            className="app-interactive inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)]"
           >
             Import song
           </Link>

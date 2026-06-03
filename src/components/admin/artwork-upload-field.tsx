@@ -664,7 +664,7 @@ export function ArtworkUploadField({
         <div className="flex">
           <label
             htmlFor={inputId}
-            className="app-interactive inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-line)]"
+            className="app-interactive inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3.5 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:border-[var(--app-line-strong)] hover:bg-[var(--app-line)]"
           >
             {busy ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -710,7 +710,7 @@ export function ArtworkUploadField({
         />
 
         {error ? (
-          <div className="rounded-2xl border border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-4 py-3 text-sm text-[var(--app-red-text)]">
+          <div className="rounded-[var(--r-xl)] border border-[var(--app-red-line)] bg-[var(--app-red-soft)] px-4 py-3 text-sm text-[var(--app-red-text)]">
             {error}
           </div>
         ) : null}
@@ -718,7 +718,7 @@ export function ArtworkUploadField({
 
       {cropSession && cropGeometry && artworkFrameStyle ? (
         <div className="fixed inset-0 z-[70] bg-[var(--scrim)] px-4 py-6 backdrop-blur-[3px]">
-          <div className="app-card mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[20px] bg-[var(--app-panel)] p-5 shadow-[var(--sh-xl)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="app-card mx-auto grid max-h-full w-full max-w-4xl gap-5 overflow-auto rounded-[var(--r-xl)] bg-[var(--app-panel)] p-5 shadow-[var(--sh-xl)] sm:p-6 lg:grid-cols-[minmax(0,1fr)_260px]">
             <div className="grid gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -736,7 +736,7 @@ export function ArtworkUploadField({
                 <button
                   type="button"
                   onClick={() => setCropSession(null)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)] transition hover:bg-[var(--app-line)] hover:text-[var(--app-text)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)] transition hover:bg-[var(--app-line)] hover:text-[var(--app-text)]"
                   aria-label="Close crop editor"
                 >
                   <X className="h-4 w-4" />
@@ -814,7 +814,7 @@ export function ArtworkUploadField({
             </div>
 
             <div className="grid content-start gap-4">
-              <div className="app-card-soft rounded-[14px] p-4">
+              <div className="app-card-soft rounded-[var(--r-lg)] p-4">
                 <p className="app-kicker text-[var(--app-muted-2)]">
                   Final cover
                 </p>
@@ -833,7 +833,7 @@ export function ArtworkUploadField({
                 </div>
               </div>
 
-              <div className="app-card-soft rounded-[14px] p-4">
+              <div className="app-card-soft rounded-[var(--r-lg)] p-4">
                 <label className="grid gap-2">
                   <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
                     <ZoomIn className="h-4 w-4 text-[var(--app-muted)]" />
@@ -863,7 +863,7 @@ export function ArtworkUploadField({
                       zoom: current.defaultZoom,
                     }))
                   }
-                  className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
+                  className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-4 text-sm font-semibold text-[var(--app-text)] transition hover:bg-[var(--app-panel-muted)]"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Reset suggested crop
@@ -873,7 +873,7 @@ export function ArtworkUploadField({
                   <button
                     type="button"
                     onClick={() => setCropSession(null)}
-                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-transparent px-4 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-transparent px-4 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
                   >
                     Cancel
                   </button>
@@ -902,7 +902,7 @@ export function ArtworkUploadField({
                       }
                     }}
                     disabled={busy}
-                    className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-transparent bg-[var(--app-accent)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--app-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="app-interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-transparent bg-[var(--app-accent)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--app-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {busy ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />

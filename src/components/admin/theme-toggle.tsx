@@ -59,7 +59,7 @@ export function ThemeToggle({
       onClick={toggleTheme}
       suppressHydrationWarning
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
+        "inline-flex shrink-0 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]",
         withLabel
           ? "h-10 w-auto gap-2 px-3.5 text-sm font-[550]"
           : size === "sm"

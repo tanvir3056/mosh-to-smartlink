@@ -40,7 +40,7 @@ export function MobileAdminMenu({
           <Link
             href="/admin/songs/new"
             aria-label="Import song"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
           >
             <Plus className="h-[18px] w-[18px]" />
           </Link>
@@ -50,7 +50,7 @@ export function MobileAdminMenu({
             aria-controls="admin-mobile-menu"
             aria-expanded={open}
             onClick={() => setOpen((current) => !current)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--r-sm)] border border-transparent bg-transparent text-[var(--app-muted)] transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
           >
             {open ? (
               <X className="h-[18px] w-[18px]" />
@@ -73,7 +73,7 @@ export function MobileAdminMenu({
           >
             <AdminNavLinks orientation="vertical" ariaLabel="Mobile workspace" />
             <div className="my-3 h-px bg-[var(--app-line)]" />
-            <div className="flex items-center gap-2 rounded-[10px] px-2 py-2">
+            <div className="flex items-center gap-2 rounded-[var(--r-md)] px-2 py-2">
               <AccountAvatar avatarUrl={avatarUrl} username={username} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13.5px] font-semibold text-[var(--app-text)]">

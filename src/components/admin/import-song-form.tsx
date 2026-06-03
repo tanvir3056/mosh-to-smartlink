@@ -78,7 +78,7 @@ function StageBadge({
     >
       <span
         className={cn(
-          "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[var(--app-panel)] shadow-[var(--sh-xs)]",
+          "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[var(--r-sm)] bg-[var(--app-panel)] shadow-[var(--sh-xs)]",
           state === "done"
             ? "text-[var(--app-green-text)]"
             : state === "active"

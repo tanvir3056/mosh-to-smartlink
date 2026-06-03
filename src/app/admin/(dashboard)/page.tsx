@@ -516,7 +516,7 @@ export default async function AdminOverviewPage({
                       <img
                         src={song.artworkUrl}
                         alt={`${song.artistName} - ${song.title} artwork`}
-                        className="h-[42px] w-[42px] shrink-0 rounded-[9px] object-cover"
+                        className="h-[42px] w-[42px] shrink-0 rounded-[var(--r-md)] object-cover"
                         loading="lazy"
                         decoding="async"
                       />
@@ -658,7 +658,7 @@ export default async function AdminOverviewPage({
                 >
                   <div className="flex flex-1 flex-col p-[18px]">
                     <div className="mb-3 flex items-center justify-between">
-                      <span className={`flex h-9 w-9 items-center justify-center rounded-[9px] ${item.done ? "bg-[var(--app-green-soft)] text-[var(--app-green-text)]" : "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"}`}>
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-[var(--r-md)] ${item.done ? "bg-[var(--app-green-soft)] text-[var(--app-green-text)]" : "bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"}`}>
                         <Icon className="h-4.5 w-4.5" />
                       </span>
                       <span className="font-mono text-xs font-semibold text-[var(--app-muted-2)]">

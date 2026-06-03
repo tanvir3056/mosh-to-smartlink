@@ -9,7 +9,7 @@ import { buildPublicSongPath } from "@/lib/utils";
 
 function actionLinkClass(tone: "primary" | "secondary" | "ghost" = "secondary") {
   const base =
-    "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
+    "app-interactive inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[var(--r-sm)] px-4 text-sm font-semibold select-none touch-manipulation transition-[transform,background-color,border-color,color,box-shadow] duration-200 ease-out active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
 
   if (tone === "primary") {
     return `${base} bg-[var(--app-accent)] text-white shadow-[var(--sh-xs)] hover:bg-[var(--app-accent-strong)] active:bg-[var(--app-accent-strong)] active:text-white`;
@@ -50,10 +50,10 @@ export function PublicLinkPanel({
   const publicUrl = `https://${displayPath}`;
 
   return (
-    <section className="app-card overflow-hidden rounded-[14px]">
+    <section className="app-card overflow-hidden rounded-[var(--r-lg)]">
       <div className="flex flex-col gap-3 border-b border-[var(--app-line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-start gap-3 sm:items-center">
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[8px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] text-[var(--app-muted)]">
             <Link2 className="h-4 w-4" />
           </span>
           <div className="min-w-0">
@@ -80,7 +80,7 @@ export function PublicLinkPanel({
       <div className="grid gap-4 p-4 sm:p-5">
         <div
           data-testid="public-link-copy-row"
-          className="grid gap-3 rounded-[10px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-3 sm:min-h-12 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:px-4"
+          className="grid gap-3 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-3 sm:min-h-12 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:px-4"
         >
           <Link2 className="hidden h-4 w-4 shrink-0 text-[var(--app-muted)] sm:block" />
           <span
@@ -95,7 +95,7 @@ export function PublicLinkPanel({
               await navigator.clipboard.writeText(publicUrl);
               setCopied(true);
             }}
-            className="inline-flex min-h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-strong)] hover:text-[var(--app-text)] sm:w-auto"
+            className="inline-flex min-h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-[13px] font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-strong)] hover:text-[var(--app-text)] sm:w-auto"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copied" : "Copy"}

@@ -71,7 +71,7 @@ export function AdminNavLinks({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "app-sidebar-nav-link relative inline-flex h-[38px] items-center gap-3 rounded-[7px] border px-3 text-sm font-medium select-none touch-manipulation transition-[background-color,border-color,color] duration-150 ease-out",
+              "app-sidebar-nav-link relative inline-flex h-[38px] items-center gap-3 rounded-[var(--r-sm)] border px-3 text-sm font-medium select-none touch-manipulation transition-[background-color,border-color,color] duration-150 ease-out",
               orientation === "horizontal" && "min-w-0 justify-start px-3",
               active
                 ? "border-transparent bg-[var(--app-accent-soft)] text-[var(--app-accent-text)]"

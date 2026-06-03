@@ -17,7 +17,7 @@ function parsePreviewDevice(value: string | string[] | undefined): PreviewDevice
 
 function segmentedClass(active: boolean) {
   return cn(
-    "inline-flex min-h-8 items-center justify-center rounded-[7px] px-3 text-[13px] font-semibold transition",
+    "inline-flex min-h-8 items-center justify-center rounded-[var(--r-sm)] px-3 text-[13px] font-semibold transition",
     active
       ? "bg-[var(--app-panel)] text-[var(--app-text)] shadow-[var(--sh-xs)]"
       : "text-[var(--app-muted)] hover:text-[var(--app-text)]",
@@ -50,7 +50,7 @@ export default async function AdminPreviewPage({
       <header className="sticky top-0 z-20 flex min-h-[58px] shrink-0 flex-col gap-3 border-b border-[var(--app-line)] bg-[var(--app-panel)]/96 px-4 py-3 shadow-[var(--sh-xs)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-[18px]">
         <Link
           href={`/admin/songs/${songId}`}
-          className="app-interactive inline-flex min-h-9 items-center justify-center gap-1.5 self-start rounded-[7px] px-3 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] sm:self-auto"
+          className="app-interactive inline-flex min-h-9 items-center justify-center gap-1.5 self-start rounded-[var(--r-sm)] px-3 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)] sm:self-auto"
         >
           <ChevronLeft className="h-4 w-4" />
           Back to editor
@@ -63,7 +63,7 @@ export default async function AdminPreviewPage({
           </span>
           <nav
             aria-label="Preview device"
-            className="inline-flex rounded-[9px] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-1"
+            className="inline-flex rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-1"
           >
             <Link
               href={`/admin/preview/${songId}?device=mobile`}
@@ -86,7 +86,7 @@ export default async function AdminPreviewPage({
           <Link
             href={publicHref}
             target="_blank"
-            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
+            className="app-interactive inline-flex min-h-9 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-text)] shadow-[var(--sh-xs)] transition hover:bg-[var(--app-panel-muted)]"
           >
             <ExternalLink className="h-4 w-4" />
             Open live
@@ -96,7 +96,7 @@ export default async function AdminPreviewPage({
             type="button"
             aria-disabled="true"
             disabled
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-muted)] opacity-55"
+            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3 text-sm font-semibold text-[var(--app-muted)] opacity-55"
           >
             <ExternalLink className="h-4 w-4" />
             Open live
@@ -117,7 +117,7 @@ export default async function AdminPreviewPage({
             "overflow-hidden border border-[var(--app-line)] bg-[var(--app-panel)] shadow-[var(--sh-xl)]",
             device === "mobile"
               ? "w-full max-w-[390px] rounded-[34px] p-[9px]"
-              : "w-full max-w-[960px] rounded-[14px]",
+              : "w-full max-w-[960px] rounded-[var(--r-lg)]",
           )}
         >
           <div

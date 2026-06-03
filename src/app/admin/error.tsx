@@ -19,7 +19,7 @@ export default function AdminError({
   return (
     <div className="bs-admin-theme min-h-screen bg-[var(--app-bg)] px-4 py-10 text-[var(--app-text)] sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-3xl items-center justify-center">
-        <section className="app-card w-full max-w-[440px] rounded-[14px] px-6 py-8 text-center sm:px-8">
+        <section className="app-card w-full max-w-[440px] rounded-[var(--r-lg)] px-6 py-8 text-center sm:px-8">
           <p className="app-kicker text-[var(--app-muted)]">Admin error</p>
           <h1 className="mt-4 font-[var(--font-display)] text-2xl font-semibold tracking-[-0.02em] text-[var(--app-text)]">
             This page hit a snag
@@ -44,13 +44,13 @@ export default function AdminError({
             </Button>
             <Link
               href="/sign-in"
-              className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[var(--sh-xs)]"
+              className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] border border-[var(--app-line)] bg-[var(--app-panel)] px-3.5 text-sm font-[550] text-[var(--app-text)] shadow-[var(--sh-xs)]"
             >
               Sign in again
             </Link>
             <Link
               href="/"
-              className="inline-flex min-h-10 items-center justify-center rounded-[7px] px-3.5 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
+              className="inline-flex min-h-10 items-center justify-center rounded-[var(--r-sm)] px-3.5 text-sm font-[550] text-[var(--app-muted)] transition hover:bg-[var(--app-panel-muted)] hover:text-[var(--app-text)]"
             >
               Back to home
             </Link>

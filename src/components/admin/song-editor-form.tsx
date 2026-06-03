@@ -936,7 +936,7 @@ export function SongEditorForm({
           <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
                   <CheckCircle2 className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0">
@@ -973,7 +973,7 @@ export function SongEditorForm({
           <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-green-line)] bg-[var(--app-green-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--app-green-line)] bg-[var(--app-panel)] text-[var(--app-green-text)]">
                   <CheckCircle2 className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0">
@@ -1011,7 +1011,7 @@ export function SongEditorForm({
           <section className="app-card-soft rounded-[var(--r-lg)] border-[var(--app-amber-line)] bg-[var(--app-amber-soft)] px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-[var(--app-amber-line)] bg-[var(--app-panel)] text-[var(--app-amber-text)]">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--app-amber-line)] bg-[var(--app-panel)] text-[var(--app-amber-text)]">
                   <EyeOff className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0">
