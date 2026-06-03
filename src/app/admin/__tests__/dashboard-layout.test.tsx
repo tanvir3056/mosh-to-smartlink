@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-const { mockRequireUserSession } = vi.hoisted(() => ({
+const { mockGetUserAvatarUrl, mockRequireUserSession } = vi.hoisted(() => ({
+  mockGetUserAvatarUrl: vi.fn(),
   mockRequireUserSession: vi.fn(),
 }));
 
@@ -23,6 +24,10 @@ vi.mock("@/lib/auth", () => ({
   requireUserSession: mockRequireUserSession,
 }));
 
+vi.mock("@/lib/data", () => ({
+  getUserAvatarUrl: mockGetUserAvatarUrl,
+}));
+
 describe("admin dashboard layout", () => {
   beforeEach(() => {
     mockRequireUserSession.mockResolvedValue({
@@ -30,6 +35,7 @@ describe("admin dashboard layout", () => {
       username: "warcry",
       loginEmail: "warcry@example.com",
     });
+    mockGetUserAvatarUrl.mockResolvedValue("https://images.example.com/avatar.jpg");
   });
 
   test("keeps the Claude sidebar brand subtitle visible", async () => {
@@ -102,5 +108,34 @@ describe("admin dashboard layout", () => {
     expect(
       within(mobileMenu!).getByRole("button", { name: "Sign out" }),
     ).toBeInTheDocument();
+  });
+
+  test("uses the saved account avatar in desktop and mobile account chrome", async () => {
+    const { default: AdminDashboardLayout } = await import("@/app/admin/(dashboard)/layout");
+    const user = userEvent.setup();
+
+    const { container } = render(
+      await AdminDashboardLayout({
+        children: <div>Dashboard content</div>,
+      }),
+    );
+
+    const desktopAvatar = container.querySelector('aside img[alt="warcry avatar"]');
+
+    expect(mockGetUserAvatarUrl).toHaveBeenCalledWith("user-1");
+    expect(desktopAvatar).toHaveAttribute(
+      "src",
+      "https://images.example.com/avatar.jpg",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+
+    const mobileMenu = document.getElementById("admin-mobile-menu");
+
+    expect(mobileMenu).not.toBeNull();
+    expect(within(mobileMenu!).getByAltText("warcry avatar")).toHaveAttribute(
+      "src",
+      "https://images.example.com/avatar.jpg",
+    );
   });
 });

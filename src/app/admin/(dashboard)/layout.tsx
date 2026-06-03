@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronDown, Globe2, LogOut, Plus, Settings } from "lucide-react";
 
 import { signOutAction } from "@/app/admin/actions";
+import { AccountAvatar } from "@/components/admin/account-avatar";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { MobileAdminMenu } from "@/components/admin/mobile-admin-menu";
 import { ThemeToggle } from "@/components/admin/theme-toggle";
@@ -9,6 +10,7 @@ import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Button } from "@/components/ui/button";
 import { APP_DOMAIN_HINT } from "@/lib/constants";
 import { requireUserSession } from "@/lib/auth";
+import { getUserAvatarUrl } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode;
 }>) {
   const session = await requireUserSession();
+  const avatarUrl = await getUserAvatarUrl(session.userId);
 
   return (
     <div className="bs-admin-theme min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
@@ -64,9 +67,7 @@ export default async function AdminDashboardLayout({
             <div className="border-t border-[var(--app-line)] pt-2">
               <details className="group relative">
                 <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[10px] border border-transparent px-2 py-2 text-left transition hover:border-[var(--app-line)] hover:bg-[var(--app-panel-muted)] [&::-webkit-details-marker]:hidden">
-                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[13px] font-semibold text-white">
-                    {session.username[0]?.toUpperCase() ?? "B"}
-                  </span>
+                  <AccountAvatar avatarUrl={avatarUrl} username={session.username} />
                   <span className="min-w-0 flex-1 leading-tight">
                     <span className="block truncate text-[13.5px] font-semibold text-[var(--app-text)]">
                       @{session.username}
@@ -113,6 +114,7 @@ export default async function AdminDashboardLayout({
 
         <div className="admin-dashboard-shell min-w-0 lg:pl-[var(--sidebar-w)]">
           <MobileAdminMenu
+            avatarUrl={avatarUrl}
             username={session.username}
             loginEmail={session.loginEmail}
           />

@@ -1,9 +1,9 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import { Upload } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
+import { AccountAvatar } from "@/components/admin/account-avatar";
 import { Button } from "@/components/ui/button";
 
 interface AvatarUploadResponse {
@@ -29,7 +29,6 @@ export function AvatarUploadControl({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const initial = username.trim().charAt(0).toUpperCase() || "B";
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -75,17 +74,11 @@ export function AvatarUploadControl({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="inline-flex h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white">
-        {currentAvatarUrl ? (
-          <img
-            src={currentAvatarUrl}
-            alt={`${username} avatar`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <span className="grid h-full w-full place-items-center">{initial}</span>
-        )}
-      </span>
+      <AccountAvatar
+        avatarUrl={currentAvatarUrl}
+        username={username}
+        className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(140deg,oklch(0.7_0.13_50),oklch(0.55_0.18_18))] text-[17px] font-semibold text-white"
+      />
       <input
         ref={inputRef}
         id={inputId}
