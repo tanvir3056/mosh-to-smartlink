@@ -33,7 +33,7 @@ import { PublicLinkPanel } from "@/components/admin/public-link-panel";
 import { StatusPill } from "@/components/admin/status-pill";
 import { ServiceIcon } from "@/components/service-icon";
 import { Button } from "@/components/ui/button";
-import { SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
+import { APP_DOMAIN_HINT, SERVICE_LABELS, STREAMING_SERVICES } from "@/lib/constants";
 import type {
   DashboardSongRow,
   EmailConnectorConfig,
@@ -424,13 +424,28 @@ function ReleaseSetupGuide({
     : allVisibleDestinationsReady
       ? "Everything needed is in place. Do one quick destination review, then publish from the rail."
       : "Finish the visible destinations before publishing.";
+  const nextStepTitle = isPublished
+    ? "Share the live page"
+    : allVisibleDestinationsReady
+      ? "Final destination review"
+      : "Resolve destination gaps";
+  const nextStepCopy = isPublished
+    ? "Open the public page in a new tab and confirm the fan-facing experience."
+    : allVisibleDestinationsReady
+      ? "Scan the destination rows once, then use the publish rail when it looks right."
+      : manualReviewCount > 0
+        ? `${manualReviewCount} visible destination${
+            manualReviewCount === 1 ? "" : "s"
+          } still need attention before launch.`
+        : "Show at least one valid destination before publishing this release.";
+  const publicDisplayPath = `${APP_DOMAIN_HINT}${publicHref}`;
 
   return (
     <section
       data-testid="release-setup-summary"
-      className="app-card overflow-hidden rounded-[var(--r-lg)] p-4 sm:p-5"
+      className="app-card grid gap-4 overflow-hidden rounded-[var(--r-lg)] p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-stretch"
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0">
         <div className="min-w-0">
           <p className="app-kicker text-[var(--app-muted)]">Setup</p>
           <h2 className="mt-2 text-[18px] font-semibold tracking-[-0.02em] text-[var(--app-text)]">
@@ -438,6 +453,53 @@ function ReleaseSetupGuide({
           </h2>
           <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[var(--app-muted)]">
             {setupSummary}
+          </p>
+        </div>
+        <div
+          data-testid="release-setup-public-path"
+          className="mt-4 flex min-w-0 items-center gap-2 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] px-3 py-2.5 text-[12.5px] text-[var(--app-muted)]"
+        >
+          <Link2 className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 truncate font-mono text-[var(--app-text)]">
+            {publicDisplayPath}
+          </span>
+        </div>
+        <div
+          data-testid="release-setup-status-row"
+          className="mt-4 grid gap-1 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-2 sm:grid-cols-3"
+        >
+          <SetupStatusChip
+            icon={<ListMusic className="h-4 w-4" />}
+            label="Details ready"
+            value="Metadata and artwork"
+          />
+          <SetupStatusChip
+            icon={<Link2 className="h-4 w-4" />}
+            label="Destinations"
+            value={
+              manualReviewCount
+                ? `${manualReviewCount} to review`
+                : `${linkedServices} of ${serviceCount} ready`
+            }
+          />
+          <SetupStatusChip
+            icon={<Globe2 className="h-4 w-4" />}
+            label={publishStatus}
+            value={isPublished ? "Public page live" : "Use the rail when ready"}
+          />
+        </div>
+      </div>
+      <div
+        data-testid="release-setup-next-step"
+        className="flex min-w-0 flex-col justify-between gap-4 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-4"
+      >
+        <div className="min-w-0">
+          <p className="app-kicker text-[var(--app-muted)]">Next step</p>
+          <h3 className="mt-2 text-[15px] font-semibold text-[var(--app-text)]">
+            {nextStepTitle}
+          </h3>
+          <p className="mt-2 text-[12.5px] leading-5 text-[var(--app-muted)]">
+            {nextStepCopy}
           </p>
         </div>
         <a
@@ -458,30 +520,6 @@ function ReleaseSetupGuide({
             </>
           )}
         </a>
-      </div>
-      <div
-        data-testid="release-setup-status-row"
-        className="mt-4 grid gap-1 rounded-[var(--r-md)] border border-[var(--app-line)] bg-[var(--app-panel-muted)] p-2 sm:grid-cols-3"
-      >
-        <SetupStatusChip
-          icon={<ListMusic className="h-4 w-4" />}
-          label="Details ready"
-          value="Metadata and artwork"
-        />
-        <SetupStatusChip
-          icon={<Link2 className="h-4 w-4" />}
-          label="Destinations"
-          value={
-            manualReviewCount
-              ? `${manualReviewCount} to review`
-              : `${linkedServices} of ${serviceCount} ready`
-          }
-        />
-        <SetupStatusChip
-          icon={<Globe2 className="h-4 w-4" />}
-          label={publishStatus}
-          value={isPublished ? "Public page live" : "Use the rail when ready"}
-        />
       </div>
     </section>
   );

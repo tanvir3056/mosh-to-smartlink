@@ -460,6 +460,31 @@ describe("SongEditorForm missing link review", () => {
     );
   });
 
+  test("turns release setup into a single next-step command center", () => {
+    render(<SongEditorForm page={PAGE} showMissingLinksReview={false} />);
+
+    const setupSummary = screen.getByTestId("release-setup-summary");
+    const nextStep = screen.getByTestId("release-setup-next-step");
+    const publicPath = screen.getByTestId("release-setup-public-path");
+
+    expect(setupSummary).toHaveClass(
+      "lg:grid-cols-[minmax(0,1fr)_280px]",
+      "lg:items-stretch",
+    );
+    expect(nextStep).toHaveClass(
+      "rounded-[var(--r-md)]",
+      "bg-[var(--app-panel-muted)]",
+    );
+    expect(within(nextStep).getByText("Next step")).toBeInTheDocument();
+    expect(
+      within(nextStep).getByRole("link", { name: "Review destinations" }),
+    ).toHaveAttribute("href", "#streaming-destinations");
+    expect(publicPath).toHaveTextContent(
+      "mosh-to-smartlink.vercel.app/artist/artist-track",
+    );
+    expect(publicPath).not.toHaveTextContent("backstage.to");
+  });
+
   test("routes published editor header actions to the live public page", () => {
     render(<SongEditorForm page={PUBLISHED_PAGE} showMissingLinksReview={false} />);
 
