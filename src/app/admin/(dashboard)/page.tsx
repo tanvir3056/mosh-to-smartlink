@@ -38,6 +38,8 @@ const releaseFilters: Array<{
   { value: "draft", label: "Drafts", href: "/admin?status=draft" },
 ];
 
+const releaseLibraryPageSize = 8;
+
 function parseStatusFilter(
   value: string | string[] | undefined,
 ): OverviewStatusFilter {
@@ -48,6 +50,44 @@ function parseStatusFilter(
   }
 
   return "all";
+}
+
+function parseLibraryPage(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number.parseInt(raw ?? "1", 10);
+
+  if (!Number.isFinite(parsed)) {
+    return 1;
+  }
+
+  return Math.max(parsed, 1);
+}
+
+function buildReleaseLibraryHref(status: OverviewStatusFilter, page: number) {
+  const params = new URLSearchParams();
+
+  if (status !== "all") {
+    params.set("status", status);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+  return query ? `/admin?${query}` : "/admin";
+}
+
+function releaseLibraryLabel(status: OverviewStatusFilter) {
+  if (status === "published") {
+    return "published releases";
+  }
+
+  if (status === "draft") {
+    return "drafts";
+  }
+
+  return "releases";
 }
 
 function ctr(clicks: number, visits: number) {
@@ -239,19 +279,46 @@ function topReleaseByPerformance(songs: DashboardSnapshot["songs"]) {
 export default async function AdminOverviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string | string[] | undefined }>;
+  searchParams: Promise<{
+    page?: string | string[] | undefined;
+    status?: string | string[] | undefined;
+  }>;
 }) {
   const session = await requireUserSession();
   const resolvedSearchParams = await searchParams;
   const activeFilter = parseStatusFilter(resolvedSearchParams.status);
-  const snapshot = await getDashboardSnapshot(session.userId);
-  const publishedSongs = snapshot.songs.filter((song) => song.status === "published");
+  const activeLibraryPage = parseLibraryPage(resolvedSearchParams.page);
+  const releaseLibraryOffset = (activeLibraryPage - 1) * releaseLibraryPageSize;
+  const snapshot = await getDashboardSnapshot(session.userId, {
+    songLimit: releaseLibraryPageSize,
+    songOffset: releaseLibraryOffset,
+    songStatus: activeFilter,
+  });
   const draftSongs = snapshot.songs.filter((song) => song.status === "draft");
-  const topRelease = topReleaseByPerformance(publishedSongs);
-  const visibleSongs =
+  const topRelease =
+    snapshot.topRelease ?? topReleaseByPerformance(
+      snapshot.songs.filter((song) => song.status === "published"),
+    );
+  const releaseLibrarySongs =
     activeFilter === "all"
       ? snapshot.songs
       : snapshot.songs.filter((song) => song.status === activeFilter);
+  const visibleSongs = releaseLibrarySongs.slice(0, releaseLibraryPageSize);
+  const releaseLibraryTotal =
+    activeFilter === "published"
+      ? snapshot.publishedSongs
+      : activeFilter === "draft"
+        ? snapshot.draftSongs
+        : snapshot.totalSongs;
+  const releaseLibraryStart =
+    visibleSongs.length > 0 ? releaseLibraryOffset + 1 : 0;
+  const releaseLibraryEnd = releaseLibraryOffset + visibleSongs.length;
+  const releaseLibrarySummary =
+    visibleSongs.length > 0
+      ? `Showing ${releaseLibraryStart}-${releaseLibraryEnd} of ${releaseLibraryTotal} ${releaseLibraryLabel(activeFilter)}`
+      : `No ${releaseLibraryLabel(activeFilter)} to show`;
+  const hasPreviousLibraryPage = activeLibraryPage > 1;
+  const hasNextLibraryPage = releaseLibraryEnd < releaseLibraryTotal;
   const liveRate =
     snapshot.totalSongs > 0
       ? `${Math.round((snapshot.publishedSongs / snapshot.totalSongs) * 100)}% live`
@@ -369,6 +436,9 @@ export default async function AdminOverviewPage({
             <h2 className="text-[17px] font-semibold">Release library</h2>
             <p className="mt-0.5 text-[13px] text-[var(--app-muted-2)]">
               Every smart link in your workspace.
+            </p>
+            <p className="mt-1 text-[12.5px] text-[var(--app-muted-2)]">
+              {releaseLibrarySummary}
             </p>
           </div>
           <nav
@@ -513,6 +583,32 @@ export default async function AdminOverviewPage({
             </>
           )}
         </div>
+        {visibleSongs.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1">
+            <p className="text-[12.5px] text-[var(--app-muted-2)]">
+              Use filters to narrow the library without stretching the workspace.
+            </p>
+            <div className="flex items-center gap-1.5">
+              {hasPreviousLibraryPage ? (
+                <Link
+                  href={buildReleaseLibraryHref(activeFilter, activeLibraryPage - 1)}
+                  className={rowActionClass("h-9 min-h-9 px-3")}
+                >
+                  Previous page
+                </Link>
+              ) : null}
+              {hasNextLibraryPage ? (
+                <Link
+                  href={buildReleaseLibraryHref(activeFilter, activeLibraryPage + 1)}
+                  className={rowActionClass("h-9 min-h-9 px-3")}
+                >
+                  Next page
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">

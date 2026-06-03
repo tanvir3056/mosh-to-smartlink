@@ -68,6 +68,19 @@ const dashboardSnapshot: DashboardSnapshot = {
   ],
 };
 
+function buildOverviewSong(index: number, status: "draft" | "published" = "draft") {
+  const padded = String(index).padStart(2, "0");
+
+  return {
+    ...dashboardSnapshot.songs[0],
+    songId: `song-${padded}`,
+    title: `Release ${padded}`,
+    slug: `release-${padded}`,
+    status,
+    updatedAt: `2026-05-${String(28 - index).padStart(2, "0")}T10:30:00.000Z`,
+  };
+}
+
 describe("admin overview page", () => {
   beforeEach(() => {
     mockRequireUserSession.mockResolvedValue({
@@ -258,5 +271,33 @@ describe("admin overview page", () => {
     expect(quickReadCard).not.toBeNull();
     expect(within(quickReadCard!).getByText("Top release")).toBeInTheDocument();
     expect(within(quickReadCard!).getByText("Bigger Signal")).toBeInTheDocument();
+  });
+
+  test("asks the backend for a paginated release window and links to the next page", async () => {
+    mockGetDashboardSnapshot.mockResolvedValue({
+      ...dashboardSnapshot,
+      totalSongs: 12,
+      draftSongs: 12,
+      publishedSongs: 0,
+      songs: Array.from({ length: 12 }, (_value, index) =>
+        buildOverviewSong(index + 1),
+      ),
+    } satisfies DashboardSnapshot);
+    const { default: AdminOverviewPage } = await import("@/app/admin/(dashboard)/page");
+
+    render(await AdminOverviewPage({ searchParams: Promise.resolve({}) }));
+
+    expect(mockGetDashboardSnapshot).toHaveBeenCalledWith("user-1", {
+      songLimit: 8,
+      songOffset: 0,
+      songStatus: "all",
+    });
+    expect(screen.getByText("Showing 1-8 of 12 releases")).toBeInTheDocument();
+    expect(screen.getByText("Release 08")).toBeInTheDocument();
+    expect(screen.queryByText("Release 09")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Next page" })).toHaveAttribute(
+      "href",
+      "/admin?page=2",
+    );
   });
 });

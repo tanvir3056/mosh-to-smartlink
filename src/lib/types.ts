@@ -218,6 +218,7 @@ export interface DashboardSnapshot {
   totalVisits: number;
   totalClicks: number;
   topService: ServiceBreakdownRow | null;
+  topRelease?: DashboardSongRow | null;
   comparison: DashboardComparison;
   daily: DashboardDailyPoint[];
   songs: DashboardSongRow[];

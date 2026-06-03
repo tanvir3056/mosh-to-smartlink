@@ -10,12 +10,14 @@ import type {
   AppUserRecord,
   AnalyticsSnapshot,
   DashboardSnapshot,
+  DashboardSongRow,
   EmailConnectorConfig,
   EmailLeadListItem,
   EmailLeadRecord,
   EmailLeadSnapshot,
   ImportBundle,
   MatchCandidate,
+  PageStatus,
   SongPageWithLinks,
   StreamingLinkRecord,
   TrackingConfig,
@@ -167,6 +169,27 @@ type EmailLeadResyncRow = QueryResultRow & {
   email: string;
   page_tag: string | null;
 };
+
+type DashboardSongQueryRow = QueryResultRow & {
+  song_id: string;
+  owner_user_id: string;
+  username: string;
+  title: string;
+  artist_name: string;
+  artwork_url: string;
+  slug: string;
+  status: PageStatus;
+  preview_url: string | null;
+  updated_at: string | Date;
+  visit_count: string | number;
+  click_count: string | number;
+};
+
+interface DashboardSnapshotOptions {
+  songLimit?: number;
+  songOffset?: number;
+  songStatus?: PageStatus | "all";
+}
 
 export interface EmailLeadResyncResult {
   attempted: number;
@@ -418,6 +441,47 @@ function mapEmailLeadListItem(
     artistName: row.artist_name,
     username: row.username,
     slug: row.slug,
+  };
+}
+
+function normalizeDashboardSongLimit(value: number | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return Math.min(Math.max(Math.trunc(value), 1), 100);
+}
+
+function normalizeDashboardSongOffset(value: number | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(Math.trunc(value), 0);
+}
+
+function normalizeDashboardSongStatus(
+  value: DashboardSnapshotOptions["songStatus"],
+): PageStatus | "all" {
+  return value === "published" || value === "draft" || value === "unpublished"
+    ? value
+    : "all";
+}
+
+function mapDashboardSong(row: DashboardSongQueryRow): DashboardSongRow {
+  return {
+    songId: row.song_id,
+    ownerUserId: row.owner_user_id,
+    username: row.username,
+    title: row.title,
+    artistName: row.artist_name,
+    artworkUrl: row.artwork_url,
+    slug: row.slug,
+    status: row.status,
+    previewUrl: row.preview_url,
+    updatedAt: normalizeTimestamp(row.updated_at),
+    visitCount: Number(row.visit_count),
+    clickCount: Number(row.click_count),
   };
 }
 
@@ -1919,10 +1983,28 @@ export async function deleteSongById(songId: string, ownerUserId: string) {
   });
 }
 
-export async function getDashboardSnapshot(ownerUserId: string): Promise<DashboardSnapshot> {
+export async function getDashboardSnapshot(
+  ownerUserId: string,
+  options: DashboardSnapshotOptions = {},
+): Promise<DashboardSnapshot> {
   const sinceIso = createSinceIso(30);
   const previousSinceIso = createSinceIso(60);
-  const [totals, previousTotals, topServiceRows, dailyVisitEvents, songs] = await Promise.all([
+  const songLimit = normalizeDashboardSongLimit(options.songLimit);
+  const songOffset = normalizeDashboardSongOffset(options.songOffset);
+  const songStatus = normalizeDashboardSongStatus(options.songStatus);
+  const songStatusSql = songStatus === "all" ? "" : "and p.status = $2";
+  const songLimitSql = songLimit === null ? "" : `limit ${songLimit}`;
+  const songOffsetSql = songOffset > 0 ? `offset ${songOffset}` : "";
+  const songQueryParams =
+    songStatus === "all" ? [ownerUserId] : [ownerUserId, songStatus];
+  const [
+    totals,
+    previousTotals,
+    topServiceRows,
+    dailyVisitEvents,
+    topReleaseRows,
+    songs,
+  ] = await Promise.all([
     dbQuery<{
       total_songs: string | number;
       published_songs: string | number;
@@ -1977,20 +2059,7 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
       `,
       [ownerUserId, sinceIso],
     ),
-    dbQuery<{
-      song_id: string;
-      owner_user_id: string;
-      username: string;
-      title: string;
-      artist_name: string;
-      artwork_url: string;
-      slug: string;
-      status: "draft" | "published" | "unpublished";
-      preview_url: string | null;
-      updated_at: string;
-      visit_count: string | number;
-      click_count: string | number;
-    }>(
+    dbQuery<DashboardSongQueryRow>(
       `
         select
           s.id as song_id,
@@ -2024,14 +2093,58 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
           group by song_id
         ) c on c.song_id = s.id
         where s.owner_user_id = $1
-        order by updated_at desc
+          and p.status = 'published'
+        order by visit_count desc, click_count desc, updated_at desc
+        limit 1
       `,
       [ownerUserId],
+    ),
+    dbQuery<DashboardSongQueryRow>(
+      `
+        select
+          s.id as song_id,
+          s.owner_user_id,
+          u.username,
+          s.title,
+          s.artist_name,
+          s.artwork_url,
+          p.slug,
+          p.status,
+          s.preview_url,
+          case
+            when s.updated_at > p.updated_at then s.updated_at
+            else p.updated_at
+          end as updated_at,
+          coalesce(v.visit_count, 0) as visit_count,
+          coalesce(c.click_count, 0) as click_count
+        from songs s
+        join song_pages p on p.song_id = s.id
+        join app_users u on u.id = s.owner_user_id
+        left join (
+          select song_id, count(*) as visit_count
+          from visits
+          where owner_user_id = $1
+          group by song_id
+        ) v on v.song_id = s.id
+        left join (
+          select song_id, count(*) as click_count
+          from click_events
+          where owner_user_id = $1
+          group by song_id
+        ) c on c.song_id = s.id
+        where s.owner_user_id = $1
+          ${songStatusSql}
+        order by updated_at desc
+        ${songLimitSql}
+        ${songOffsetSql}
+      `,
+      songQueryParams,
     ),
   ]);
 
   const row = totals[0];
   const topService = topServiceRows[0];
+  const topRelease = topReleaseRows[0];
   const totalVisits = Number(row?.total_visits ?? 0);
   const totalClicks = Number(row?.total_clicks ?? 0);
   const previousRow = previousTotals[0];
@@ -2073,6 +2186,7 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
           clicks: Number(topService.clicks),
         }
       : null,
+    topRelease: topRelease ? mapDashboardSong(topRelease) : null,
     comparison: {
       totalVisitsDeltaRate: changeRate(totalVisits, previousVisits),
       totalClicksDeltaRate: changeRate(totalClicks, previousClicks),
@@ -2082,20 +2196,7 @@ export async function getDashboardSnapshot(ownerUserId: string): Promise<Dashboa
           : clickThroughRate - previousClickThroughRate,
     },
     daily,
-    songs: songs.map((song) => ({
-      songId: song.song_id,
-      ownerUserId: song.owner_user_id,
-      username: song.username,
-      title: song.title,
-      artistName: song.artist_name,
-      artworkUrl: song.artwork_url,
-      slug: song.slug,
-      status: song.status,
-      previewUrl: song.preview_url,
-      updatedAt: normalizeTimestamp(song.updated_at),
-      visitCount: Number(song.visit_count),
-      clickCount: Number(song.click_count),
-    })),
+    songs: songs.map(mapDashboardSong),
   };
 }
 

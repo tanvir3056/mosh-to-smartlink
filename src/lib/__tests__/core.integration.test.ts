@@ -76,6 +76,31 @@ const IMPORT_BUNDLE: ImportBundle = {
   importStatus: "partial",
 };
 
+function buildImportBundle(index: number): ImportBundle {
+  const padded = String(index).padStart(2, "0");
+
+  return {
+    ...IMPORT_BUNDLE,
+    song: {
+      ...IMPORT_BUNDLE.song,
+      spotifyTrackId: `demo-track-id-${padded}`,
+      spotifyTrackUrl: `https://open.spotify.com/track/demo-track-id-${padded}`,
+      title: `Dashboard Release ${padded}`,
+      rawSource: {
+        ...IMPORT_BUNDLE.song.rawSource,
+        ogDescription: `North Vale · Dashboard Release ${padded} · Song · 2026`,
+      },
+    },
+    links: IMPORT_BUNDLE.links.map((link) => ({
+      ...link,
+      url:
+        link.service === "spotify"
+          ? `https://open.spotify.com/track/demo-track-id-${padded}`
+          : link.url,
+    })),
+  };
+}
+
 const USER_ID = "user_test_owner";
 const USERNAME = "north-vale";
 const LOGIN_EMAIL = "north-vale@users.backstage.local";
@@ -663,6 +688,69 @@ describe("core data flow", () => {
     expect(analyticsAfterDelete.totalVisits).toBe(0);
     expect(analyticsAfterDelete.totalClicks).toBe(0);
   });
+
+  test("limits dashboard library rows by status without shrinking aggregate totals", async () => {
+    const {
+      createAccountOwner,
+      createSongImportDraft,
+      getAdminSongPageBySongId,
+      getDashboardSnapshot,
+      updateSongDraft,
+    } = await import("@/lib/data");
+
+    await createAccountOwner({
+      userId: USER_ID,
+      username: USERNAME,
+      loginEmail: LOGIN_EMAIL,
+      passwordHash: "salt:hash",
+    });
+
+    for (let index = 1; index <= 6; index += 1) {
+      const songId = await createSongImportDraft(
+        buildImportBundle(index),
+        USERNAME,
+        USER_ID,
+      );
+
+      if (index <= 2) {
+        const adminPage = await getAdminSongPageBySongId(songId, USER_ID);
+
+        await updateSongDraft({
+          ownerUserId: USER_ID,
+          songId,
+          title: adminPage!.song.title,
+          artistName: adminPage!.song.artistName,
+          albumName: adminPage!.song.albumName,
+          artworkUrl: adminPage!.song.artworkUrl,
+          previewUrl: adminPage!.song.previewUrl,
+          headline: adminPage!.page.headline,
+          slug: adminPage!.page.slug,
+          status: "published",
+          emailCapture: adminPage!.emailCapture,
+          links: adminPage!.links.map((link) => ({
+            service: link.service,
+            url: link.url,
+            isVisible: link.isVisible,
+            matchStatus: link.matchStatus,
+            matchSource: link.matchSource,
+            confidence: link.confidence,
+            notes: link.notes,
+          })),
+        });
+      }
+    }
+
+    const dashboard = await getDashboardSnapshot(USER_ID, {
+      songLimit: 3,
+      songStatus: "draft",
+    });
+
+    expect(dashboard.totalSongs).toBe(6);
+    expect(dashboard.publishedSongs).toBe(2);
+    expect(dashboard.draftSongs).toBe(4);
+    expect(dashboard.songs).toHaveLength(3);
+    expect(dashboard.songs.every((song) => song.status === "draft")).toBe(true);
+  }, 10_000);
 
   test("compares analytics KPI totals against the previous period", async () => {
     const {
